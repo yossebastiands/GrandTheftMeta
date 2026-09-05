@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  overflow: hidden;
+}
+
+/* Thin, unobtrusive scrollbars that match the dark theme */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #111827;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: #111827;
+}
+*::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 6px;
+  border: 2px solid #111827;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #e8702a;
+}
+
+/* Hide scrollbars on the synced header band (body shows the scrollbar) */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Numeric cell text alignment help */
+.num {
+  font-variant-numeric: tabular-nums;
+}

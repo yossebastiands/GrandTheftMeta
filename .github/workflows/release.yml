@@ -1,0 +1,56 @@
+name: Release
+
+# Builds a Windows installer and creates a draft GitHub Release whenever a tag
+# like `v0.1.0` is pushed (or run manually from the Actions tab).
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./app/src-tauri -> target"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: "app/package-lock.json"
+
+      - name: Install frontend dependencies
+        working-directory: app
+        run: npm ci
+
+      - name: Build & publish release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: "app"
+          tagName: ${{ github.ref_name }}
+          releaseName: "GrandTheftMeta ${{ github.ref_name }}"
+          releaseBody: |
+            ## Install
+
+            Download the `*-setup.exe` (NSIS) or `.msi` from the assets below.
+
+            Requires Windows 10/11 and the WebView2 runtime (bundled on Win11).
+          releaseDraft: true
+          prerelease: false
+          args: "--bundles nsis msi"
