@@ -177,7 +177,7 @@ function GlossaryView() {
                         setActive(m.id);
                         setQ("");
                       }}
-                      className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm ${
+                      className={`flex w-full items-start gap-2 rounded-md px-2 py-2 text-left text-sm ${
                         isActive
                           ? "bg-accent/15 font-semibold text-accent ring-1 ring-inset ring-accent/40"
                           : "text-gray-400 hover:bg-gray-800/60"
@@ -185,15 +185,15 @@ function GlossaryView() {
                       title={m.desc}
                     >
                       {m.hasGlossary ? (
-                        <BookOpenText className="h-4 w-4 shrink-0" />
+                        <BookOpenText className="mt-0.5 h-4 w-4 shrink-0" />
                       ) : (
-                        <FileText className="h-4 w-4 shrink-0 opacity-70" />
+                        <FileText className="mt-0.5 h-4 w-4 shrink-0 opacity-70" />
                       )}
-                      <span className="min-w-0 flex-1">
+                      <span className="min-w-0 flex-1 leading-tight">
                         <span className="block truncate font-mono text-xs">
                           {m.file}
                         </span>
-                        <span className="block truncate text-2xs text-gray-600">
+                        <span className="mt-0.5 block truncate text-2xs text-gray-600">
                           {m.label}
                           {m.hasGlossary
                             ? ` · ${entries.length} params`
@@ -201,7 +201,7 @@ function GlossaryView() {
                         </span>
                       </span>
                       {!m.hasGlossary && (
-                        <Lock className="ml-auto h-3 w-3 shrink-0 opacity-40" />
+                        <Lock className="ml-1 mt-0.5 h-3 w-3 shrink-0 opacity-40" />
                       )}
                     </button>
                   </li>
@@ -296,7 +296,7 @@ function GlossaryView() {
             </div>
           </>
         ) : activeMeta ? (
-          <div className="min-h-0 overflow-y-auto">
+          <div className="min-h-0 flex-1 overflow-auto">
             <div className="border-b border-gray-800 bg-gray-900 px-4 py-2">
               <h1 className="font-mono text-sm font-semibold text-gray-200">
                 {activeMeta.file}
@@ -305,15 +305,22 @@ function GlossaryView() {
                 {activeMeta.label} · parameter glossary coming soon
               </p>
             </div>
-            <div className="mx-auto max-w-2xl px-4 py-4">
-              <div className="flex items-start gap-3 rounded-lg border border-gray-800 bg-gray-900/50 p-4">
-                <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                <div>
-                  <p className="text-xs leading-relaxed text-gray-300">{activeMeta.desc}</p>
-                  <p className="mt-3 text-2xs text-gray-600">
-                    This file's field glossary will appear here once its editor is wired up.
-                    The editor map on the Home screen shows which are live.
-                  </p>
+            <div className="flex min-h-0 min-w-full justify-center">
+              <div className="w-full min-w-[420px] max-w-3xl px-6 py-6">
+                <div className="flex items-start gap-4 rounded-lg border border-gray-800 bg-gray-900/50 p-5">
+                  <Info className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+                  <div className="min-w-0">
+                    <h2 className="text-sm font-semibold text-gray-200">
+                      {activeMeta.label}
+                    </h2>
+                    <p className="mt-2 text-sm leading-relaxed text-gray-300">
+                      {activeMeta.desc}
+                    </p>
+                    <p className="mt-4 text-xs text-gray-600">
+                      This file's field glossary will appear here once its editor is
+                      wired up. The editor map on the Home screen shows which are live.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
