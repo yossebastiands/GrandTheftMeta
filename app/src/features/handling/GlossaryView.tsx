@@ -8,6 +8,7 @@ import {
   Search,
 } from "lucide-react";
 import { handlingGlossary } from "./hints";
+import { weaponGlossary } from "./weaponHints";
 
 function toPlain(html: string): string {
   return html
@@ -103,8 +104,8 @@ const GROUPS: MetaGroup[] = [
         id: "weapons",
         file: "weapons.meta",
         label: "Weapons",
-        desc: "Firearm base stats (CWeaponInfo): damage, clip, accuracy, recoil, ammo, flags… Scanner ready — parameter glossary coming soon.",
-        hasGlossary: false,
+        desc: "Firearm base stats (CWeaponInfo): damage, clip, accuracy, recoil, ammo, flags… Full parameter glossary with input guides.",
+        hasGlossary: true,
       },
       {
         id: "weaponanimations",
@@ -132,10 +133,9 @@ const GROUPS: MetaGroup[] = [
 ];
 
 function GlossaryView() {
-  const entries = useMemo(() => handlingGlossary(), []);
   const [active, setActive] = useState<string>("handling");
   const [q, setQ] = useState("");
-  // Handling glossary params that are expanded (everything starts collapsed).
+  // Params that are expanded (everything starts collapsed).
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
 
   const activeMeta = useMemo(() => {
@@ -146,7 +146,20 @@ function GlossaryView() {
     return GROUPS[0].metas[0];
   }, [active]);
 
-  const handlingFiltered = useMemo(() => {
+  const isWeapons = activeMeta?.id === "weapons";
+  const entries = useMemo(
+    () => (isWeapons ? weaponGlossary() : handlingGlossary()),
+    [isWeapons]
+  );
+  const counts = useMemo(
+    () => ({
+      handling: handlingGlossary().length,
+      weapons: weaponGlossary().length,
+    }),
+    []
+  );
+
+  const listFiltered = useMemo(() => {
     const t = q.trim().toLowerCase();
     if (!t) return entries;
     return entries.filter((e) =>
@@ -196,7 +209,7 @@ function GlossaryView() {
                         <span className="mt-0.5 block truncate text-2xs text-gray-600">
                           {m.label}
                           {m.hasGlossary
-                            ? ` · ${entries.length} params`
+                            ? ` · ${(counts as Record<string, number>)[m.id] ?? entries.length} params`
                             : " · about only"}
                         </span>
                       </span>
@@ -226,7 +239,7 @@ function GlossaryView() {
                 {activeMeta.file} Glossary
               </h1>
               <span className="text-2xs text-gray-500">
-                {entries.length} parameters · {handlingFiltered.length} shown
+                {entries.length} parameters · {listFiltered.length} shown
               </span>
               <div className="relative ml-auto">
                 <Search className="pointer-events-none absolute bottom-0 left-2 top-0 m-auto h-3.5 w-3.5 text-gray-500" />
@@ -240,13 +253,13 @@ function GlossaryView() {
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto">
-              {handlingFiltered.length === 0 ? (
+              {listFiltered.length === 0 ? (
                 <div className="flex h-full items-center justify-center text-sm text-gray-500">
                   No parameters match “{q}”.
                 </div>
               ) : (
                 <ul className="divide-y divide-gray-800/80">
-                  {handlingFiltered.map((e) => {
+                  {listFiltered.map((e) => {
                     const isOpen = open.has(e.name);
                     return (
                       <li key={e.name}>

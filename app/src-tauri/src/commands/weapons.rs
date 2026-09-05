@@ -231,6 +231,7 @@ mod tests {
             res.columns.len(),
             res.skipped.len()
         );
+        eprintln!("COLUMNS:\n{}", res.columns.join("\n"));
     }
 }
 
