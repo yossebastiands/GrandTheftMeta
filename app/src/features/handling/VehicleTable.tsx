@@ -20,6 +20,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowDown, ArrowUp, ChevronsUpDown, HelpCircle, X } from "lucide-react";
 import { rowKey, type VehicleRow } from "../../shared/models";
 import { paramHint } from "./hints";
+import ValueEditorDialog from "../../ui/ValueEditorDialog";
 
 export interface VehicleTableProps {
   /** Rows to display (already filtered by search / class). */
@@ -113,72 +114,9 @@ function metaValue(original: VehicleRow, id: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Isolated inline editor — typing only re-renders this one input, never the grid.
+// Cells are edited in a shared modal (ValueEditorDialog) so long values can be
+// read and typed in full instead of inside a tiny cell-sized input.
 // ---------------------------------------------------------------------------
-
-interface CellEditorProps {
-  initialValue: string;
-  onCommit: (value: string) => void;
-  onCancel: () => void;
-  hintHtml?: string;
-  onHint?: (e: MouseEvent<HTMLButtonElement>) => void;
-}
-
-function CellEditor({
-  initialValue,
-  onCommit,
-  onCancel,
-  hintHtml,
-  onHint,
-}: CellEditorProps) {
-  const [draft, setDraft] = useState(initialValue);
-  const finished = useRef(false);
-
-  const commit = useCallback(() => {
-    if (finished.current) return;
-    finished.current = true;
-    onCommit(draft);
-  }, [draft, onCommit]);
-
-  const cancel = useCallback(() => {
-    if (finished.current) return;
-    finished.current = true;
-    onCancel();
-  }, [onCancel]);
-
-  return (
-    <div className="flex h-full w-full items-center bg-white ring-2 ring-inset ring-accent">
-      <input
-        autoFocus
-        className="h-full min-w-0 flex-1 select-text bg-transparent px-2 text-xs text-gray-900 outline-none"
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onFocus={(e) => e.currentTarget.select()}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            commit();
-          } else if (e.key === "Escape") {
-            e.preventDefault();
-            cancel();
-          }
-        }}
-        onBlur={commit}
-      />
-      {hintHtml && onHint && (
-        <button
-          type="button"
-          title="What does this parameter do?"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={(e) => onHint(e)}
-          className="grid h-full shrink-0 cursor-help place-items-center px-1 text-gray-500 transition-colors hover:text-accent"
-        >
-          <HelpCircle className="h-3.5 w-3.5" />
-        </button>
-      )}
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Hint popover (floating card anchored to the clicked hint icon)
@@ -235,11 +173,7 @@ interface RowContentProps {
   layout: Layout[];
   /** Edits for THIS row only, so editing one cell never re-renders other rows. */
   rowEdits?: Record<string, string>;
-  /** `${rowKey}\u0001${col}` for the cell currently being edited, else null. */
-  editingKey: string | null;
-  onCommitCell: (row: VehicleRow, col: string, value: string) => void;
-  onStartCell: (row: VehicleRow, col: string) => void;
-  onCancelCell: () => void;
+  onOpenCell: (row: VehicleRow, col: string) => void;
   onHintOpen: (e: MouseEvent<HTMLElement>, row: VehicleRow, col: string) => void;
   hintFor: (col: string, kind?: string) => string | undefined;
 }
@@ -249,14 +183,10 @@ const GridRowContent = memo(function GridRowContent({
   visualIndex,
   layout,
   rowEdits,
-  editingKey,
-  onCommitCell,
-  onStartCell,
-  onCancelCell,
+  onOpenCell,
   onHintOpen,
   hintFor,
 }: RowContentProps) {
-  const k = rowKey(original);
   const zebra = visualIndex % 2 === 1;
   const rowBg = zebra ? BODY_BG_ALT : BODY_BG;
 
@@ -280,11 +210,9 @@ const GridRowContent = memo(function GridRowContent({
           );
         }
 
-        // Editable parameter cell
+        // Editable parameter cell — click opens the shared full-text editor.
         const value = displayValue(original, l.id, rowEdits);
         const dirty = isDirty(original, l.id, rowEdits);
-        const cellKey = `${k}\u0001${l.id}`;
-        const isEditing = editingKey === cellKey;
         const bg = dirty ? DIRTY_BG : rowBg;
         const hintHtml = hintFor(l.id, original.vehicle_type);
 
@@ -306,32 +234,15 @@ const GridRowContent = memo(function GridRowContent({
         return (
           <div
             key={l.id}
-            className={`${cellBase} ${bg} relative ${
-              isEditing || dirty ? "" : "cursor-text hover:bg-white/5"
-            }`}
+            className={`${cellBase} ${bg} cursor-text hover:bg-white/5`}
             style={{ width: l.width, zIndex: dirty ? 1 : undefined }}
-            title={isEditing ? undefined : `Edit ${l.id}`}
-            onClick={() => {
-              if (!isEditing) onStartCell(original, l.id);
-            }}
+            title={value ? `Edit ${l.id} — ${value}` : `Edit ${l.id}`}
+            onClick={() => onOpenCell(original, l.id)}
           >
-            {isEditing ? (
-              <CellEditor
-                key={cellKey}
-                initialValue={value}
-                onCommit={(v) => onCommitCell(original, l.id, v)}
-                onCancel={onCancelCell}
-                hintHtml={hintHtml}
-                onHint={(e) => onHintOpen(e, original, l.id)}
-              />
-            ) : (
-              <>
-                <span className={`min-w-0 flex-1 truncate ${dirty ? "font-semibold" : ""}`}>
-                  {value || <span className="opacity-40">—</span>}
-                </span>
-                {hintButton}
-              </>
-            )}
+            <span className={`min-w-0 flex-1 truncate ${dirty ? "font-semibold" : ""}`}>
+              {value || <span className="opacity-40">—</span>}
+            </span>
+            {hintButton}
           </div>
         );
       })}
@@ -342,11 +253,6 @@ const GridRowContent = memo(function GridRowContent({
 // ---------------------------------------------------------------------------
 // The grid — ONE scroll container (both axes): sticky header + virtual rows.
 // ---------------------------------------------------------------------------
-
-interface EditingState {
-  rowKey: string;
-  col: string;
-}
 
 function VehicleTableImpl({
   vehicles,
@@ -364,7 +270,7 @@ function VehicleTableImpl({
   };
   const resolver = hintFor ?? paramHint;
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [editing, setEditing] = useState<EditingState | null>(null);
+  const [cellDialog, setCellDialog] = useState<{ row: VehicleRow; col: string } | null>(null);
   const [hintPop, setHintPop] = useState<HintPop | null>(null);
 
   const layout = useMemo(() => buildLayout(columns), [columns]);
@@ -423,26 +329,18 @@ function VehicleTableImpl({
     overscan: effectiveOverscan,
   });
 
-  // Close the cell editor if its row disappears (filter/scan change).
+  // Close the value dialog if its row disappears (filter/scan change).
   useEffect(() => {
-    if (editing && !vehicles.some((v) => rowKey(v) === editing.rowKey)) {
-      setEditing(null);
+    if (cellDialog && !vehicles.some((v) => rowKey(v) === rowKey(cellDialog.row))) {
+      setCellDialog(null);
     }
-  }, [vehicles, editing]);
+  }, [vehicles, cellDialog]);
 
-  const onStartCell = useCallback((row: VehicleRow, col: string) => {
-    setEditing({ rowKey: rowKey(row), col });
+  const onOpenCell = useCallback((row: VehicleRow, col: string) => {
+    setCellDialog({ row, col });
   }, []);
 
-  const onCancelCell = useCallback(() => setEditing(null), []);
-
-  const onCommitCell = useCallback(
-    (row: VehicleRow, col: string, value: string) => {
-      setEditing(null);
-      onCommitEdit(row, col, value);
-    },
-    [onCommitEdit]
-  );
+  const closeCellDialog = useCallback(() => setCellDialog(null), []);
 
   const onHintOpen = useCallback(
     (e: MouseEvent<HTMLElement>, row: VehicleRow, col: string) => {
@@ -552,8 +450,6 @@ function VehicleTableImpl({
                 if (!row) return null;
                 const original = row.original;
                 const k = rowKey(original);
-                const editingKey =
-                  editing && editing.rowKey === k ? `${k}\u0001${editing.col}` : null;
                 return (
                   <div
                     key={row.id}
@@ -569,11 +465,8 @@ function VehicleTableImpl({
                       visualIndex={vi.index}
                       layout={layout}
                       rowEdits={edits[k]}
-                      editingKey={editingKey}
                       hintFor={resolver}
-                      onCommitCell={onCommitCell}
-                      onStartCell={onStartCell}
-                      onCancelCell={onCancelCell}
+                      onOpenCell={onOpenCell}
                       onHintOpen={onHintOpen}
                     />
                   </div>
@@ -584,6 +477,25 @@ function VehicleTableImpl({
         )}
       </div>
 
+      {cellDialog && (
+        <ValueEditorDialog
+          title={cellDialog.col}
+          value={
+            edits[rowKey(cellDialog.row)]?.[cellDialog.col] ??
+            cellDialog.row.params[cellDialog.col] ??
+            ""
+          }
+          original={cellDialog.row.params[cellDialog.col] ?? ""}
+          hintHtml={resolver(cellDialog.col, cellDialog.row.vehicle_type)}
+          onSave={(v) => {
+            const { row, col } = cellDialog;
+            const current = edits[rowKey(row)]?.[col] ?? row.params[col] ?? "";
+            setCellDialog(null);
+            if (v !== current) onCommitEdit(row, col, v);
+          }}
+          onCancel={closeCellDialog}
+        />
+      )}
       {hintPop && <HintOverlay pop={hintPop} onClose={() => setHintPop(null)} />}
     </div>
   );

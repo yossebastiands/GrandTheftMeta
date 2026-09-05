@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, HelpCircle, RotateCcw, Search } from "lucide-react";
+import { ChevronDown, HelpCircle, RotateCcw, Search, SquarePen } from "lucide-react";
 import { rowKey, type VehicleRow } from "../../shared/models";
+import ValueEditorDialog from "../../ui/ValueEditorDialog";
 import {
   elementName,
   groupColumns,
@@ -34,33 +35,27 @@ interface FieldProps {
   label: string;
   col: string;
   value: string;
-  original: string;
   edited: boolean;
   hintHtml?: string;
   hintOpen: boolean;
   onToggleHint: () => void;
-  onCommit: (value: string) => void;
+  onOpenEditor: () => void;
+  onRevert: () => void;
 }
 
+// A field shows the current value and opens the shared full-text editor dialog
+// on click (so long values are easy to see and type).
 function ParamField({
   label,
   col,
   value,
-  original,
   edited,
   hintHtml,
   hintOpen,
   onToggleHint,
-  onCommit,
+  onOpenEditor,
+  onRevert,
 }: FieldProps) {
-  const [local, setLocal] = useState<string | null>(null);
-  const shown = local ?? value;
-
-  const commitLocal = (v: string) => {
-    if (local !== null) setLocal(null);
-    if (v !== value) onCommit(v);
-  };
-
   return (
     <div className="flex flex-col py-1">
       <div className="flex items-center gap-2">
@@ -70,35 +65,26 @@ function ParamField({
         >
           {label}
         </label>
-        <input
-          className={`h-7 min-w-0 flex-1 rounded-md border bg-gray-950 px-2 text-xs text-gray-200 outline-none transition-colors focus:border-accent ${
+        <button
+          type="button"
+          title={value ? `Edit ${label} — ${value}` : `Edit ${label}`}
+          onClick={onOpenEditor}
+          className={`flex h-7 min-w-0 flex-1 items-center rounded-md border bg-gray-950 px-2 text-left text-xs text-gray-200 outline-none transition-colors hover:border-gray-600 ${
             edited ? "border-accent/70 font-semibold text-orange-200" : "border-gray-700"
           }`}
-          value={shown}
-          spellCheck={false}
-          onChange={(e) => setLocal(e.target.value)}
-          onBlur={() => commitLocal(shown)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              commitLocal(shown);
-              (e.target as HTMLInputElement).blur();
-            } else if (e.key === "Escape") {
-              setLocal(null);
-              (e.target as HTMLInputElement).blur();
-            }
-          }}
-        />
+        >
+          <span className={`min-w-0 flex-1 truncate ${value ? "" : "text-gray-600"}`}>
+            {value || "—"}
+          </span>
+          <SquarePen className="ml-1.5 h-3 w-3 shrink-0 text-gray-500" />
+        </button>
         {edited && (
           <button
             type="button"
             title="Revert to original"
             className="grid h-6 w-6 shrink-0 place-items-center rounded text-gray-500 transition-colors hover:text-white"
             onMouseDown={(e) => e.preventDefault()}
-            onClick={() => {
-              setLocal(null);
-              onCommit(original);
-            }}
+            onClick={onRevert}
           >
             <RotateCcw className="h-3 w-3" />
           </button>
@@ -147,6 +133,7 @@ export default function SingleHandlingEditor({
     () => new Set(["core", "flying", "boat", "vweapon", "wheel", "meta"])
   );
   const [hintCol, setHintCol] = useState<string | null>(null);
+  const [editCol, setEditCol] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase();
@@ -192,7 +179,8 @@ export default function SingleHandlingEditor({
     });
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1">
+    <>
+      <div className="flex min-h-0 min-w-0 flex-1">
       {/* Left: searchable list of handling names */}
       <aside className="flex w-72 shrink-0 flex-col border-r border-gray-800 bg-gray-900/40">
         <div className="border-b border-gray-800 p-2">
@@ -203,6 +191,7 @@ export default function SingleHandlingEditor({
               onChange={(e) => {
                 setQ(e.target.value);
                 setHintCol(null);
+                setEditCol(null);
               }}
               placeholder="Search handling name…"
               className="w-full rounded-md border border-gray-700 bg-gray-950 py-1 pl-7 pr-2 text-xs text-gray-200 placeholder:text-gray-500 focus:border-accent focus:outline-none"
@@ -229,6 +218,7 @@ export default function SingleHandlingEditor({
                       onClick={() => {
                         setSelKey(key);
                         setHintCol(null);
+                        setEditCol(null);
                       }}
                       className={`flex w-full flex-col gap-0.5 px-3 py-1.5 text-left transition-colors ${
                         isSel
@@ -339,14 +329,14 @@ export default function SingleHandlingEditor({
                                 label={elementName(col)}
                                 col={col}
                                 value={value}
-                                original={original}
                                 edited={edited}
                                 hintHtml={hint}
                                 hintOpen={hintCol === col}
                                 onToggleHint={() =>
                                   setHintCol((prev) => (prev === col ? null : col))
                                 }
-                                onCommit={(v) => onCommitEdit(selected, col, v)}
+                                onOpenEditor={() => setEditCol(col)}
+                                onRevert={() => onCommitEdit(selected, col, original)}
                               />
                             );
                           })}
@@ -364,6 +354,27 @@ export default function SingleHandlingEditor({
           Select a handling entry from the list.
         </main>
       )}
-    </div>
+
+      {editCol && selected && (() => {
+        const col = editCol;
+        const original = selected.params[col] ?? "";
+        const current = (selRowKey ? edits[selRowKey]?.[col] : undefined) ?? original;
+        const hint = hintFor ? hintFor(col) : paramHint(col, selected.vehicle_type);
+        return (
+          <ValueEditorDialog
+            title={elementName(col)}
+            value={current}
+            original={original}
+            hintHtml={hint}
+            onSave={(v) => {
+              setEditCol(null);
+              if (v !== current) onCommitEdit(selected, col, v);
+            }}
+            onCancel={() => setEditCol(null)}
+          />
+        );
+      })()}
+      </div>
+    </>
   );
 }
