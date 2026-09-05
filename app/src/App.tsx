@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Car, FolderOpen, Loader2 } from "lucide-react";
 import FilterBar from "./ui/FilterBar";
 import Navbar from "./ui/Navbar";
-import Sidebar from "./ui/Sidebar";
+import Sidebar, { type EditorId } from "./ui/Sidebar";
 import StatusBar from "./ui/StatusBar";
 import Toast, { type ToastData } from "./ui/Toast";
 import Toolbar from "./ui/Toolbar";
 import GlossaryView from "./features/handling/GlossaryView";
+import SingleHandlingEditor from "./features/handling/SingleHandlingEditor";
 import VehicleTable from "./features/handling/VehicleTable";
 import { demoScan } from "./features/handling/demoData";
 import { pickFolder, scanFolder, updateFiles } from "./shared/api";
@@ -30,6 +31,8 @@ export default function App() {
   const [classFilter, setClassFilter] = useState("ALL");
   const [scanId, setScanId] = useState(0);
   const [view, setView] = useState<"home" | "glossary">("home");
+  // Which editor is active in the left Editors sidebar (Vehicles category).
+  const [editor, setEditor] = useState<EditorId>("handling");
   const [toast, setToast] = useState<ToastData | null>(null);
   const toastTimer = useRef<number | null>(null);
 
@@ -202,6 +205,16 @@ export default function App() {
         <p className="text-sm">Scanning vehicle folders…</p>
       </div>
     );
+  } else if (hasData && editor === "single") {
+    content = (
+      <SingleHandlingEditor
+        key={`${folder ?? ""}|${scanId}|single`}
+        vehicles={result?.vehicles ?? []}
+        columns={result?.columns ?? []}
+        edits={edits}
+        onCommitEdit={commitEdit}
+      />
+    );
   } else if (hasData && filtered.length > 0) {
     content = (
       <VehicleTable
@@ -274,7 +287,7 @@ export default function App() {
       <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
         <div className={view === "home" ? "absolute inset-0 flex flex-col" : "hidden"}>
           <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-            <Sidebar />
+            <Sidebar active={editor} onSelect={setEditor} />
             <main className="flex min-h-0 min-w-0 flex-1 flex-col">
       <Toolbar
         folder={folder}
@@ -288,17 +301,19 @@ export default function App() {
         onUpdate={() => void handleUpdate()}
       />
 
-      <FilterBar
-        search={search}
-        onSearch={setSearch}
-        types={types}
-        typeFilter={typeFilter}
-        onTypeFilter={setTypeFilter}
-        classes={classes}
-        classFilter={classFilter}
-        onClassFilter={setClassFilter}
-        disabled={!hasData}
-      />
+      {editor === "handling" && (
+        <FilterBar
+          search={search}
+          onSearch={setSearch}
+          types={types}
+          typeFilter={typeFilter}
+          onTypeFilter={setTypeFilter}
+          classes={classes}
+          classFilter={classFilter}
+          onClassFilter={setClassFilter}
+          disabled={!hasData}
+        />
+      )}
 
       {error && hasData && (
         <div className="flex items-center gap-2 border-b border-red-900/60 bg-red-950/40 px-3 py-1.5 text-xs text-red-300">

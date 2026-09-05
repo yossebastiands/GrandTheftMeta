@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from "react";
-import { BookOpenText, ChevronDown, FileText, Search } from "lucide-react";
+import { BookOpenText, ChevronDown, FileText, Lock, Rocket, Search } from "lucide-react";
 import { handlingGlossary } from "./hints";
 
 function toPlain(html: string): string {
@@ -110,8 +110,11 @@ function GlossaryView() {
       {/* Glossary side panel */}
       <nav className="flex w-60 shrink-0 flex-col gap-4 overflow-y-auto border-r border-gray-800 bg-gray-900 px-2 py-3">
         <div>
-          <div className="px-2 pb-1 text-2xs font-semibold uppercase tracking-wider text-gray-600">
-            Glossaries
+          <div className="flex items-baseline justify-between px-2 pb-1">
+            <span className="text-2xs font-semibold uppercase tracking-wider text-gray-600">
+              Vehicles
+            </span>
+            <span className="text-2xs text-gray-600">live</span>
           </div>
           <ul className="flex flex-col gap-0.5">
             {CATEGORIES.map((c) => {
@@ -141,6 +144,28 @@ function GlossaryView() {
                 </li>
               );
             })}
+          </ul>
+        </div>
+        <div>
+          <div className="flex items-baseline justify-between px-2 pb-1">
+            <span className="text-2xs font-semibold uppercase tracking-wider text-gray-600">
+              Weapons
+            </span>
+            <span className="text-2xs text-gray-600">coming soon</span>
+          </div>
+          <ul className="flex flex-col gap-0.5">
+            <li>
+              <button
+                type="button"
+                disabled
+                title="Coming soon — firearm meta (weaponarchetypes.meta, etc.)"
+                className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-gray-600"
+              >
+                <Rocket className="h-4 w-4 shrink-0 opacity-60" />
+                <span className="truncate">Weapon meta glossaries</span>
+                <Lock className="ml-auto h-3 w-3 shrink-0 opacity-50" />
+              </button>
+            </li>
           </ul>
         </div>
         <div className="mt-auto px-2 text-2xs leading-relaxed text-gray-600">

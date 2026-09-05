@@ -55,7 +55,7 @@ function moduleFor(col: string, vehicleType?: string): string | undefined {
 
 /** Map a column name to its glossary element name.
  *  `CFlyingHandlingData.vecTurnRes.x` → `vecTurnRes`, `fMass` → `fMass`. */
-function elementName(col: string): string {
+export function elementName(col: string): string {
   let c = col;
   if (/\.(x|y|z)$/.test(c)) c = c.slice(0, -2);
   const i = c.indexOf(".");
@@ -156,4 +156,61 @@ export function handlingGlossary(): GlossaryEntry[] {
     }
   }
   return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// ---------------------------------------------------------------------------
+// Param grouping for the Single Handling Editor's module form
+// ---------------------------------------------------------------------------
+
+export interface ParamGroup {
+  id: string;
+  label: string;
+  /** Full column names (may carry a module prefix like `CFlyingHandlingData.`). */
+  cols: string[];
+}
+
+const GROUP_ORDER = ["core", "flying", "boat", "vweapon", "wheel", "meta"];
+const GROUP_LABEL: Record<string, string> = {
+  core: "Vehicle",
+  flying: "Aircraft / flying",
+  boat: "Watercraft",
+  vweapon: "Vehicle weapons",
+  wheel: "Aircraft wheels",
+  meta: "Flags & metadata",
+};
+const PREFIX_GROUP: Array<[RegExp, string]> = [
+  [/^CFlyingHandlingData\./, "flying"],
+  [/^CBoatHandlingData\./, "boat"],
+  [/^CVehicleWeaponHandlingData\./, "vweapon"],
+  [/^CVehicleAircraftWheelHandlingData\./, "wheel"],
+];
+
+/** True for the non-physics flag/type fields shown last. */
+function isMetaField(col: string): boolean {
+  return (
+    col === "handlingType" || col === "strHandlingFlags" || col === "strModelFlags"
+  );
+}
+
+/** Bucket the entry's parameter columns into labelled modules for a form. */
+export function groupColumns(columns: string[]): ParamGroup[] {
+  const buckets = new Map<string, string[]>();
+  for (const col of columns) {
+    let id = "core";
+    for (const [re, gid] of PREFIX_GROUP) {
+      if (re.test(col)) {
+        id = gid;
+        break;
+      }
+    }
+    if (id === "core" && isMetaField(col)) id = "meta";
+    const arr = buckets.get(id);
+    if (arr) arr.push(col);
+    else buckets.set(id, [col]);
+  }
+  return GROUP_ORDER.filter((id) => buckets.has(id)).map((id) => ({
+    id,
+    label: GROUP_LABEL[id],
+    cols: buckets.get(id) ?? [],
+  }));
 }
