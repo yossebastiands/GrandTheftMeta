@@ -1,5 +1,6 @@
 pub mod carcols;
 pub mod carvariations;
+pub mod pedpersonality;
 pub mod pick;
 pub mod scan;
 pub mod textnav;

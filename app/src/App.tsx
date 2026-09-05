@@ -19,12 +19,14 @@ import {
   demoWeaponanimations,
   demoWeaponarchetypes,
   demoWeapons,
+  demoPedpersonality,
 } from "./features/handling/demoData";
 import { paramHintWeapon } from "./features/handling/weaponHints";
 import {
   scanCarcols,
   scanCarvariations,
   scanFolder,
+  scanPedpersonality,
   scanVehiclelayouts,
   scanVehicleweapons,
   scanVehicles,
@@ -34,6 +36,7 @@ import {
   updateCarcolsFiles,
   updateCarvariationsFiles,
   updateFiles,
+  updatePedpersonalityFiles,
   updateVehiclelayoutsFiles,
   updateVehicleweaponsFiles,
   updateVehicleFiles,
@@ -55,6 +58,7 @@ type PanelId =
   | "veh_weaponarchetypes"
   | "weaponanimations"
   | "weaponarchetypes"
+  | "pedpersonality"
   | "weapons";
 
 /** Weapon table labels (folder column shows the relative .meta file path). */
@@ -102,6 +106,14 @@ const WEAPONARCHETYPES_LABELS = {
   folder: "File",
   type: "Model",
   klass: "",
+  name: "Entry",
+};
+
+/** pedpersonality table labels (file / Kind / scenario-personality Set / entry path). */
+const PEDPERSONALITY_LABELS = {
+  folder: "File",
+  type: "Kind",
+  klass: "Set",
   name: "Entry",
 };
 
@@ -218,6 +230,17 @@ const PANELS: Record<PanelId, DomainCfg> = {
     pickText:
       "Select a folder that contains your weapon resources (weaponarchetypes.meta, any layout).",
   },
+  pedpersonality: {
+    noun: "entries",
+    nounShort: "ped-personality",
+    labels: PEDPERSONALITY_LABELS,
+    hintFor: noHint,
+    metaFile: "pedpersonality.meta",
+    coreLabel: "Binding",
+    note: "One weapon→clip binding (unholster clip or movement clip set) in one pedpersonality.meta — edits update only that binding.",
+    pickText:
+      "Select a folder that contains your weapon resources (pedpersonality.meta / pedpersonality*.meta, any layout).",
+  },
   weapons: {
     noun: "weapons",
     nounShort: "weapon",
@@ -319,6 +342,12 @@ export default function App() {
     notify,
     onScanStart: resetFilters,
   });
+  const pp = useMetaDomain({
+    scan: scanPedpersonality,
+    write: updatePedpersonalityFiles,
+    notify,
+    onScanStart: resetFilters,
+  });
 
   const domains = {
     handling: veh,
@@ -331,6 +360,7 @@ export default function App() {
     veh_weaponarchetypes: varch,
     weaponanimations: wan,
     weaponarchetypes: arch,
+    pedpersonality: pp,
   };
   const d = domains[panel];
   const cfg = PANELS[panel];
@@ -446,6 +476,18 @@ export default function App() {
     setPanel("weaponarchetypes");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isWeaponarchetypesDemo]);
+
+  // ?pp — dev-only pedpersonality.meta demo (Weapons category panel).
+  const isPedpersonalityDemo =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("pp");
+  useEffect(() => {
+    if (!isPedpersonalityDemo) return;
+    pp.load(demoPedpersonality(), "[demo-pedpersonality]");
+    setPanel("pedpersonality");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPedpersonalityDemo]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

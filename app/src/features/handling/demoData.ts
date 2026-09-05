@@ -315,3 +315,60 @@ export function demoWeaponarchetypes(count = 4): ScanResult {
   }
   return { vehicles, columns, skipped: [] };
 }
+
+// Dev-only pedpersonality.meta sample rows (`?pp`) so the ped-personality
+// editors can be inspected without the Tauri backend. Mirrors the scanner:
+// handling_name = structural clip-binding path, vehicle_type = Kind
+// (Unholster / ClipSet), vehicle_class = scenario/personality Set, params = the
+// binding's scalar leaves (Clip for unholster bindings, clip-set fields for
+// clip-set bindings).
+export function demoPedpersonality(count = 12): ScanResult {
+  const clipSet = (
+    core: string,
+    weapon: string,
+    extra?: Record<string, string>
+  ): Record<string, string> => ({
+    MovementClipSetId: `MOVE_ACTION@${core}@ARMED@CORE`,
+    WeaponClipSetId: `MOVE_ACTION@${core}@ARMED@${weapon}@UPPER`,
+    WeaponClipFilterId: "UpperbodyAndIk_filter",
+    UpperBodyShadowExpressionEnabled: "true",
+    UpperBodyFeatheredLeanEnabled: "true",
+    UseWeaponAnimsForGrip: "false",
+    UseLeftHandIk: "true",
+    IdleTransitionBlendOutTime: "0.50000000",
+    UnholsterClipSetId: `MOVE_ACTION@${core}@HOLSTER`,
+    UnholsterClipData: "UNHOLSTER_1H",
+    ...extra,
+  });
+  const base: Array<[string, string, string, string, Record<string, string>]> = [
+    ["weapons/WEAPON_PISTOL/pedpersonality.meta", "MovementModeUnholsterData/0/UnholsterClips/0", "Unholster", "UNHOLSTER_UNARMED", { Clip: "unarmed_holster_1h" }],
+    ["weapons/WEAPON_PISTOL/pedpersonality.meta", "MovementModeUnholsterData/1/UnholsterClips/0", "Unholster", "UNHOLSTER_2H_MELEE", { Clip: "2h_melee_holster_1h" }],
+    ["weapons/WEAPON_PISTOL/pedpersonality.meta", "MovementModeUnholsterData/2/UnholsterClips/0", "Unholster", "UNHOLSTER_1H", { Clip: "1h_holster_1h" }],
+    ["weapons/WEAPON_PISTOL/pedpersonality.meta", "MovementModeUnholsterData/3/UnholsterClips/0", "Unholster", "UNHOLSTER_2H", { Clip: "2h_holster_1h" }],
+    ["weapons/WEAPON_PISTOL/pedpersonality.meta", "MovementModeUnholsterData/4/UnholsterClips/0", "Unholster", "UNHOLSTER_MINIGUN", { Clip: "mini_holster_1h" }],
+    ["weapons/WEAPON_PISTOL/pedpersonality.meta", "MovementModeUnholsterData/5/UnholsterClips/0", "Unholster", "UNHOLSTER_1H_STEALTH", { Clip: "1h_holster_1h" }],
+    ["weapons/WEAPON_PISTOL/pedpersonality.meta", "MovementModes/0/MovementModes/0/0/ClipSets/0", "ClipSet", "DEFAULT_ACTION", clipSet("P_M_ZERO", "1H")],
+    ["weapons/WEAPON_PISTOL/pedpersonality.meta", "MovementModes/0/MovementModes/1/0/ClipSets/0", "ClipSet", "DEFAULT_ACTION", clipSet("P_M_ZERO", "1H", { MovementClipSetId: "MOVE_STEALTH@P_M_ZERO@UNARMED@CORE", IdleTransitionBlendOutTime: "0.75000000" })],
+    ["weapons/WEAPON_PISTOL/pedpersonality.meta", "MovementModes/1/MovementModes/0/0/ClipSets/0", "ClipSet", "MP_FEMALE_ACTION", clipSet("MP_FEMALE", "1H", { UseLeftHandIk: "false" })],
+    ["weapons/WEAPON_PISTOL/pedpersonality.meta", "MovementModes/4/MovementModes/0/0/ClipSets/0", "ClipSet", "TREVOR_ACTION", clipSet("P_M_TWO", "1H", { UseLeftHandIk: "false" })],
+    ["weapons/WEAPON_SMG/pedpersonality.meta", "MovementModeUnholsterData/0/UnholsterClips/0", "Unholster", "UNHOLSTER_UNARMED", { Clip: "unarmed_holster_2h" }],
+    ["weapons/WEAPON_SMG/pedpersonality.meta", "MovementModeUnholsterData/1/UnholsterClips/0", "Unholster", "UNHOLSTER_2H", { Clip: "2h_holster_2h" }],
+    ["weapons/WEAPON_SMG/pedpersonality.meta", "MovementModes/0/MovementModes/0/0/ClipSets/0", "ClipSet", "DEFAULT_ACTION", clipSet("P_M_ZERO", "2H", { WeaponClipSetId: "MOVE_ACTION@P_M_ZERO@ARMED@2H@UPPER" })],
+    ["weapons/WEAPON_SMG/pedpersonality.meta", "MovementModes/1/MovementModes/0/0/ClipSets/0", "ClipSet", "MP_FEMALE_ACTION", clipSet("P_M_ZERO", "2H", { WeaponClipSetId: "MOVE_ACTION@P_M_ZERO@ARMED@2H@UPPER" })],
+  ];
+  const columns = Array.from(new Set(base.flatMap((b) => Object.keys(b[4])))).sort();
+  const vehicles: VehicleRow[] = [];
+  for (let i = 0; i < count; i++) {
+    const [file, path, kind, setKey, params] = base[i % base.length];
+    const dup = Math.floor(i / base.length);
+    vehicles.push({
+      folder_name: dup ? file.replace(".meta", `_${i}.meta`) : file,
+      meta_path: "",
+      handling_name: dup ? `${path}/${i}` : path,
+      vehicle_type: kind,
+      vehicle_class: setKey,
+      params,
+    });
+  }
+  return { vehicles, columns, skipped: [] };
+}

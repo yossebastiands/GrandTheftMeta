@@ -139,3 +139,16 @@ export function updateWeaponarchetypesFiles(
 ): Promise<UpdateResult> {
   return invoke<UpdateResult>("update_weaponarchetypes_files", { folderPath, changes });
 }
+
+/** Scan a folder for pedpersonality.meta → one row per unholster / clip-set binding. */
+export function scanPedpersonality(folderPath: string): Promise<ScanResult> {
+  return invoke<ScanResult>("scan_pedpersonality", { folderPath });
+}
+
+/** Write edited ped-personality clip bindings back into the original files. */
+export function updatePedpersonalityFiles(
+  folderPath: string,
+  changes: VehicleChange[]
+): Promise<UpdateResult> {
+  return invoke<UpdateResult>("update_pedpersonality_files", { folderPath, changes });
+}

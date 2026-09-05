@@ -39,15 +39,6 @@ interface Category {
   panels: MetaPanel[];
 }
 
-const soon = (mode: EditorMode, hint: string): ModeDef => ({
-  id: mode,
-  label: mode === "bulk" ? "Bulk Editor" : "Single Editor",
-  icon: mode === "bulk" ? <Table2 className="h-3.5 w-3.5" /> : <Settings2 className="h-3.5 w-3.5" />,
-  available: false,
-  hint,
-});
-
-const BOTH_SOON = "Coming soon";
 const BOTH = (): ModeDef[] => [
   {
     id: "single",
@@ -157,8 +148,7 @@ const CATEGORIES: Category[] = [
         file: "pedpersonality.meta",
         label: "Ped Personality",
         aliasHint: "matches pedpersonality*.meta",
-        status: BOTH_SOON,
-        modes: [soon("single", BOTH_SOON), soon("bulk", BOTH_SOON)],
+        modes: BOTH(),
       },
     ],
   },
@@ -175,6 +165,7 @@ const LIVE_PANELS: string[] = [
   "veh_weaponarchetypes",
   "weaponanimations",
   "weaponarchetypes",
+  "pedpersonality",
   "weapons",
 ];
 

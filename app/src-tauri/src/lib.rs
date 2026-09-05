@@ -2,6 +2,7 @@ mod commands;
 
 use commands::carcols::{scan_carcols, update_carcols_files};
 use commands::carvariations::{scan_carvariations, update_carvariations_files};
+use commands::pedpersonality::{scan_pedpersonality, update_pedpersonality_files};
 use commands::pick::pick_folder;
 use commands::vehiclelayouts::{scan_vehiclelayouts, update_vehiclelayouts_files};
 use commands::vehicleweapons::{scan_vehicleweapons, update_vehicleweapons_files};
@@ -25,6 +26,8 @@ pub fn run() {
             update_carcols_files,
             scan_carvariations,
             update_carvariations_files,
+            scan_pedpersonality,
+            update_pedpersonality_files,
             scan_vehiclelayouts,
             update_vehiclelayouts_files,
             scan_vehicleweapons,
