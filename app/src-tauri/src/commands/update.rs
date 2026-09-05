@@ -179,7 +179,7 @@ fn format_value(v: &str) -> String {
 
 /// `text[i..]` is inside an opened `<Item ...>`. Return the index just after its
 /// matching `</Item>`, handling nested and self-closing `<Item />` tags.
-fn find_matching_close(text: &str, start: usize) -> Option<usize> {
+pub(crate) fn find_matching_close(text: &str, start: usize) -> Option<usize> {
     let open_re = Regex::new(r"<Item\b").unwrap();
     let close_re = Regex::new(r"</Item>").unwrap();
     let mut depth: i64 = 1;
@@ -219,7 +219,7 @@ fn find_matching_close(text: &str, start: usize) -> Option<usize> {
 }
 
 /// Offsets of every `<Item type="ITYPE">...</Item>` span in `text`, in order.
-fn find_item_spans(text: &str, itype: &str) -> Vec<(usize, usize)> {
+pub(crate) fn find_item_spans(text: &str, itype: &str) -> Vec<(usize, usize)> {
     let pat = Regex::new(&format!(r#"<Item\s+type="{}""#, regex::escape(itype))).unwrap();
     let mut spans = Vec::new();
     for m in pat.find_iter(text) {
@@ -231,7 +231,7 @@ fn find_item_spans(text: &str, itype: &str) -> Vec<(usize, usize)> {
 }
 
 /// List of (open_start, open_end, close_span_or_none) for every `<tag>` in region.
-fn locate_elements(region: &str, tag: &str) -> Vec<(usize, usize, Option<(usize, usize)>)> {
+pub(crate) fn locate_elements(region: &str, tag: &str) -> Vec<(usize, usize, Option<(usize, usize)>)> {
     let open_pat = Regex::new(&format!(r"<{}\b[^>]*>", regex::escape(tag))).unwrap();
     let close_pat = Regex::new(&format!(r"</{}\s*>", regex::escape(tag))).unwrap();
     let mut out = Vec::new();
@@ -249,13 +249,13 @@ fn locate_elements(region: &str, tag: &str) -> Vec<(usize, usize, Option<(usize,
     out
 }
 
-fn attr_value(tag: &str, attr: &str) -> Option<String> {
+pub(crate) fn attr_value(tag: &str, attr: &str) -> Option<String> {
     let re = Regex::new(&format!(r#"\b{}\s*=\s*"([^"]*)""#, regex::escape(attr))).unwrap();
     re.captures(tag)
         .map(|c| c.get(1).map(|m| m.as_str().to_string()).unwrap_or_default())
 }
 
-fn replace_attr_value(region: &str, open_s: usize, open_e: usize, attr: &str, new_val: &str) -> String {
+pub(crate) fn replace_attr_value(region: &str, open_s: usize, open_e: usize, attr: &str, new_val: &str) -> String {
     let tag = &region[open_s..open_e];
     let re = Regex::new(&format!(r#"(\b{}\s*=\s*")[^"]*(")"#, regex::escape(attr))).unwrap();
     match re.captures(tag) {
@@ -278,7 +278,7 @@ fn replace_attr_value(region: &str, open_s: usize, open_e: usize, attr: &str, ne
     }
 }
 
-fn replace_text(region: &str, open_e: usize, close_s: usize, new_text: &str) -> String {
+pub(crate) fn replace_text(region: &str, open_e: usize, close_s: usize, new_text: &str) -> String {
     let mut out = String::with_capacity(region.len() + new_text.len());
     out.push_str(&region[..open_e]);
     out.push_str(new_text);

@@ -7,7 +7,7 @@
 //! attributes, and short text leaves such as flags/stat names). Structural
 //! blocks (Explosion, AttachPoints, …) and references are preserved untouched.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -231,5 +231,228 @@ mod tests {
             res.columns.len(),
             res.skipped.len()
         );
+    }
+}
+
+
+// ---------------------------------------------------------------------------
+// Write-back — surgical text patching inside the matching CWeaponInfo block
+// (never parse & re-serialise, so formatting/comments are preserved).
+// ---------------------------------------------------------------------------
+
+use super::update::{
+    attr_value, find_item_spans, locate_elements, replace_attr_value, replace_text, UpdateResult,
+    VehicleChange,
+};
+
+fn escape_xml(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
+/// `<Name>WEAPON_X</Name>` inside a CWeaponInfo block, or "".
+fn extract_weapon_name(block: &str) -> String {
+    // Name is the first direct child in practice; grab the first match.
+    let mut rest = block;
+    while let Some(i) = rest.find("<Name>") {
+        let after = &rest[i + "<Name>".len()..];
+        if let Some(end) = after.find("</Name>") {
+            return after[..end].trim().to_string();
+        }
+        rest = &after;
+    }
+    String::new()
+}
+
+/// Apply one entry's params to a single CWeaponInfo block string.
+/// Returns (new_block, applied, unchanged, missing).
+fn patch_weapon_block(
+    block: &str,
+    params: &HashMap<String, String>,
+) -> (String, usize, usize, Vec<String>) {
+    let mut text = block.to_string();
+    let mut applied = 0usize;
+    let mut unchanged = 0usize;
+    let mut missing: Vec<String> = Vec::new();
+
+    for (name, new_val) in params {
+        let els = locate_elements(&text, name);
+        let el = els.into_iter().next();
+        match el {
+            None => missing.push(format!("{name} not found")),
+            Some((os, oe, close)) => {
+                if let Some((cs, _ce)) = close {
+                    // Text leaf: <Name>value</Name>
+                    let old = text[oe..cs].trim().to_string();
+                    let norm_old = old.split_whitespace().collect::<Vec<_>>().join(" ");
+                    let norm_new = new_val.trim();
+                    if norm_old == norm_new {
+                        unchanged += 1;
+                    } else {
+                        text = replace_text(&text, oe, cs, &escape_xml(norm_new));
+                        applied += 1;
+                    }
+                } else {
+                    // Scalar attribute: <Name value=".."/>
+                    match attr_value(&text[os..oe], "value") {
+                        Some(old) => {
+                            if old.trim() == new_val.trim() {
+                                unchanged += 1;
+                            } else {
+                                text = replace_attr_value(&text, os, oe, "value", new_val);
+                                applied += 1;
+                            }
+                        }
+                        None => missing.push(format!("{name} has no value to edit")),
+                    }
+                }
+            }
+        }
+    }
+    (text, applied, unchanged, missing)
+}
+
+/// Patch every listed weapon inside one file. `entries`: weapon name -> params.
+fn patch_weapon_file(
+    text: &str,
+    entries: &HashMap<String, HashMap<String, String>>,
+) -> (String, usize, usize, Vec<String>) {
+    let mut cur = text.to_string();
+    let mut applied = 0usize;
+    let mut unchanged = 0usize;
+    let mut missing: Vec<String> = Vec::new();
+
+    for (weapon, params) in entries {
+        let spans = find_item_spans(&cur, "CWeaponInfo");
+        let target = spans
+            .into_iter()
+            .find(|(s, e)| extract_weapon_name(&cur[*s..*e]) == *weapon);
+        match target {
+            None => missing.push(format!("{weapon}: weapon not found")),
+            Some((s, e)) => {
+                let block = cur[s..e].to_string();
+                let (nb, ap, un, mi) = patch_weapon_block(&block, params);
+                applied += ap;
+                unchanged += un;
+                for m in mi {
+                    missing.push(format!("{weapon} :: {m}"));
+                }
+                let mut next = String::with_capacity(cur.len() + nb.len());
+                next.push_str(&cur[..s]);
+                next.push_str(&nb);
+                next.push_str(&cur[e..]);
+                cur = next;
+            }
+        }
+    }
+    (cur, applied, unchanged, missing)
+}
+
+/// Writes edited weapon params back to the original weapons.meta files.
+/// `changes[].folder_name` is the meta file RELATIVE to the chosen root
+/// (e.g. `metas/ak47/weapons.meta`); `changes[].handling_name` is the weapon name.
+#[tauri::command]
+pub fn update_weapon_files(
+    folder_path: String,
+    changes: Vec<VehicleChange>,
+) -> Result<UpdateResult, String> {
+    let root = std::path::Path::new(&folder_path);
+    if !root.is_dir() {
+        return Err(format!("Folder not found: {folder_path}"));
+    }
+
+    // Group by relative file path -> weapon -> params.
+    let mut by_file: HashMap<String, HashMap<String, HashMap<String, String>>> = HashMap::new();
+    for ch in changes {
+        by_file
+            .entry(ch.folder_name)
+            .or_default()
+            .entry(ch.handling_name)
+            .or_default()
+            .extend(ch.changed_params);
+    }
+
+    let mut result = UpdateResult::default();
+    for (rel, entries) in by_file {
+        if rel.contains("..") || rel.starts_with('/') || std::path::Path::new(&rel).is_absolute() {
+            result.errors.push(format!("{rel}: unsafe relative path"));
+            continue;
+        }
+        let file = root.join(&rel);
+        if !file.is_file() {
+            result.errors.push(format!("{rel}: file not found under the chosen root"));
+            continue;
+        }
+        let text = match std::fs::read_to_string(&file) {
+            Ok(t) => t,
+            Err(e) => {
+                result.errors.push(format!("{rel}: cannot read: {e}"));
+                continue;
+            }
+        };
+        let (new_text, applied, unchanged, missing) = patch_weapon_file(&text, &entries);
+        result.params_applied += applied;
+        result.params_unchanged += unchanged;
+        for m in missing {
+            result.errors.push(format!("{rel} :: {m}"));
+        }
+        if applied > 0 {
+            if let Err(e) = std::fs::write(&file, new_text) {
+                result.errors.push(format!("{rel}: cannot write: {e}"));
+                continue;
+            }
+            result.files_changed += 1;
+        }
+    }
+
+    Ok(result)
+}
+
+#[cfg(test)]
+mod writer_tests {
+    use super::*;
+
+    #[test]
+    fn patches_value_attr_and_text_leaf() {
+        let xml = r#"<CWeaponInfoBlob>
+  <Infos><Item><Infos>
+    <Item type="CWeaponInfo">
+      <Name>WEAPON_TEST</Name>
+      <ClipSize value="30"/>
+      <WeaponFlags>CarriedInHand Automatic</WeaponFlags>
+      <Damage value="25.000000"/>
+    </Item>
+  </Infos></Item></Infos>
+  <Name>AR</Name>
+</CWeaponInfoBlob>"#;
+        let mut params = HashMap::new();
+        params.insert("ClipSize".to_string(), "45".to_string());
+        params.insert("WeaponFlags".to_string(), "Automatic TwoHanded".to_string());
+        let mut entries = HashMap::new();
+        entries.insert("WEAPON_TEST".to_string(), params);
+        let (out, applied, unchanged, missing) = patch_weapon_file(xml, &entries);
+        assert_eq!(applied, 2);
+        assert_eq!(unchanged, 0);
+        assert!(missing.is_empty(), "missing: {missing:?}");
+        assert!(out.contains(r#"<ClipSize value="45"/>"#), "{out}");
+        assert!(out.contains("<WeaponFlags>Automatic TwoHanded</WeaponFlags>"), "{out}");
+        // untouched parts preserved
+        assert!(out.contains(r#"<Damage value="25.000000"/>"#));
+    }
+
+    #[test]
+    fn unchanged_and_missing_accounted() {
+        let xml = r#"<Item type="CWeaponInfo"><Name>WEAPON_A</Name><ClipSize value="30"/></Item>"#;
+        let mut params = HashMap::new();
+        params.insert("ClipSize".to_string(), "30".to_string());
+        params.insert("Damage".to_string(), "9".to_string());
+        let mut entries = HashMap::new();
+        entries.insert("WEAPON_A".to_string(), params);
+        let (out, applied, unchanged, missing) = patch_weapon_file(xml, &entries);
+        assert_eq!(applied, 0);
+        assert_eq!(unchanged, 1);
+        assert_eq!(missing.len(), 1);
+        assert_eq!(out, xml);
     }
 }

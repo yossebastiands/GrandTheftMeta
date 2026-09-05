@@ -3,7 +3,7 @@ mod commands;
 use commands::pick::pick_folder;
 use commands::scan::scan_folder;
 use commands::update::update_files;
-use commands::weapons::scan_weapons;
+use commands::weapons::{scan_weapons, update_weapon_files};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -14,7 +14,8 @@ pub fn run() {
             scan_folder,
             update_files,
             pick_folder,
-            scan_weapons
+            scan_weapons,
+            update_weapon_files
         ])
         .run(tauri::generate_context!())
         .expect("error while running GrandTheftMeta");
