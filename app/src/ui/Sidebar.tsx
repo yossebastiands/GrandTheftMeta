@@ -141,9 +141,8 @@ const CATEGORIES: Category[] = [
         id: "weapons",
         file: "weapons.meta",
         label: "Weapons",
-        aliasHint: "matches weapons.meta / weapons_*.meta — scanner ready",
-        status: "editor coming next",
-        modes: [soon("single", "Scanner ready — editor in progress"), soon("bulk", "Scanner ready — editor in progress")],
+        aliasHint: "matches weapons.meta / weapons_*.meta",
+        modes: BOTH(),
       },
       {
         id: "weaponanimations",
@@ -173,17 +172,18 @@ const CATEGORIES: Category[] = [
   },
 ];
 
-// The one meta panel actually wired to the editors right now.
-const ACTIVE_PANEL = "handling";
+// Meta panels currently wired to live editors: handling.meta + weapons.meta.
+const LIVE_PANELS: string[] = ["handling", "weapons"];
 
 interface SidebarProps {
+  activePanel: string;
   activeMode: EditorMode;
-  onSelect: (mode: EditorMode) => void;
+  onSelect: (panelId: string, mode: EditorMode) => void;
 }
 
-export default function Sidebar({ activeMode, onSelect }: SidebarProps) {
-  // Which panels are expanded (dropdowns). Handling starts open.
-  const [open, setOpen] = useState<Set<string>>(() => new Set([ACTIVE_PANEL]));
+export default function Sidebar({ activePanel, activeMode, onSelect }: SidebarProps) {
+  // Which panels are expanded (dropdowns). Live panels start open.
+  const [open, setOpen] = useState<Set<string>>(() => new Set(LIVE_PANELS));
 
   const toggle = (id: string) =>
     setOpen((prev) => {
@@ -207,7 +207,7 @@ export default function Sidebar({ activeMode, onSelect }: SidebarProps) {
           <ul className="flex flex-col gap-0.5">
             {cat.panels.map((panel) => {
               const expanded = open.has(panel.id);
-              const isActivePanel = panel.id === ACTIVE_PANEL;
+              const isActivePanel = panel.id === activePanel;
               return (
                 <li key={panel.id} className="rounded-md">
                   {/* Panel header (collapsible dropdown) */}
@@ -239,14 +239,18 @@ export default function Sidebar({ activeMode, onSelect }: SidebarProps) {
                     <ul className="mt-0.5 flex flex-col gap-0.5 pl-5">
                       {panel.modes.map((mode) => {
                         const isActive =
-                          mode.available && isActivePanel && activeMode === mode.id;
+                          mode.available &&
+                          panel.id === activePanel &&
+                          activeMode === mode.id;
                         return (
                           <li key={mode.id}>
                             <button
                               type="button"
                               disabled={!mode.available}
                               title={mode.hint}
-                              onClick={() => mode.available && onSelect(mode.id)}
+                              onClick={() =>
+                                mode.available && onSelect(panel.id, mode.id)
+                              }
                               className={`flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-xs ${
                                 isActive
                                   ? "bg-accent/15 font-semibold text-accent ring-1 ring-inset ring-accent/40"

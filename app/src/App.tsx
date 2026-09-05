@@ -9,53 +9,36 @@ import Toolbar from "./ui/Toolbar";
 import GlossaryView from "./features/handling/GlossaryView";
 import SingleHandlingEditor from "./features/handling/SingleHandlingEditor";
 import VehicleTable from "./features/handling/VehicleTable";
-import { demoScan } from "./features/handling/demoData";
-import { pickFolder, scanFolder, updateFiles } from "./shared/api";
+import { demoScan, demoWeapons } from "./features/handling/demoData";
 import {
-  rowKey,
-  type ScanResult,
-  type VehicleChange,
-  type VehicleRow,
-} from "./shared/models";
+  scanFolder,
+  scanWeapons,
+  updateFiles,
+  updateWeaponFiles,
+} from "./shared/api";
+import { useMetaDomain, type Notify } from "./shared/useMetaDomain";
 import { version as APP_VERSION } from "../package.json";
 
+/** Which live meta panel the Home editors are showing. */
+type PanelId = "handling" | "weapons";
+
+/** Weapon table labels (folder column shows the relative .meta file path). */
+const WEAPON_LABELS = {
+  folder: "File",
+  type: "Slot",
+  klass: "Group",
+  name: "Name",
+};
+
 export default function App() {
-  const [folder, setFolder] = useState<string | null>(null);
-  const [result, setResult] = useState<ScanResult | null>(null);
-  const [scanning, setScanning] = useState(false);
-  const [updating, setUpdating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [edits, setEdits] = useState<Record<string, Record<string, string>>>({});
+  const [view, setView] = useState<"home" | "glossary">("home");
+  const [panel, setPanel] = useState<PanelId>("handling");
+  const [editor, setEditor] = useState<EditorMode>("bulk");
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [classFilter, setClassFilter] = useState("ALL");
-  const [scanId, setScanId] = useState(0);
-  const [view, setView] = useState<"home" | "glossary">("home");
-  // Which editor is active in the left sidebar (Handling.meta → Bulk/Single).
-  const [editor, setEditor] = useState<EditorMode>("bulk");
   const [toast, setToast] = useState<ToastData | null>(null);
   const toastTimer = useRef<number | null>(null);
-
-  const isDemo =
-    import.meta.env.DEV &&
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).has("demo");
-
-  // Dev-only: populate the grid with sample data so it can be inspected in a
-  // plain browser (the Tauri backend is unavailable there). `?demo=150` renders
-  // 150 rows so the virtualized table path can be stress-tested.
-  useEffect(() => {
-    if (!isDemo) return;
-    const raw = new URLSearchParams(window.location.search).get("demo") ?? "";
-    const count = /^\d+$/.test(raw)
-      ? Math.min(Math.max(parseInt(raw, 10), 1), 2000)
-      : 8;
-    setFolder("[demo]");
-    setResult(demoScan(count));
-    setEdits({});
-    setScanId((n) => n + 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDemo]);
 
   const showToast = useCallback((t: ToastData) => {
     setToast(t);
@@ -63,84 +46,65 @@ export default function App() {
     toastTimer.current = window.setTimeout(() => setToast(null), 6000);
   }, []);
 
-  const runScan = useCallback(async (p: string) => {
-    setScanning(true);
-    setError(null);
+  const notify = useCallback<Notify>(
+    (kind, title, message) => showToast({ kind, title, message }),
+    [showToast]
+  );
+
+  const resetFilters = useCallback(() => {
     setSearch("");
     setTypeFilter("ALL");
     setClassFilter("ALL");
-    setEdits({});
-    try {
-      const r = await scanFolder(p);
-      setResult(r);
-      setScanId((n) => n + 1);
-      if (r.vehicles.length === 0) {
-        setError(
-          r.skipped.length
-            ? `No handling data could be loaded. Skipped: ${r.skipped.join(", ")}`
-            : "No handling.meta files were found under that folder."
-        );
-      }
-    } catch (e) {
-      setResult(null);
-      setError(String(e));
-    } finally {
-      setScanning(false);
-    }
   }, []);
 
-  const chooseFolder = useCallback(async () => {
-    try {
-      const p = await pickFolder();
-      if (p) {
-        setFolder(p);
-        void runScan(p);
-      }
-    } catch (e) {
-      showToast({ kind: "error", title: "Could not open the folder picker", message: String(e) });
-    }
-  }, [runScan, showToast]);
+  // Two independent editor domains: vehicles/handling.meta and weapons.meta.
+  const veh = useMetaDomain({
+    scan: scanFolder,
+    write: updateFiles,
+    notify,
+    onScanStart: resetFilters,
+  });
+  const wpn = useMetaDomain({
+    scan: scanWeapons,
+    write: updateWeaponFiles,
+    notify,
+    onScanStart: resetFilters,
+  });
 
-  const commitEdit = useCallback((row: VehicleRow, col: string, value: string) => {
-    const key = rowKey(row);
-    const original = (row.params[col] ?? "").trim();
-    const v = value.trim();
-    setEdits((prev) => {
-      const next: Record<string, Record<string, string>> = { ...prev };
-      const cur: Record<string, string> = { ...(next[key] ?? {}) };
-      // Empty cells are never written (matches the Excel importer behaviour).
-      if (v === original || v === "") {
-        delete cur[col];
-      } else {
-        cur[col] = v;
-      }
-      if (Object.keys(cur).length > 0) next[key] = cur;
-      else delete next[key];
-      return next;
-    });
-  }, []);
+  const d = panel === "weapons" ? wpn : veh;
+  const isWeapon = panel === "weapons";
 
-  const vehicleByKey = useMemo(() => {
-    const m = new Map<string, VehicleRow>();
-    for (const v of result?.vehicles ?? []) m.set(rowKey(v), v);
-    return m;
-  }, [result]);
+  // Dev-only demos (Tauri backend absent in a plain browser).
+  const isDemo =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("demo");
+  useEffect(() => {
+    if (!isDemo) return;
+    const raw = new URLSearchParams(window.location.search).get("demo") ?? "";
+    const count = /^\d+$/.test(raw)
+      ? Math.min(Math.max(parseInt(raw, 10), 1), 2000)
+      : 8;
+    veh.load(demoScan(count), "[demo]");
+    setPanel("handling");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDemo]);
 
-  const types = useMemo(() => {
-    const s = new Set<string>();
-    for (const v of result?.vehicles ?? []) if (v.vehicle_type) s.add(v.vehicle_type);
-    return [...s].sort();
-  }, [result]);
-
-  const classes = useMemo(() => {
-    const s = new Set<string>();
-    for (const v of result?.vehicles ?? []) if (v.vehicle_class) s.add(v.vehicle_class);
-    return [...s].sort();
-  }, [result]);
+  // ?dw — dev-only weapons demo.
+  const isWeaponDemo =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("dw");
+  useEffect(() => {
+    if (!isWeaponDemo) return;
+    wpn.load(demoWeapons(), "[demo-weapons]");
+    setPanel("weapons");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isWeaponDemo]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (result?.vehicles ?? []).filter((v) => {
+    return (d.result?.vehicles ?? []).filter((v) => {
       if (typeFilter !== "ALL" && v.vehicle_type !== typeFilter) return false;
       if (classFilter !== "ALL" && v.vehicle_class !== classFilter) return false;
       if (!q) return true;
@@ -148,93 +112,64 @@ export default function App() {
         .toLowerCase()
         .includes(q);
     });
-  }, [result, search, typeFilter, classFilter]);
+  }, [d.result, search, typeFilter, classFilter]);
 
-  const modifiedRows = useMemo(() => Object.keys(edits).length, [edits]);
-  const modifiedCells = useMemo(
-    () => Object.values(edits).reduce((n, rec) => n + Object.keys(rec).length, 0),
-    [edits]
-  );
-
-  const handleUpdate = useCallback(async () => {
-    if (!folder || !result || modifiedCells === 0) return;
-    const changes: VehicleChange[] = [];
-    for (const key of Object.keys(edits)) {
-      const row = vehicleByKey.get(key);
-      if (!row) continue;
-      changes.push({
-        folder_name: row.folder_name,
-        handling_name: row.handling_name,
-        changed_params: edits[key],
-      });
+  const onSelect = useCallback((panelId: string, mode: EditorMode) => {
+    if (panelId === "handling" || panelId === "weapons") {
+      setPanel(panelId);
+      setEditor(mode);
     }
-    setUpdating(true);
-    try {
-      const res = await updateFiles(folder, changes);
-      if (res.errors.length > 0) {
-        showToast({
-          kind: "error",
-          title: `Updated ${res.files_changed} file${res.files_changed === 1 ? "" : "s"} · ${res.params_applied} params applied`,
-          message: res.errors.slice(0, 10).join("\n"),
-        });
-      } else {
-        showToast({
-          kind: "success",
-          title: `Updated ${res.files_changed} file${res.files_changed === 1 ? "" : "s"}`,
-          message: `${res.params_applied} parameters changed · ${res.params_unchanged} already equal`,
-        });
-      }
-      // Reload from disk so the table reflects the new file contents.
-      await runScan(folder);
-    } catch (e) {
-      showToast({ kind: "error", title: "Update failed", message: String(e) });
-    } finally {
-      setUpdating(false);
-    }
-  }, [folder, result, modifiedCells, edits, vehicleByKey, runScan, showToast]);
-
-  const hasData = (result?.vehicles.length ?? 0) > 0;
-  const canUpdate =
-    !!folder && !!result && modifiedCells > 0 && !scanning && !updating;
+  }, []);
 
   let content: JSX.Element;
-  if (scanning) {
+  if (d.scanning) {
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-gray-500">
         <Loader2 className="h-8 w-8 animate-spin text-accent" />
-        <p className="text-sm">Scanning vehicle folders…</p>
+        <p className="text-sm">Scanning {isWeapon ? "weapon" : "vehicle"} meta…</p>
       </div>
     );
-  } else if (hasData && editor === "single") {
+  } else if (d.hasData && editor === "single") {
     content = (
       <SingleHandlingEditor
-        key={`${folder ?? ""}|${scanId}|single`}
-        vehicles={result?.vehicles ?? []}
-        columns={result?.columns ?? []}
-        edits={edits}
-        onCommitEdit={commitEdit}
+        key={`${panel}|${d.folder ?? ""}|${d.scanId}|single`}
+        vehicles={d.result?.vehicles ?? []}
+        columns={d.result?.columns ?? []}
+        edits={d.edits}
+        onCommitEdit={d.commitEdit}
+        metaLabel={isWeapon ? "weapons.meta" : "handling.meta"}
+        coreLabel={isWeapon ? "Weapon" : "Vehicle"}
+        note={
+          isWeapon
+            ? "One weapon (CWeaponInfo) in one weapons.meta — edits update only this weapon."
+            : undefined
+        }
       />
     );
-  } else if (hasData && filtered.length > 0) {
+  } else if (d.hasData && filtered.length > 0) {
     content = (
       <VehicleTable
-        key={`${folder ?? ""}|${scanId}`}
+        key={`${panel}|${d.folder ?? ""}|${d.scanId}`}
         vehicles={filtered}
-        columns={result?.columns ?? []}
-        edits={edits}
-        onCommitEdit={commitEdit}
+        columns={d.result?.columns ?? []}
+        edits={d.edits}
+        onCommitEdit={d.commitEdit}
+        labels={isWeapon ? WEAPON_LABELS : undefined}
       />
     );
   } else {
     const noMatches =
-      hasData &&
+      d.hasData &&
+      editor === "bulk" &&
       (search.trim() !== "" || typeFilter !== "ALL" || classFilter !== "ALL");
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
         {noMatches ? (
           <>
             <Car className="h-10 w-10 text-gray-700" />
-            <p className="text-sm text-gray-400">No vehicles match the current filters.</p>
+            <p className="text-sm text-gray-400">
+              No {isWeapon ? "weapons" : "vehicles"} match the current filters.
+            </p>
             <button
               onClick={() => {
                 setSearch("");
@@ -246,26 +181,25 @@ export default function App() {
               Clear filters
             </button>
           </>
-        ) : !folder ? (
+        ) : !d.folder ? (
           <>
             <FolderOpen className="h-12 w-12 text-gray-700" />
             <p className="text-sm text-gray-300">
-              Select the folder that contains your FiveM vehicle resources.
-            </p>
-            <p className="text-xs text-gray-500">
-              e.g. <code className="text-gray-400">resources/[vehicles]</code>
+              {isWeapon
+                ? "Select a folder that contains your weapon resources (weapons.meta / weapons_*.meta, any layout)."
+                : "Select the folder that contains your FiveM vehicle resources."}
             </p>
             <button
-              onClick={() => void chooseFolder()}
+              onClick={() => void d.chooseFolder()}
               className="mt-1 flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500"
             >
               <FolderOpen className="h-4 w-4" /> Select Folder…
             </button>
           </>
-        ) : error ? (
+        ) : d.error ? (
           <>
             <AlertTriangle className="h-10 w-10 text-red-500/70" />
-            <p className="max-w-lg text-sm text-gray-300">{error}</p>
+            <p className="max-w-lg text-sm text-gray-300">{d.error}</p>
           </>
         ) : (
           <>
@@ -287,52 +221,53 @@ export default function App() {
       <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
         <div className={view === "home" ? "absolute inset-0 flex flex-col" : "hidden"}>
           <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-            <Sidebar activeMode={editor} onSelect={setEditor} />
+            <Sidebar activePanel={panel} activeMode={editor} onSelect={onSelect} />
             <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <Toolbar
-        folder={folder}
-        scanning={scanning}
-        updating={updating}
-        canUpdate={canUpdate}
-        onPickFolder={() => void chooseFolder()}
-        onRescan={() => {
-          if (folder) void runScan(folder);
-        }}
-        onUpdate={() => void handleUpdate()}
-      />
+              <Toolbar
+                folder={d.folder}
+                scanning={d.scanning}
+                updating={d.updating}
+                canUpdate={d.canUpdate}
+                onPickFolder={() => void d.chooseFolder()}
+                onRescan={() => {
+                  if (d.folder) void d.runScan(d.folder);
+                }}
+                onUpdate={() => void d.update()}
+              />
 
-      {editor === "bulk" && (
-        <FilterBar
-          search={search}
-          onSearch={setSearch}
-          types={types}
-          typeFilter={typeFilter}
-          onTypeFilter={setTypeFilter}
-          classes={classes}
-          classFilter={classFilter}
-          onClassFilter={setClassFilter}
-          disabled={!hasData}
-        />
-      )}
+              {editor === "bulk" && (
+                <FilterBar
+                  search={search}
+                  onSearch={setSearch}
+                  types={d.types}
+                  typeFilter={typeFilter}
+                  onTypeFilter={setTypeFilter}
+                  classes={d.classes}
+                  classFilter={classFilter}
+                  onClassFilter={setClassFilter}
+                  disabled={!d.hasData}
+                />
+              )}
 
-      {error && hasData && (
-        <div className="flex items-center gap-2 border-b border-red-900/60 bg-red-950/40 px-3 py-1.5 text-xs text-red-300">
-          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-          <span className="truncate">{error}</span>
-        </div>
-      )}
+              {d.error && d.hasData && (
+                <div className="flex items-center gap-2 border-b border-red-900/60 bg-red-950/40 px-3 py-1.5 text-xs text-red-300">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{d.error}</span>
+                </div>
+              )}
 
-      {content}
+              {content}
 
-      <StatusBar
-        vehicleCount={result?.vehicles.length ?? 0}
-        paramCount={result?.columns.length ?? 0}
-        modifiedRows={modifiedRows}
-        modifiedCells={modifiedCells}
-        skippedCount={result?.skipped.length ?? 0}
-        skipped={result?.skipped ?? []}
-      />
-          </main>
+              <StatusBar
+                noun={isWeapon ? "weapons" : "vehicles"}
+                vehicleCount={d.result?.vehicles.length ?? 0}
+                paramCount={d.result?.columns.length ?? 0}
+                modifiedRows={d.modifiedRows}
+                modifiedCells={d.modifiedCells}
+                skippedCount={d.result?.skipped.length ?? 0}
+                skipped={d.result?.skipped ?? []}
+              />
+            </main>
           </div>
         </div>
 

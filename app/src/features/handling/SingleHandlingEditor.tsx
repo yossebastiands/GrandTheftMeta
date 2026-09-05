@@ -16,6 +16,12 @@ interface Props {
   /** Committed edits keyed by rowKey -> col -> value (shared with Bulk editor). */
   edits: Record<string, Record<string, string>>;
   onCommitEdit: (row: VehicleRow, col: string, value: string) => void;
+  /** File name shown next to the folder (defaults to handling.meta). */
+  metaLabel?: string;
+  /** Label for the un-prefixed group in the form (defaults to Vehicle). */
+  coreLabel?: string;
+  /** Helper line under the header (defaults to the handling wording). */
+  note?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -128,6 +134,9 @@ export default function SingleHandlingEditor({
   columns,
   edits,
   onCommitEdit,
+  metaLabel = "handling.meta",
+  coreLabel = "Vehicle",
+  note = "One handlingName in one handling.meta — edits update only this entry.",
 }: Props) {
   const [q, setQ] = useState("");
   const [selKey, setSelKey] = useState<string | null>(null);
@@ -162,8 +171,11 @@ export default function SingleHandlingEditor({
     const present = columns.filter((c) =>
       Object.prototype.hasOwnProperty.call(selected.params, c)
     );
-    return groupColumns(present);
-  }, [columns, selected]);
+    const g = groupColumns(present);
+    return coreLabel === "Vehicle"
+      ? g
+      : g.map((x) => (x.id === "core" ? { ...x, label: coreLabel } : x));
+  }, [columns, selected, coreLabel]);
 
   const selRowKey = selected ? rowKey(selected) : null;
   const rowEdits = selRowKey ? edits[selRowKey] : undefined;
@@ -267,12 +279,14 @@ export default function SingleHandlingEditor({
                 </span>
               )}
               <span className="truncate text-2xs text-gray-500">
-                {selected.folder_name} · handling.meta
+                {selected.folder_name}
+                {metaLabel &&
+                !selected.folder_name.toLowerCase().endsWith(".meta")
+                  ? ` · ${metaLabel}`
+                  : ""}
               </span>
             </div>
-            <p className="mt-0.5 text-2xs text-gray-600">
-              One handlingName in one handling.meta — edits update only this entry.
-            </p>
+            <p className="mt-0.5 text-2xs text-gray-600">{note}</p>
           </div>
 
           <div className="min-h-0 flex-1 overflow-auto">

@@ -73,3 +73,32 @@ export function demoScan(count = 8): ScanResult {
     vehicles,
   };
 }
+
+
+// Dev-only weapon sample rows (`?dw` in the browser) so the weapon editors can
+// be inspected without the Tauri backend. Rows mirror the weapons.meta scanner:
+// folder_name = relative meta file, handling_name = weapon Name, vehicle_type =
+// Slot, vehicle_class = Group, params = CWeaponInfo scalar fields.
+export function demoWeapons(count = 6): ScanResult {
+  const base: Array<[string, string, string, string, Record<string, string>]> = [
+    ["metas/ak47/weapons.meta", "WEAPON_AK47", "SLOT_WEAPON_AK47", "GROUP_RIFLE", { Damage: "30.000000", ClipSize: "30", AccuracySpread: "3.500000", RecoilErrorTime: "3.000000", WeaponFlags: "Automatic CarriedInHand", HumanNameHash: "WEAPON_AK47" }],
+    ["metas/m4/weapons.meta", "WEAPON_M4", "SLOT_WEAPON_M4", "GROUP_RIFLE", { Damage: "32.000000", ClipSize: "30", AccuracySpread: "4.000000", RecoilErrorTime: "2.600000", WeaponFlags: "Automatic", HumanNameHash: "WEAPON_M4" }],
+    ["metas/glock17/weapons.meta", "WEAPON_GLOCK17", "SLOT_WEAPON_PISTOL", "GROUP_HANDGUN", { Damage: "20.000000", ClipSize: "17", AccuracySpread: "1.500000", RecoilErrorTime: "2.000000", WeaponFlags: "Semiautomatic", HumanNameHash: "WEAPON_GLOCK17" }],
+    ["metas/rpg/weapons.meta", "WEAPON_RPG", "SLOT_WEAPON_RPG", "GROUP_RPG", { Damage: "120.000000", ClipSize: "1", AccuracySpread: "0.000000", RecoilErrorTime: "0.500000", WeaponFlags: "Explosive", HumanNameHash: "WEAPON_RPG" }],
+  ];
+  const columns = ["Damage", "ClipSize", "AccuracySpread", "RecoilErrorTime", "WeaponFlags", "HumanNameHash"];
+  const vehicles: VehicleRow[] = [];
+  for (let i = 0; i < count; i++) {
+    const [file, name, slot, group, params] = base[i % base.length];
+    const dup = Math.floor(i / base.length);
+    vehicles.push({
+      folder_name: dup ? file.replace(".meta", `_${i}.meta`) : file,
+      meta_path: "",
+      handling_name: dup ? `${name}_${i}` : name,
+      vehicle_type: slot,
+      vehicle_class: group,
+      params,
+    });
+  }
+  return { vehicles, columns, skipped: [] };
+}

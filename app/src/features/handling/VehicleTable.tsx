@@ -29,6 +29,8 @@ export interface VehicleTableProps {
   /** Committed edits keyed by rowKey -> col -> value. */
   edits: Record<string, Record<string, string>>;
   onCommitEdit: (row: VehicleRow, col: string, value: string) => void;
+  /** Column headers for the four fixed meta columns (defaults = vehicles). */
+  labels?: { folder: string; type: string; klass: string; name: string };
 }
 
 const W_VEHICLE = 200;
@@ -347,7 +349,14 @@ function VehicleTableImpl({
   columns,
   edits,
   onCommitEdit,
+  labels,
 }: VehicleTableProps) {
+  const metaLabels = labels ?? {
+    folder: "Folder",
+    type: "Type",
+    klass: "Class",
+    name: "handlingName",
+  };
   const [sorting, setSorting] = useState<SortingState>([]);
   const [editing, setEditing] = useState<EditingState | null>(null);
   const [hintPop, setHintPop] = useState<HintPop | null>(null);
@@ -360,16 +369,16 @@ function VehicleTableImpl({
   // Column defs are stable (sorting uses the raw file value).
   const tableColumns = useMemo(() => {
     const base = [
-      columnHelper.accessor("folder_name", { id: "__vehicle", header: "Folder", enableSorting: true }),
-      columnHelper.accessor("vehicle_type", { id: "__type", header: "Type", enableSorting: true }),
-      columnHelper.accessor("vehicle_class", { id: "__class", header: "Class", enableSorting: true }),
-      columnHelper.accessor("handling_name", { id: "__name", header: "handlingName", enableSorting: true }),
+      columnHelper.accessor("folder_name", { id: "__vehicle", header: metaLabels.folder, enableSorting: true }),
+      columnHelper.accessor("vehicle_type", { id: "__type", header: metaLabels.type, enableSorting: true }),
+      columnHelper.accessor("vehicle_class", { id: "__class", header: metaLabels.klass, enableSorting: true }),
+      columnHelper.accessor("handling_name", { id: "__name", header: metaLabels.name, enableSorting: true }),
     ];
     const params = columns.map((col) =>
       columnHelper.accessor((r) => r.params[col] ?? "", { id: col, header: col, enableSorting: true })
     );
     return [...base, ...params];
-  }, [columnHelper, columns]);
+  }, [columnHelper, columns, metaLabels]);
 
   const table = useReactTable({
     data: vehicles,
