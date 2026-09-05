@@ -1,16 +1,20 @@
-// Weapon.meta (CWeaponInfo) field glossary.
+// Weapon.meta (CWeaponInfo) field glossary — written to be understandable.
 //
-// The param list below is the REAL union of fields found across the GGC
-// weapons pack (24 weapons / 149 params, dumped by the Rust scanner). Each
-// entry explains what the field does and what to type. HTML is intentionally
-// light so it renders in the glossary (lists/strong).
+// Every entry answers three things:
+//   1. What is it?          (plain English)
+//   2. Turn it UP → …       (what changes in-game when you raise it)
+//   3. Turn it DOWN → …     (what changes when you lower it)
+//   4. Where to start.      (a sensible first value or advice)
+// Only fields that really change gameplay get detailed guides; internal/hash
+// fields tell you honestly to leave them alone.
+//
+// The param list is the REAL union found in the GGC pack (149 fields).
 
 export interface WeaponHintEntry {
   n: string;
   d: string;
 }
 
-// Every CWeaponInfo scalar/leaf param seen in real packs (canonical order).
 const ALL_PARAMS: string[] = [
   "AccuracyOffsetShakeHash", "AccuracySpread", "AccurateModeAccuracyModifier", "AiPotentialBlastEventRange",
   "AiSoundRange", "AimProbeLengthMax", "AimProbeLengthMin", "AimProbeRadiusOverrideFPSIdle",
@@ -52,175 +56,215 @@ const ALL_PARAMS: string[] = [
   "WeaponFlags", "WeaponRange", "WheelSlot", "ZoomFactorForAccurateMode",
 ];
 
-const CURATED: Record<string, string> = {
-  Model: "<p>Weapon world/character model hash. Do not change unless you are swapping models.</p><p><b>Input:</b> keep as-is, or a valid weapon model name.</p>",
-  Audio: "<p>Audio set used when firing/reloading.</p>",
-  Damage: "<p>Base damage per bullet/projectile.</p><p><b>Guide:</b> pistols ≈ 20–34, SMG ≈ 18–25, AR ≈ 28–35, DMR/SNIPER ≈ 70–150, RPG 100+. Tune against TimeBetweenShots (DPA).</p>",
-  DamageTime: "<p>Extra delay before damage is applied (rarely used; 0.0 for hitscan).</p>",
-  DamageTimeInVehicle: "<p>Damage delay vs vehicle occupants. Usually 0.0 (instant).</p>",
-  DamageTimeInVehicleHeadShot: "<p>Headshot damage delay vs vehicle occupants.</p>",
-  DamageType: "<p>What the weapon deals: BULLET, MELEE, EXPLOSIVE, FIRE, WATER, …</p>",
-  FireType: "<p>Trigger behaviour: INSTANT_HIT, PROJECTILE, MELEE, EXPLOSIVE…</p>",
-  ClipSize: "<p>Magazine capacity per reload.</p><p><b>Guide:</b> pistol 12–17, SMG 25–50, AR 30, LMG 60–100. Pair with HudCapacity.</p>",
-  TimeBetweenShots: "<p>Delay between rounds = fire rate. Lower = faster.</p><p><b>Guide:</b> semi-auto ~0.15–0.25, SMG ~0.09–0.11, AR ~0.10–0.13. DPS ≈ Damage / TimeBetweenShots.</p>",
-  BulletsInBatch: "<p>Rounds per trigger pull (shotgun pellets/salvo). 1 = single; 8–12 = shotgun.</p>",
-  BulletsPerAnimLoop: "<p>Rounds consumed per firing animation cycle.</p>",
-  AlternateWaitTime: "<p>Wait between burst groups when using burst fire patterns.</p>",
-  BulletDirectionOffsetInDegrees: "<p>Adds angular spread to every shot (degrees).</p>",
-  AccuracySpread: "<p>Base bullet spread (bigger = less accurate).</p><p><b>Guide:</b> pistol ~1.0–2.0, SMG ~2.5–3.5, AR ~3.0–4.0, sniper ~0.1–0.5. Lower = tighter.</p>",
-  AccurateModeAccuracyModifier: "<p>Multiplier on AccuracySpread while aiming (ADS). &lt;1 = tighter when ADS.</p>",
-  RunAndGunAccuracyModifier: "<p>Spread multiplier while moving/shooting on foot.</p>",
-  RunAndGunAccuracyMaxModifier: "<p>Max spread multiplier added during sustained run-and-gun.</p>",
-  RunAndGunAccuracyMinOverride: "<p>Overrides the minimum spread floor while run-and-gunning.</p>",
-  BatchSpread: "<p>Extra spread between pellets inside one shotgun batch.</p>",
-  ZoomFactorForAccurateMode: "<p>ADS zoom magnification (e.g. 2.0 = 2× zoom while aiming).</p>",
-  RecoilErrorTime: "<p>Time over which recoil error builds with sustained fire.</p><p><b>Guide:</b> smaller = recoil kicks in sooner; 2.5–3.5 for AR.</p>",
-  RecoilRecoveryRate: "<p>How fast the weapon re-centres after recoil.</p>",
-  RecoilAccuracyMax: "<p>Max accuracy penalty applied by recoil (cap on bloom).</p>",
-  RecoilAccuracyToAllowHeadShotAI: "<p>Recoil/accuracy threshold under which AI can land headshots.</p>",
-  RecoilAccuracyToAllowHeadShotPlayer: "<p>Accuracy threshold for player headshots to register normally.</p>",
-  MinHeadShotDistancePlayer: "<p>Min range (m) headshots count. Below this headshots may be bodyshots.</p>",
-  MaxHeadShotDistancePlayer: "<p>Max range (m) headshots count.</p>",
-  HeadShotDamageModifierPlayer: "<p>Headshot damage multiplier (e.g. 2.0 = double damage).</p>",
-  HeadShotDamageModifierAI: "<p>Headshot multiplier vs AI.</p>",
-  MinHeadShotDistanceAI: "<p>Min range for AI headshots.</p>",
-  MaxHeadShotDistanceAI: "<p>Max range for AI headshots.</p>",
-  HitLimbsDamageModifier: "<p>Damage multiplier when hitting arms/legs (usually &lt;1).</p>",
-  LightlyArmouredDamageModifier: "<p>Damage multiplier vs light-armoured peds.</p>",
-  NetworkPedDamageModifier: "<p>Damage multiplier applied in online/netcode (player-vs-player balance).</p>",
-  NetworkPlayerDamageModifier: "<p>Damage multiplier vs other players on the network.</p>",
-  NetworkHeadShotPlayerDamageModifier: "<p>Headshot multiplier vs players in online sessions.</p>",
-  NetworkHitLimbsDamageModifier: "<p>Limb damage multiplier in online sessions.</p>",
-  ArmouredVehicleGlassDamageOverride: "<p>Overrides damage vs armoured vehicle glass.</p>",
-  Force: "<p>Impact force applied to ragdolls/objects (heavier = stronger knock).</p><p><b>Guide:</b> pistols 40–80, rifles 75–150, sniper 200–400.</p>",
-  ForceHitPed: "<p>Force applied specifically to peds (ragdoll push).</p>",
-  ForceHitVehicle: "<p>Force applied when hitting a vehicle.</p>",
-  ForceHitFlyingHeli: "<p>Force applied when hitting helicopters.</p>",
-  ForceMaxStrengthMult: "<p>Cap multiplier on total knockback force.</p>",
-  ForceFalloffMin: "<p>Minimum force kept at max range.</p>",
-  ForceFalloffRangeStart: "<p>Range where force falloff begins.</p>",
-  ForceFalloffRangeEnd: "<p>Range where force falloff bottoms out.</p>",
-  KnockdownCount: "<p>Shots that guarantee a knockdown/ragdoll (per hit count). -1 = never.</p>",
-  KillshotImpulseScale: "<p>Extra impulse applied on the killing shot.</p>",
-  FragImpulse: "<p>Impulse applied by explosive fragments.</p>",
-  ProjectileForce: "<p>Launch force for projectile-type rounds (rockets).</p>",
-  DropForwardVelocity: "<p>Initial forward velocity given to a dropped/thrown item.</p>",
-  VerticalLaunchAdjustment: "<p>Vertical launch angle offset for projectiles (rockets/grenades).</p>",
-  Speed: "<p>Projectile/bullet speed (hitscan ignores). Higher = faster travel.</p>",
-  Penetration: "<p>Bullet penetration capability (walls/objects). Higher = more walls.</p>",
-  WeaponRange: "<p>Effective range in metres. Beyond this damage falls off.</p>",
-  DamageFallOffRangeMin: "<p>Range where damage falloff starts.</p>",
-  DamageFallOffRangeMax: "<p>Range where falloff reaches its floor.</p>",
-  DamageFallOffModifier: "<p>Damage multiplier applied at max falloff range (e.g. 0.5 = half damage).</p>",
-  LockOnRange: "<p>Max range auto-aim/lock-on works (consoles/pads).</p>",
-  VehicleAttackAngle: "<p>Angular range AI gunners engage targets.</p>",
-  VehicleDamageModifier: "<p>Damage multiplier vs vehicles.</p>",
-  VehicleReloadTime: "<p>Reload time while seated in a vehicle.</p>",
-  SpinTime: "<p>Time to spin up before firing (gatling).</p>",
-  SpinUpTime: "<p>Time from trigger to full rate of fire.</p>",
-  SpinDownTime: "<p>Time for the weapon to wind down after firing.</p>",
-  AnimReloadRate: "<p>Reload animation speed multiplier.</p>",
-  ReloadTimeSP: "<p>Reload duration in single-player pacing.</p>",
-  ReloadTimeMP: "<p>Reload duration in online pacing.</p>",
-  AmmoDiminishingRate: "<p>How fast ammo supply depletes when firing.</p>",
-  ExplosionShakeAmplitude: "<p>Camera shake strength from explosions.</p>",
-  AiSoundRange: "<p>Range at which AI hears this weapon.</p>",
-  AiPotentialBlastEventRange: "<p>Range AI reacts to explosions from this weapon.</p>",
-  WeaponFlags: "<p>Whitespace-separated behaviour flags, e.g. Automatic, CanFreeAim, TwoHanded, Explosive, UsableOnFoot…</p>",
-  HumanNameHash: "<p>Hash used for the HUD weapon name.</p>",
-  StatName: "<p>Weapon-stat group used by skill/stats (e.g. ASLTRIFLE).</p>",
-  NmShotTuningSet: "<p>Name-matching tuning set for the ragdoll reaction (e.g. Automatic).</p>",
-  TargetSequenceGroup: "<p>Animation target-group reference for this weapon.</p>",
-  MovementModeConditionalIdle: "<p>Movement mode used for the idle pose (e.g. MMI_2Handed).</p>",
-  PickupHash: "<p>Pickup entity hash dropped by this weapon.</p>",
-  MPPickupHash: "<p>Online ammo/weapon pickup hash.</p>",
-  ReticuleStyleHash: "<p>Crosshair style hash shown in ADS.</p>",
-  ReticuleScale: "<p>Crosshair size scale.</p>",
-  ReticuleMinSizeStanding: "<p>Min crosshair size standing.</p>",
-  ReticuleMinSizeCrouched: "<p>Min crosshair size when crouched.</p>",
-  CameraFov: "<p>Camera FOV while shouldered/ADS.</p>",
-  FirstPersonAimFovMin: "<p>Min FOV for first-person aiming (zoom).</p>",
-  FirstPersonAimFovMax: "<p>Max FOV for first-person aiming.</p>",
-  FirstPersonScopeFov: "<p>Scope FOV in first person.</p>",
-  FirstPersonScopeAttachmentFov: "<p>Scope FOV when an attachment scope is fitted.</p>",
-  DefaultCameraHash: "<p>Camera set hash used while aiming this weapon.</p>",
-  CinematicShootingCameraHash: "<p>Camera set for cinematic/cover shooting.</p>",
-  CoverCameraHash: "<p>Camera set while shooting from cover.</p>",
-  RunAndGunCameraHash: "<p>Camera set while moving &amp; shooting.</p>",
-  RecoilShakeHash: "<p>Camera shake hash used on each shot (third person).</p>",
-  RecoilShakeHashFirstPerson: "<p>Camera shake hash used on each shot (first person).</p>",
-  RecoilShakeAmplitude: "<p>Strength of per-shot camera shake.</p>",
-  MinTimeBetweenRecoilShakes: "<p>Min delay between consecutive recoil shakes.</p>",
-  AccuracyOffsetShakeHash: "<p>Shake hash offset applied with accuracy bloom.</p>",
-  InitialRumbleDuration: "<p>Controller rumble duration on the first shot.</p>",
-  InitialRumbleIntensity: "<p>Controller rumble strength on the first shot.</p>",
-  InitialRumbleIntensityTrigger: "<p>Trigger rumble strength on the first shot.</p>",
-  InitialRumbleDurationFps: "<p>First-person rumble duration.</p>",
-  InitialRumbleIntensityFps: "<p>First-person rumble strength.</p>",
-  InitialRumbleIntensityTriggerFps: "<p>First-person trigger rumble strength.</p>",
-  RumbleIntensity: "<p>Controller rumble strength while firing.</p>",
-  RumbleIntensityTrigger: "<p>Trigger rumble strength while firing.</p>",
-  RumbleDuration: "<p>Controller rumble duration while firing.</p>",
-  RumbleIntensityFps: "<p>First-person rumble strength while firing.</p>",
-  RumbleDurationFps: "<p>First-person rumble duration while firing.</p>",
-  RumbleDamageIntensity: "<p>Rumble intensity on damage dealt.</p>",
-  HudDamage: "<p>Weapon-stat bar shown in the pause menu (0–100).</p>",
-  HudSpeed: "<p>Weapon-stat bar: fire rate (0–100).</p>",
-  HudCapacity: "<p>Weapon-stat bar: magazine size (0–100).</p>",
-  HudAccuracy: "<p>Weapon-stat bar: accuracy (0–100).</p>",
-  HudRange: "<p>Weapon-stat bar: range (0–100).</p>",
-  AimingBreathingAdditiveWeight: "<p>Weight of breathing sway while aiming.</p>",
-  FiringBreathingAdditiveWeight: "<p>Breathing sway added while firing.</p>",
-  StealthAimingBreathingAdditiveWeight: "<p>Breathing sway while aiming in stealth.</p>",
-  StealthFiringBreathingAdditiveWeight: "<p>Breathing sway while firing in stealth.</p>",
-  AimingLeanAdditiveWeight: "<p>Lean amount while aiming.</p>",
-  FiringLeanAdditiveWeight: "<p>Lean amount while firing.</p>",
-  StealthAimingLeanAdditiveWeight: "<p>Lean amount aiming in stealth.</p>",
-  StealthFiringLeanAdditiveWeight: "<p>Lean amount firing in stealth.</p>",
-  ExpandPedCapsuleRadius: "<p>Expands the ped hit-capsule radius (easier to hit).</p>",
-  IkRecoilDisplacement: "<p>IK (hand/weapon) recoil kick distance.</p>",
-  IkRecoilDisplacementScaleBackward: "<p>Scales backward IK recoil displacement.</p>",
-  IkRecoilDisplacementScaleVertical: "<p>Scales vertical IK recoil displacement.</p>",
-  IkRecoilDisplacementScope: "<p>IK recoil displacement while using a scope.</p>",
-  TorsoIKAngleLimit: "<p>Max torso angle for IK tracking.</p>",
-  MeleeRightFistTargetHealthDamageScaler: "<p>Scales damage dealt by right-fist melee attacks.</p>",
-  BulletBendingNearRadius: "<p>Range within which bullets magnet toward the target (auto-aim help).</p>",
-  BulletBendingFarRadius: "<p>Range within which bullets bend at distance.</p>",
-  BulletBendingZoomedRadius: "<p>Bullet bending while zoomed (ADS).</p>",
-  FirstPersonBulletBendingNearRadius: "<p>FP bullet bending near radius.</p>",
-  FirstPersonBulletBendingFarRadius: "<p>FP bullet bending far radius.</p>",
-  FirstPersonBulletBendingZoomedRadius: "<p>FP bullet bending while scoped.</p>",
-  AimProbeLengthMin: "<p>Min aim-probe length (target assist).</p>",
-  AimProbeLengthMax: "<p>Max aim-probe length (target assist).</p>",
-  AimProbeRadiusOverrideFPSIdle: "<p>Aim-assist radius override in first person (idle).</p>",
-  AimProbeRadiusOverrideFPSIdleStealth: "<p>Aim-assist radius override in FP stealth idle.</p>",
-  AimProbeRadiusOverrideFPSLT: "<p>Aim-assist radius override in FP when locked/look-to.</p>",
-  AimProbeRadiusOverrideFPSRNG: "<p>Aim-assist radius override in FP run-and-gun.</p>",
-  AimProbeRadiusOverrideFPSScope: "<p>Aim-assist radius override in FP scope.</p>",
-  AirborneAircraftLockOnMultiplier: "<p>Multiplies lock-on range against airborne aircraft.</p>",
-  TimeLeftBetweenShotsWhereShouldFireIsCached: "<p>Internal fire-input cache window (rarely changed).</p>",
-  WheelSlot: "<p>Slot the weapon sits in the weapon wheel (e.g. WHEEL_RIFLE).</p>",
-  FirstPersonDofMaxNearInFocusDistance: "<p>FP depth-of-field near focus distance.</p>",
-  FirstPersonDofMaxNearInFocusDistanceBlendLevel: "<p>FP DoF blend level at near focus.</p>",
-  FirstPersonDofSubjectMagnificationPowerFactorNear: "<p>FP DoF magnification power (near).</p>",
-};
+// Plain-language guides (single source string; parsed by the "Name:" markers).
+const GUIDE = `
+Damage:<p>How much health one bullet takes away.</p>
+<p><b>Turn it up →</b> the weapon kills faster (fewer shots needed).</p>
+<p><b>Turn it down →</b> enemies survive more hits (weaker gun).</p>
+<p><b>Start with:</b> pistols ~20–34 · SMG ~18–25 · assault rifles ~28–35 · snipers ~70–150. Pair it with TimeBetweenShots — together they decide "shots to kill".</p>
+TimeBetweenShots:<p>The gap in seconds between two shots. This is your fire rate.</p>
+<p><b>Turn it up →</b> slower firing (more recoil control, feels like a semi-auto).</p>
+<p><b>Turn it down →</b> faster firing (higher DPS, but burns ammo and climbs).</p>
+<p><b>Start with:</b> semi-auto ~0.20–0.25 · SMG ~0.09–0.11 · AR ~0.10–0.13. Example: 0.1 = 10 bullets per second.</p>
+ClipSize:<p>How many bullets fit in the magazine before you must reload.</p>
+<p><b>Turn it up →</b> more rounds per mag (fewer reloads, longer sustained fire).</p>
+<p><b>Turn it down →</b> reloads happen constantly (punishes spray).</p>
+<p><b>Start with:</b> pistol 12–17 · SMG 25–50 · AR 30 · LMG 60–100. Show it honestly in HudCapacity.</p>
+AccuracySpread:<p>How far the bullets scatter sideways when you fire (bloom).</p>
+<p><b>Turn it up →</b> bigger spread = less accurate at range, more "spray and pray".</p>
+<p><b>Turn it down →</b> tight grouping = lasers, maybe too strong at long range.</p>
+<p><b>Start with:</b> pistol ~1.0–2.0 · SMG ~2.5–3.5 · AR ~3.0–4.0 · sniper ~0.1–0.5. Lower = tighter.</p>
+AccurateModeAccuracyModifier:<p>Multiplier on AccuracySpread <b>while you are aiming down sights (ADS)</b>.</p>
+<p><b>Turn it up (above 1) →</b> shots while aiming become MORE spread than hipfire.</p>
+<p><b>Turn it down (below 1) →</b> aiming makes bullets tighter (usual for rifles). 0.5 = half the spread.</p>
+RunAndGunAccuracyModifier:<p>Multiplier on spread while you move and shoot without aiming.</p>
+<p><b>Up →</b> moving hipfire sprays badly. <b>Down →</b> you stay accurate on the move. Keep ~1–2.</p>
+RunAndGunAccuracyMaxModifier:<p>The ceiling spread added during long run-and-gun bursts.</p>
+<p><b>Up →</b> sustained hipfire gets very wild. <b>Down →</b> stays controllable. Usually 1.0.</p>
+RunAndGunAccuracyMinOverride:<p>Forces a minimum (floor) spread while run-and-gunning.</p>
+<p>Raise it to stop hipfire from ever being perfectly accurate.</p>
+BatchSpread:<p>Extra spread between pellets in one shotgun blast.</p>
+<p><b>Up →</b> pellets spread wider. <b>Down →</b> tighter, more damage concentrated at range.</p>
+BulletsInBatch:<p>How many projectiles come out per trigger pull (shotgun pellets / salvo).</p>
+<p><b>Up →</b> more pellets = more potential damage per shot. <b>Down →</b> fewer pellets. 1 = single shot; shotguns ~8–12.</p>
+BulletsPerAnimLoop:<p>Rounds the weapon consumes per firing animation cycle.</p>
+<p>Leave at 1 unless you know the animation expects more.</p>
+AlternateWaitTime:<p>Delay between burst groups when a burst fire pattern is used.</p>
+<p><b>Up →</b> longer pause between bursts. <b>Down →</b> bursts feel continuous.</p>
+BulletDirectionOffsetInDegrees:<p>Adds a fixed angle error to every shot (degrees).</p>
+<p><b>Up →</b> shots always veer slightly. <b>Down →</b> straight shots. Keep 0 unless you want a quirky gun.</p>
+RecoilErrorTime:<p>How quickly recoil "bloom" builds while you hold the trigger.</p>
+<p><b>Up →</b> the gun stays accurate longer before climbing. <b>Down →</b> recoil kicks in sooner.</p>
+<p><b>Start with:</b> ~2.5–3.5 for rifles.</p>
+RecoilRecoveryRate:<p>How fast the crosshair settles back down after recoil.</p>
+<p><b>Up →</b> recovers fast = easier to control tap-fire. <b>Down →</b> stays kicked up longer.</p>
+RecoilAccuracyMax:<p>The worst accuracy penalty full recoil can cause (a cap).</p>
+<p><b>Up →</b> sustained fire can become very inaccurate. <b>Down →</b> spray stays manageable. Usually 0.5-ish.</p>
+RecoilAccuracyToAllowHeadShotPlayer:<p>The accuracy level the gun must be better than for your headshots to register as headshots.</p>
+<p>Make it easier/harder to get consistent headshots while spraying. Start ~0.17–0.3.</p>
+RecoilAccuracyToAllowHeadShotAI:<p>Same as above, but for NPCs. Higher = AI headshots more often.</p>
+MinHeadShotDistancePlayer:<p>Nearest range (m) where a headshot counts. Inside this range hits may count as body shots.</p>
+MaxHeadShotDistancePlayer:<p>Farthest range (m) where a headshot still counts.</p>
+HeadShotDamageModifierPlayer:<p>Headshot damage multiplier. 2.0 = a headshot does double damage.</p>
+<p><b>Up →</b> one-tap headshots are more likely. <b>Down →</b> headshots barely matter.</p>
+HeadShotDamageModifierAI:<p>Same multiplier but when shooting NPCs.</p>
+MinHeadShotDistanceAI:<p>Nearest range where AI headshots count.</p>
+MaxHeadShotDistanceAI:<p>Farthest range where AI headshots count.</p>
+HitLimbsDamageModifier:<p>Damage you deal when hitting arms/legs.</p>
+<p><b>Up →</b> limb shots hurt more. <b>Down →</b> limb shots are weak (usual: ~0.5).</p>
+LightlyArmouredDamageModifier:<p>Damage multiplier against lightly armoured targets.</p>
+NetworkPedDamageModifier:<p>Global damage tweak applied in online play.</p>
+NetworkPlayerDamageModifier:<p>Damage vs other players online — your PvP balance dial.</p>
+<p><b>Up →</b> online players die faster. <b>Down →</b> they tank more.</p>
+NetworkHeadShotPlayerDamageModifier:<p>Headshot damage vs players online.</p>
+NetworkHitLimbsDamageModifier:<p>Limb damage vs players online.</p>
+ArmouredVehicleGlassDamageOverride:<p>Overrides how much damage armoured-vehicle glass takes.</p>
+Force:<p>How hard a hit shoves the target (knockback / ragdoll push).</p>
+<p><b>Up →</b> enemies fly/ragdoll more. <b>Down →</b> they stay standing.</p>
+<p><b>Start with:</b> pistols 40–80 · rifles 75–150 · snipers 200–400.</p>
+ForceHitPed:<p>Knockback force applied specifically to people.</p>
+ForceHitVehicle:<p>Force applied when the bullet hits a vehicle.</p>
+ForceHitFlyingHeli:<p>Force applied when hitting helicopters.</p>
+ForceMaxStrengthMult:<p>Multiplier capping how strong knockback can ever get.</p>
+ForceFalloffMin:<p>Minimum knockback that remains at the very end of range.</p>
+ForceFalloffRangeStart:<p>Distance at which knockback starts to weaken.</p>
+ForceFalloffRangeEnd:<p>Distance at which knockback stops weakening.</p>
+KnockdownCount:<p>Shots before a target is guaranteed to be knocked over. -1 = never.</p>
+KillshotImpulseScale:<p>Extra shove applied specifically on the killing shot (fun ragdolls).</p>
+FragImpulse:<p>How hard explosion fragments push things.</p>
+ProjectileForce:<p>Launch power for projectile weapons (rockets/grenades).</p>
+DropForwardVelocity:<p>Forward speed when the weapon/item is dropped.</p>
+VerticalLaunchAdjustment:<p>Angles projectiles upward on launch.</p>
+<p><b>Up →</b> rockets/grenades arc higher. <b>Down →</b> flatter.</p>
+Speed:<p>Bullet/projectile travel speed (hitscan weapons ignore this).</p>
+<p><b>Up →</b> hits land faster at range. <b>Down →</b> you must lead targets.</p>
+Penetration:<p>How many walls/objects a bullet can pass through.</p>
+<p><b>Up →</b> wall-bang kills. <b>Down →</b> bullets stop on thin cover.</p>
+WeaponRange:<p>Effective range in metres; beyond it the gun stops being useful.</p>
+<p><b>Up →</b> long-range weapon. <b>Down →</b> close-quarters only.</p>
+DamageFallOffRangeMin:<p>Distance where damage falloff begins.</p>
+DamageFallOffRangeMax:<p>Distance where falloff reaches its lowest point.</p>
+DamageFallOffModifier:<p>Damage multiplier at maximum range (0.5 = half damage far away).</p>
+LockOnRange:<p>Max range auto-aim / lock-on works (controller users).</p>
+VehicleAttackAngle:<p>How wide an angle vehicle gunners can engage.</p>
+VehicleDamageModifier:<p>Damage multiplier vs vehicles.</p>
+VehicleReloadTime:<p>Reload time while seated in a vehicle.</p>
+SpinTime:<p>How long before a spinning weapon (gatling) fires at full speed.</p>
+SpinUpTime:<p>Delay from pressing the trigger to reaching full fire rate.</p>
+SpinDownTime:<p>How long the barrel keeps spinning after you stop firing.</p>
+AnimReloadRate:<p>Speed of the reload animation.</p>
+<p><b>Up →</b> reloads feel faster. <b>Down →</b> slower. Keep ≈1.</p>
+ReloadTimeSP:<p>Reload pacing used in single-player.</p>
+ReloadTimeMP:<p>Reload pacing used online.</p>
+AmmoDiminishingRate:<p>How fast the ammo reserve drains while firing.</p>
+ExplosionShakeAmplitude:<p>How hard the screen shakes from explosions.</p>
+AiSoundRange:<p>How far away NPCs can hear this weapon.</p>
+AiPotentialBlastEventRange:<p>How far NPCs react to an explosion from this weapon.</p>
+WeaponFlags:<p>Space-separated behaviour switches. Common ones: Automatic, Explosive, CanFreeAim, TwoHanded, UsableOnFoot, UsableInCover, CanLockOnOnFoot…</p>
+<p>Add/remove words here to change how the weapon behaves — read each flag name.</p>
+HumanNameHash:<p>The name shown on the HUD when you equip it (leave as-is).</p>
+StatName:<p>Which weapon-stat group it belongs to (e.g. ASLTRIFLE). Used by skills/stats.</p>
+NmShotTuningSet:<p>Which ragdoll "shot reaction" tuning set to use (usually Automatic).</p>
+TargetSequenceGroup:<p>Animation group reference (leave as-is).</p>
+MovementModeConditionalIdle:<p>Movement mode for the idle pose (e.g. MMI_2Handed).</p>
+PickupHash:<p>What you pick up from the ground (weapon pickup hash).</p>
+MPPickupHash:<p>Online pickup hash (leave as-is).</p>
+ReticuleStyleHash:<p>Which crosshair style to draw while aiming.</p>
+ReticuleScale:<p>Crosshair size.</p>
+ReticuleMinSizeStanding:<p>Smallest the crosshair gets while standing.</p>
+ReticuleMinSizeCrouched:<p>Smallest the crosshair gets while crouched.</p>
+CameraFov:<p>Field of view while aiming this weapon.</p>
+FirstPersonAimFovMin:<p>FOV floor while aiming in first person.</p>
+FirstPersonAimFovMax:<p>FOV ceiling while aiming in first person.</p>
+FirstPersonScopeFov:<p>Zoom strength of the scope in first person (lower = more zoom).</p>
+FirstPersonScopeAttachmentFov:<p>Same, but when a scope attachment is fitted.</p>
+DefaultCameraHash:<p>Camera set used while aiming (leave as-is).</p>
+CinematicShootingCameraHash:<p>Camera set for cinematic cover shooting.</p>
+CoverCameraHash:<p>Camera set while shooting from cover.</p>
+RunAndGunCameraHash:<p>Camera set while moving and shooting.</p>
+RecoilShakeHash:<p>Camera-shake animation used per shot (third person).</p>
+RecoilShakeHashFirstPerson:<p>Same, in first person.</p>
+RecoilShakeAmplitude:<p>How violently the camera shakes per shot.</p>
+MinTimeBetweenRecoilShakes:<p>Minimum delay between camera shakes (prevents blur on fast fire).</p>
+AccuracyOffsetShakeHash:<p>Shake applied as accuracy bloom grows (leave as-is).</p>
+InitialRumbleDuration:<p>Controller rumble length on the first shot.</p>
+InitialRumbleIntensity:<p>Controller rumble strength on the first shot.</p>
+InitialRumbleIntensityTrigger:<p>Trigger rumble strength on the first shot.</p>
+InitialRumbleDurationFps:<p>Same, first-person camera.</p>
+InitialRumbleIntensityFps:<p>Same, first-person camera.</p>
+RumbleIntensity:<p>Controller vibration strength while firing.</p>
+RumbleIntensityTrigger:<p>Trigger vibration strength while firing.</p>
+RumbleDuration:<p>How long each shot vibrates the controller.</p>
+RumbleIntensityFps:<p>First-person vibration strength while firing.</p>
+RumbleDurationFps:<p>First-person vibration length per shot.</p>
+RumbleDamageIntensity:<p>Controller vibration when you deal damage.</p>
+HudDamage:<p>The "Damage" bar shown in the pause menu (0–100). Cosmetic — match how the gun actually feels.</p>
+HudSpeed:<p>The pause-menu "Fire rate" bar (0–100). Cosmetic.</p>
+HudCapacity:<p>The pause-menu "Magazine" bar (0–100). Cosmetic.</p>
+HudAccuracy:<p>The pause-menu "Accuracy" bar (0–100). Cosmetic.</p>
+HudRange:<p>The pause-menu "Range" bar (0–100). Cosmetic.</p>
+AimingBreathingAdditiveWeight:<p>How much the weapon sways from breathing while aiming.</p>
+FiringBreathingAdditiveWeight:<p>Breathing sway added while you fire.</p>
+StealthAimingBreathingAdditiveWeight:<p>Breathing sway while aiming in stealth.</p>
+StealthFiringBreathingAdditiveWeight:<p>Breathing sway while firing in stealth.</p>
+AimingLeanAdditiveWeight:<p>How much your character leans while aiming.</p>
+FiringLeanAdditiveWeight:<p>Lean amount added while firing.</p>
+StealthAimingLeanAdditiveWeight:<p>Lean while aiming in stealth.</p>
+StealthFiringLeanAdditiveWeight:<p>Lean while firing in stealth.</p>
+ExpandPedCapsuleRadius:<p>Makes the target's hitbox bigger (easier to hit). Use sparingly.</p>
+IkRecoilDisplacement:<p>How far the on-screen hands/weapon kick back per shot.</p>
+IkRecoilDisplacementScaleBackward:<p>Scales the backward part of that hand recoil.</p>
+IkRecoilDisplacementScaleVertical:<p>Scales the upward part of that hand recoil.</p>
+IkRecoilDisplacementScope:<p>Hand recoil amount while looking through a scope.</p>
+TorsoIKAngleLimit:<p>Maximum torso angle used for animation follow (leave as-is).</p>
+MeleeRightFistTargetHealthDamageScaler:<p>Damage scale for right-fist melee attacks.</p>
+BulletBendingNearRadius:<p>Range where bullets curve toward a target to help you hit (aim assist).</p>
+BulletBendingFarRadius:<p>Range where bullets bend at distance.</p>
+BulletBendingZoomedRadius:<p>Bullet bending while zoomed.</p>
+FirstPersonBulletBendingNearRadius:<p>Same aim-assist bend in first person (near).</p>
+FirstPersonBulletBendingFarRadius:<p>Same in first person (far).</p>
+FirstPersonBulletBendingZoomedRadius:<p>Same in first person while scoped.</p>
+AimProbeLengthMin:<p>Aim-assist probe minimum length.</p>
+AimProbeLengthMax:<p>Aim-assist probe maximum length (how far the assist reaches).</p>
+AimProbeRadiusOverrideFPSIdle:<p>Aim-assist size in first person (idle).</p>
+AimProbeRadiusOverrideFPSIdleStealth:<p>Aim-assist size in first-person stealth.</p>
+AimProbeRadiusOverrideFPSLT:<p>Aim-assist size in first person when already locked/tracking.</p>
+AimProbeRadiusOverrideFPSRNG:<p>Aim-assist size in first-person run-and-gun.</p>
+AimProbeRadiusOverrideFPSScope:<p>Aim-assist size in first person while scoped.</p>
+AirborneAircraftLockOnMultiplier:<p>Extra lock-on range against flying aircraft.</p>
+TimeLeftBetweenShotsWhereShouldFireIsCached:<p>Internal fire-input cache window — leave alone.</p>
+WheelSlot:<p>Which weapon-wheel slot the gun sits in (e.g. WHEEL_RIFLE).</p>
+FirstPersonDofMaxNearInFocusDistance:<p>First-person camera focus-blur (DOF) distance — cosmetic.</p>
+FirstPersonDofMaxNearInFocusDistanceBlendLevel:<p>DOF blend — cosmetic.</p>
+FirstPersonDofSubjectMagnificationPowerFactorNear:<p>DOF magnification — cosmetic.</p>
+Model:<p>Which weapon model the game loads. Only change if you swap the model.</p>
+Audio:<p>Which sound set the weapon uses (fire/reload).</p>
+DamageType:<p>What damage kind it deals (BULLET, MELEE, EXPLOSIVE, FIRE…). Changing it changes how the hit behaves.</p>
+FireType:<p>How the weapon fires: INSTANT_HIT (hitscan bullets), PROJECTILE (rockets/grenades), MELEE…</p>
+`.trim();
 
-const GENERIC: Record<string, string> = {
-  FirstPerson: "<p>First-person camera/feel setting. Match a vanilla weapon of the same class; usually left at pack defaults.</p>",
-  Dof: "<p>Depth-of-field (focus blur) tuning for first person.</p>",
-};
-
-function fallback(name: string): string {
-  if (name.includes("FirstPerson") || name.startsWith("FirstPerson")) {
-    return GENERIC.FirstPerson;
+// Split the guide text into {paramName: html} using the "Name:" markers.
+function parseGuide(): Map<string, string> {
+  const map = new Map<string, string>();
+  const re = /^([A-Za-z0-9]+):/gm;
+  const matches: Array<{ key: string; idx: number }> = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(GUIDE)) !== null) {
+    matches.push({ key: m[1], idx: m.index });
   }
-  if (name.includes("Dof")) return GENERIC.Dof;
-  return "<p>Advanced field — keep the value used by your pack/vanilla equivalent unless you know what it does.</p>";
+  for (let i = 0; i < matches.length; i++) {
+    const start = matches[i].idx;
+    const end = i + 1 < matches.length ? matches[i + 1].idx : GUIDE.length;
+    let seg = GUIDE.slice(start, end).trim();
+    const ci = seg.indexOf(":");
+    seg = seg.slice(ci + 1).trim();
+    if (seg) map.set(matches[i].key, seg);
+  }
+  return map;
 }
 
-/** HTML description for a weapon param, or undefined when unknown. */
 export function paramHintWeapon(col: string): string | undefined {
-  return CURATED[col] ?? fallback(col);
+  return parseGuide().get(col);
 }
 
 export interface WeaponGlossaryEntry {
@@ -229,11 +273,15 @@ export interface WeaponGlossaryEntry {
   description: string;
 }
 
-/** Full weapons.meta glossary (one entry per real CWeaponInfo param). */
 export function weaponGlossary(): WeaponGlossaryEntry[] {
+  const map = parseGuide();
   return ALL_PARAMS.map((name) => ({
     name,
     moduleLabel: "Weapon",
-    description: CURATED[name] ?? fallback(name),
+    description: map.get(name) ?? fallback(name),
   }));
+}
+
+function fallback(name: string): string {
+  return `<p><b>What is it?</b> An advanced ${name} setting.</p><p><b>Advice:</b> keep the value from your pack or a matching vanilla weapon — it rarely needs changing.</p>`;
 }
