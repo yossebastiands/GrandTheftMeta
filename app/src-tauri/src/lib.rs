@@ -9,6 +9,7 @@ use commands::scan::scan_folder;
 use commands::update::update_files;
 use commands::vehicles::{scan_vehicles, update_vehicle_files};
 use commands::weaponanimations::{scan_weaponanimations, update_weaponanimations_files};
+use commands::weaponarchetypes::{scan_weaponarchetypes, update_weaponarchetypes_files};
 use commands::weapons::{scan_weapons, update_weapon_files};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -32,6 +33,8 @@ pub fn run() {
             update_vehicle_files,
             scan_weaponanimations,
             update_weaponanimations_files,
+            scan_weaponarchetypes,
+            update_weaponarchetypes_files,
             scan_weapons,
             update_weapon_files
         ])

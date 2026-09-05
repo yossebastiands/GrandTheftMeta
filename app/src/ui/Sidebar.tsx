@@ -121,9 +121,8 @@ const CATEGORIES: Category[] = [
         id: "veh_weaponarchetypes",
         file: "weaponarchetypes.meta",
         label: "Weapon Archetypes",
-        aliasHint: "vehicle-mounted weapon archetypes",
-        status: BOTH_SOON,
-        modes: [soon("single", BOTH_SOON), soon("bulk", BOTH_SOON)],
+        aliasHint: "vehicle-mounted weapon model archetypes",
+        modes: BOTH(),
       },
     ],
   },
@@ -150,9 +149,8 @@ const CATEGORIES: Category[] = [
         id: "weaponarchetypes",
         file: "weaponarchetypes.meta",
         label: "Weapon Archetypes",
-        aliasHint: "firearm archetypes",
-        status: BOTH_SOON,
-        modes: [soon("single", BOTH_SOON), soon("bulk", BOTH_SOON)],
+        aliasHint: "firearm weapon-model archetypes",
+        modes: BOTH(),
       },
       {
         id: "pedpersonality",
@@ -166,9 +164,7 @@ const CATEGORIES: Category[] = [
   },
 ];
 
-// Meta panels currently wired to live editors: handling.meta, vehicles.meta,
-// carcols.meta, carvariations.meta, vehiclelayouts.meta, vehicleweapons.meta,
-// weaponanimations.meta + weapons.meta.
+// Meta panels currently wired to live editors.
 const LIVE_PANELS: string[] = [
   "handling",
   "vehicles",
@@ -176,7 +172,9 @@ const LIVE_PANELS: string[] = [
   "carvariations",
   "vehiclelayouts",
   "vehicleweapons",
+  "veh_weaponarchetypes",
   "weaponanimations",
+  "weaponarchetypes",
   "weapons",
 ];
 

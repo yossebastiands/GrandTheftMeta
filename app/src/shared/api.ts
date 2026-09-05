@@ -126,3 +126,16 @@ export function updateWeaponanimationsFiles(
 ): Promise<UpdateResult> {
   return invoke<UpdateResult>("update_weaponanimations_files", { folderPath, changes });
 }
+
+/** Scan a folder for weaponarchetypes.meta → one row per weapon-model archetype. */
+export function scanWeaponarchetypes(folderPath: string): Promise<ScanResult> {
+  return invoke<ScanResult>("scan_weaponarchetypes", { folderPath });
+}
+
+/** Write edited weapon-archetype entries back into the original files. */
+export function updateWeaponarchetypesFiles(
+  folderPath: string,
+  changes: VehicleChange[]
+): Promise<UpdateResult> {
+  return invoke<UpdateResult>("update_weaponarchetypes_files", { folderPath, changes });
+}

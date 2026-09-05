@@ -288,3 +288,30 @@ export function demoWeaponanimations(count = 6): ScanResult {
   }
   return { vehicles, columns, skipped: [] };
 }
+
+// Dev-only weaponarchetypes.meta sample rows (`?wp`) so the archetype editors can
+// be inspected without the Tauri backend. Mirrors the scanner: handling_name =
+// InitDatas index path, vehicle_type = Model (modelName), params = scalar leaves.
+export function demoWeaponarchetypes(count = 4): ScanResult {
+  const base: Array<[string, string, string, string, Record<string, string>]> = [
+    ["[mbo-vehicles]/Aircraft_A10C/weaponarchetypes.meta", "InitDatas/0", "W_LR_SIDEWINDER", "", { txdName: "W_LR_SIDEWINDER", ptfxAssetName: "null", lodDist: "200" }],
+    ["[mbo-vehicles]/Aircraft_A10C/weaponarchetypes.meta", "InitDatas/1", "W_LR_AGM65", "", { txdName: "W_LR_AGM65", ptfxAssetName: "null", lodDist: "200" }],
+    ["[mbo-vehicles]/Aircraft_A10C/weaponarchetypes.meta", "InitDatas/2", "W_LR_A10C_HYDRA", "", { txdName: "W_LR_A10C_HYDRA", ptfxAssetName: "null", lodDist: "200" }],
+    ["[mbo-vehicles]/Aircraft_A10C/weaponarchetypes.meta", "InitDatas/3", "W_LR_UGB", "", { txdName: "W_LR_UGB", ptfxAssetName: "null", lodDist: "200" }],
+  ];
+  const columns = Array.from(new Set(base.flatMap((b) => Object.keys(b[4])))).sort();
+  const vehicles: VehicleRow[] = [];
+  for (let i = 0; i < count; i++) {
+    const [file, path, model, klass, params] = base[i % base.length];
+    const dup = Math.floor(i / base.length);
+    vehicles.push({
+      folder_name: dup ? file.replace(".meta", `_${i}.meta`) : file,
+      meta_path: "",
+      handling_name: dup ? `${path}/${i}` : path,
+      vehicle_type: model,
+      vehicle_class: klass,
+      params,
+    });
+  }
+  return { vehicles, columns, skipped: [] };
+}

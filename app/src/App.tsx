@@ -17,6 +17,7 @@ import {
   demoVehicleweapons,
   demoVehicles,
   demoWeaponanimations,
+  demoWeaponarchetypes,
   demoWeapons,
 } from "./features/handling/demoData";
 import { paramHintWeapon } from "./features/handling/weaponHints";
@@ -28,6 +29,7 @@ import {
   scanVehicleweapons,
   scanVehicles,
   scanWeaponanimations,
+  scanWeaponarchetypes,
   scanWeapons,
   updateCarcolsFiles,
   updateCarvariationsFiles,
@@ -36,6 +38,7 @@ import {
   updateVehicleweaponsFiles,
   updateVehicleFiles,
   updateWeaponanimationsFiles,
+  updateWeaponarchetypesFiles,
   updateWeaponFiles,
 } from "./shared/api";
 import { useMetaDomain, type Notify } from "./shared/useMetaDomain";
@@ -49,7 +52,9 @@ type PanelId =
   | "carvariations"
   | "vehiclelayouts"
   | "vehicleweapons"
+  | "veh_weaponarchetypes"
   | "weaponanimations"
+  | "weaponarchetypes"
   | "weapons";
 
 /** Weapon table labels (folder column shows the relative .meta file path). */
@@ -89,6 +94,14 @@ const WEAPONANIMATIONS_LABELS = {
   folder: "File",
   type: "Set",
   klass: "Weapon",
+  name: "Entry",
+};
+
+/** weaponarchetypes table labels (file / Model / (blank) / entry path). */
+const WEAPONARCHETYPES_LABELS = {
+  folder: "File",
+  type: "Model",
+  klass: "",
   name: "Entry",
 };
 
@@ -172,6 +185,17 @@ const PANELS: Record<PanelId, DomainCfg> = {
     pickText:
       "Select a folder that contains your vehicle resources (vehicleweapons*.meta, any layout).",
   },
+  veh_weaponarchetypes: {
+    noun: "entries",
+    nounShort: "weapon-archetype",
+    labels: WEAPONARCHETYPES_LABELS,
+    hintFor: noHint,
+    metaFile: "weaponarchetypes.meta",
+    coreLabel: "Entry",
+    note: "One vehicle-mounted weapon model archetype in one weaponarchetypes.meta — edits update only that entry.",
+    pickText:
+      "Select a folder that contains your vehicle resources (weaponarchetypes.meta, any layout).",
+  },
   weaponanimations: {
     noun: "entries",
     nounShort: "weapon-anim",
@@ -182,6 +206,17 @@ const PANELS: Record<PanelId, DomainCfg> = {
     note: "One weapon × personality animation set in one weaponanimations.meta — edits update only that entry.",
     pickText:
       "Select a folder that contains your weapon resources (weaponanimations.meta / weaponanimations*.meta, any layout).",
+  },
+  weaponarchetypes: {
+    noun: "entries",
+    nounShort: "weapon-archetype",
+    labels: WEAPONARCHETYPES_LABELS,
+    hintFor: noHint,
+    metaFile: "weaponarchetypes.meta",
+    coreLabel: "Entry",
+    note: "One weapon model archetype in one weaponarchetypes.meta — edits update only that entry.",
+    pickText:
+      "Select a folder that contains your weapon resources (weaponarchetypes.meta, any layout).",
   },
   weapons: {
     noun: "weapons",
@@ -272,6 +307,18 @@ export default function App() {
     notify,
     onScanStart: resetFilters,
   });
+  const arch = useMetaDomain({
+    scan: scanWeaponarchetypes,
+    write: updateWeaponarchetypesFiles,
+    notify,
+    onScanStart: resetFilters,
+  });
+  const varch = useMetaDomain({
+    scan: scanWeaponarchetypes,
+    write: updateWeaponarchetypesFiles,
+    notify,
+    onScanStart: resetFilters,
+  });
 
   const domains = {
     handling: veh,
@@ -281,7 +328,9 @@ export default function App() {
     carvariations: carv,
     vehiclelayouts: lay,
     vehicleweapons: vw,
+    veh_weaponarchetypes: varch,
     weaponanimations: wan,
+    weaponarchetypes: arch,
   };
   const d = domains[panel];
   const cfg = PANELS[panel];
@@ -385,6 +434,18 @@ export default function App() {
     setPanel("weaponanimations");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isWeaponanimationsDemo]);
+
+  // ?wp — dev-only weaponarchetypes.meta demo (Weapons category panel).
+  const isWeaponarchetypesDemo =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("wp");
+  useEffect(() => {
+    if (!isWeaponarchetypesDemo) return;
+    arch.load(demoWeaponarchetypes(), "[demo-weaponarchetypes]");
+    setPanel("weaponarchetypes");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isWeaponarchetypesDemo]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

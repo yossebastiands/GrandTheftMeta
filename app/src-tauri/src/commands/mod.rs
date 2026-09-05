@@ -8,4 +8,5 @@ pub mod vehiclelayouts;
 pub mod vehicles;
 pub mod vehicleweapons;
 pub mod weaponanimations;
+pub mod weaponarchetypes;
 pub mod weapons;
