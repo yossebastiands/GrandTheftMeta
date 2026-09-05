@@ -22,6 +22,7 @@ import {
   demoPedpersonality,
 } from "./features/handling/demoData";
 import { paramHintWeapon } from "./features/handling/weaponHints";
+import { glossaryHint } from "./features/handling/glossaries/registry";
 import {
   scanCarcols,
   scanCarvariations,
@@ -253,6 +254,16 @@ const PANELS: Record<PanelId, DomainCfg> = {
       "Select a folder that contains your weapon resources (weapons.meta / weapons_*.meta, any layout).",
   },
 };
+
+// Wire each editor's in-table "?" hints to its per-meta glossary. Metas that had
+// a specialised hint function (handling/weapons) keep it; the rest were muted
+// with noHint and now get their glossary as the hint source.
+for (const id of Object.keys(PANELS)) {
+  const cfg = PANELS[id as PanelId];
+  if (cfg.hintFor === noHint) {
+    cfg.hintFor = (col: string) => glossaryHint(id, col);
+  }
+}
 
 export default function App() {
   const [view, setView] = useState<"home" | "glossary">("home");

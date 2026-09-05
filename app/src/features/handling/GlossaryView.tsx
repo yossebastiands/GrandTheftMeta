@@ -7,8 +7,7 @@ import {
   Lock,
   Search,
 } from "lucide-react";
-import { handlingGlossary } from "./hints";
-import { weaponGlossary } from "./weaponHints";
+import { glossaryCount, glossaryEntries } from "./glossaries/registry";
 
 function toPlain(html: string): string {
   return html
@@ -23,7 +22,7 @@ function toPlain(html: string): string {
 
 // ---------------------------------------------------------------------------
 // Meta files (same map as the Home editors). Each file has its own glossary
-// page; only handling.meta has a real parameter glossary so far.
+// page, fed from the per-meta glossary registry (features/handling/glossaries).
 // ---------------------------------------------------------------------------
 
 interface MetaFile {
@@ -146,18 +145,7 @@ function GlossaryView() {
     return GROUPS[0].metas[0];
   }, [active]);
 
-  const isWeapons = activeMeta?.id === "weapons";
-  const entries = useMemo(
-    () => (isWeapons ? weaponGlossary() : handlingGlossary()),
-    [isWeapons]
-  );
-  const counts = useMemo(
-    () => ({
-      handling: handlingGlossary().length,
-      weapons: weaponGlossary().length,
-    }),
-    []
-  );
+  const entries = useMemo(() => glossaryEntries(activeMeta?.id ?? ""), [activeMeta]);
 
   const listFiltered = useMemo(() => {
     const t = q.trim().toLowerCase();
@@ -166,6 +154,8 @@ function GlossaryView() {
       `${e.name} ${e.moduleLabel} ${toPlain(e.description)}`.toLowerCase().includes(t)
     );
   }, [entries, q]);
+
+  const activeHasGlossary = (activeMeta?.id ? glossaryCount(activeMeta.id) : 0) > 0;
 
   return (
     <div className="flex min-h-0 flex-1">
@@ -182,6 +172,7 @@ function GlossaryView() {
             <ul className="flex flex-col gap-0.5">
               {g.metas.map((m) => {
                 const isActive = active === m.id;
+                const hasG = glossaryCount(m.id) > 0;
                 return (
                   <li key={m.id}>
                     <button
@@ -197,7 +188,7 @@ function GlossaryView() {
                       }`}
                       title={m.desc}
                     >
-                      {m.hasGlossary ? (
+                      {hasG ? (
                         <BookOpenText className="mt-0.5 h-4 w-4 shrink-0" />
                       ) : (
                         <FileText className="mt-0.5 h-4 w-4 shrink-0 opacity-70" />
@@ -208,12 +199,12 @@ function GlossaryView() {
                         </span>
                         <span className="mt-0.5 block truncate text-2xs text-gray-600">
                           {m.label}
-                          {m.hasGlossary
-                            ? ` · ${(counts as Record<string, number>)[m.id] ?? entries.length} params`
+                          {hasG
+                            ? ` · ${glossaryCount(m.id)} params`
                             : " · about only"}
                         </span>
                       </span>
-                      {!m.hasGlossary && (
+                      {!hasG && (
                         <Lock className="ml-1 mt-0.5 h-3 w-3 shrink-0 opacity-40" />
                       )}
                     </button>
@@ -225,14 +216,15 @@ function GlossaryView() {
         ))}
 
         <div className="mt-auto px-2 text-2xs leading-relaxed text-gray-600">
-          Handling definitions come from the Apollo Flight Program glossary. Parameter
-          glossaries for the other meta files are added as each editor lands.
+          Handling definitions come from the Apollo Flight Program glossary. Every
+          meta file now has a parameter glossary; unglossed fields still show an
+          honest "keep the pack value" note.
         </div>
       </nav>
 
       {/* Glossary content */}
       <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-        {activeMeta && activeMeta.hasGlossary ? (
+        {activeMeta && activeHasGlossary ? (
           <>
             <div className="flex items-center gap-3 border-b border-gray-800 bg-gray-900 px-3 py-2">
               <h1 className="text-sm font-semibold text-gray-200">
