@@ -98,7 +98,7 @@ auto-fetches NSIS/WiX; no code-signing cert is configured, so SmartScreen will w
 ## Publishing (open source)
 
 1. Push the repo to GitHub (this project is set up as open source).
-2. The repo ships with an MIT `LICENSE` — keep it (or swap it) before your first public release.
+2. The repo ships with a GPL-3.0 `LICENSE` — keep it (or swap it) before your first public release.
 3. Tag a version — the committed `.github/workflows/release.yml` builds the Windows installer on
    GitHub Actions and creates a **draft Release** with the assets attached:
 
@@ -118,7 +118,7 @@ and how to open a pull request.
 
 ## License
 
-Distributed under the [MIT License](./LICENSE).
+Distributed under the [GNU General Public License v3](./LICENSE).
 
 ---
 

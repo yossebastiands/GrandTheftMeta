@@ -51,3 +51,57 @@ body {
 .num {
   font-variant-numeric: tabular-nums;
 }
+
+/*
+  Each virtualized row is extremely wide (one column per handling param, up to
+  200+ columns). content-visibility:auto makes the browser skip layout & paint
+  for rows that are off-screen, so opening a big table and scrolling feel
+  instant instead of freezing while every mounted row is laid out. Rows have
+  explicit width/height, so they never collapse while skipped.
+*/
+.gtm-vrow {
+  content-visibility: auto;
+}
+
+/*
+  Structured text used in the glossary descriptions (trusted HTML coming from
+  hints.json). Renders lists/bold/paragraphs readably instead of flat text.
+*/
+.glossary-html {
+  overflow-wrap: break-word;
+}
+.glossary-html p {
+  margin: 4px 0;
+}
+.glossary-html ul {
+  margin: 4px 0;
+  padding-left: 16px;
+  list-style: disc;
+}
+.glossary-html ol {
+  margin: 4px 0;
+  padding-left: 16px;
+  list-style: decimal;
+}
+.glossary-html ul ul {
+  list-style: circle;
+}
+.glossary-html li {
+  margin: 2px 0;
+}
+.glossary-html li > ul {
+  margin: 2px 0;
+}
+.glossary-html b,
+.glossary-html strong {
+  font-weight: 600;
+  color: #e5e7eb;
+}
+.glossary-html code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92em;
+  color: #e8702a;
+  background: rgba(232, 112, 42, 0.1);
+  border-radius: 3px;
+  padding: 0 3px;
+}

@@ -1,0 +1,1452 @@
+[
+  {
+    "t": "automobile",
+    "n": "fMass",
+    "d": "The weight of the vehicle in kilograms.\r\n\t\t\t<ul>\r\n\t\t\t\t<li>Affects collision physics and suspension compression.</li>\r\n\t\t\t</ul>"
+  },
+  {
+    "t": "automobile",
+    "n": "fInitialDragCoeff",
+    "d": "Aerodynamic drag coefficient.\r\n\t\t\t<ul>\r\n\t\t\t\t<li>Higher values slow the vehicle more at high speed.</li>\r\n\t\t\t\t<li>This value controls how much air resistance the vehicle feels when moving fast. Think of it like how wind pushes against a car as it drives faster.</li>\r\n\t\t\t\t<li>If the vehicle is too fast, raise the drag to slow it down.</li>\r\n\t\t\t\t<li>If it’s too slow, lower the drag to let it go faster.</li>\r\n\t\t\t</ul>"
+  },
+  {
+    "t": "automobile",
+    "n": "fDownforceModifier",
+    "d": "Scales the aerodynamic downforce applied to the car.\r\n\t\t\tThis value controls how much extra force pushes the car down onto the road when it’s going fast. \r\n\t\t\tIt helps the tires stick better to the road, especially at high speeds — just like real-life racecars that have big spoilers or wings.\r\n\t\t\t<ul>\r\n\t\t\t\t<li>Higher values increase grip at speed.</li>\r\n\t\t\t\t<li>Try 10000 value to see the difference.</li>\r\n\t\t\t</ul>"
+  },
+  {
+    "t": "automobile",
+    "n": "fPercentSubmerged",
+    "d": "This value decides how deep the vehicle can go underwater before it starts to float temporarily (like a momentary bounce), before sinking for real.\r\n\t\t\t<ul>\r\n\t\t\t\t<li>85.0 = 85% submerged to float.</li>\r\n\t\t\t\t<li>100.0: Has to be fully underwater before it floats — then sinks.</li>\t\t\t\r\n\t\t\t\t<li>Invalid value (e.g., 2.0 or text): Car sinks instantly but the driver doesn’t drown. Vehicle may later teleport back to the surface weirdly.</li>\r\n\t\t\t</ul>"
+  },
+  {
+    "t": "automobile",
+    "n": "vecCentreOfMassOffset",
+    "d": "This setting lets you move the car’s center of gravity (CoG) — basically, the balance point of the vehicle. \r\n\t\t\tThink of it like how a see-saw tips depending on where you place the weight.\r\n\t\t\t<p>Changing this affects how the car behaves when:</p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Turning\r\n\t\t\t\t<ul>\r\n\t\t\t\t<li>Will it roll or grip?</li>\r\n\t\t\t\t</ul>\r\n\t\t\t</li>\r\n\t\t\t<li>Jumping\r\n\t\t\t\t<ul>\r\n\t\t\t\t<li>Nose-heavy or tail-heavy?</li>\r\n\t\t\t\t</ul>\r\n\t\t\t</li>\r\n\t\t\t<li>Driving sideways or upside down\r\n\t\t\t\t<ul>\r\n\t\t\t\t<li>Will it spin or stay balanced?</li>\r\n\t\t\t\t</ul>\r\n\t\t\t</li>\r\n\t\t\t</ul>\r\n\t\t\t<p>Format: vecCentreOfMassOffset x=\"0.0\" y=\"0.0\" z=\"0.0\"</p>\r\n\t\t\t<ul>\r\n\t\t\t<li>X: left/right (− = left, + = right)\r\n\t\t\t\t<ul><li>Shift weight side-to-side</li><li>Used to fix off-center balance (rarely changed)</li></ul>\r\n\t\t\t</li>\r\n\t\t\t<li>Y: front/back (− = rear, + = front)\r\n\t\t\t\t<ul><li>Makes the car nose-heavy or rear-heavy</li></ul>\r\n\t\t\t</li>\r\n\t\t\t<li>Z: up/down (− = lower, + = higher)\r\n\t\t\t\t<ul><li>Controls how high or low the balance is</li><li>This is the most important value!</li></ul>\r\n\t\t\t</li>\r\n\t\t\t</ul>"
+  },
+  {
+    "t": "automobile",
+    "n": "vecInertiaMultiplier",
+    "d": "This controls how much the vehicle resists rotating around each axis — in other words, how much it \"fights back\" against flipping, rolling, or spinning.\r\n\t\t\t<p>Think of it like adjusting how heavy or agile the car feels during:</p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Hard braking or acceleration (tilting forward/back)</li>\r\n\t\t\t<li>Cornering (leaning side to side)</li>\r\n\t\t\t<li>Steering (how fast the car turns or reacts to input)</li>\r\n\t\t\t<li>Mid-air rotations (flips, spins)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p>Each axis affects different types of rotation:</p>\r\n\t\t\t<ul>\r\n\t\t\t<li>X (Pitch - front/back tilt)\r\n\t\t\t\t<ul>\r\n\t\t\t\t<li>Controls how much the car tilts when braking or accelerating</li>\r\n\t\t\t\t<li>Also affects how easily the car flips end-over-end in the air</li>\r\n\t\t\t\t<li>Lower values = more tilt and easier flips</li>\r\n\t\t\t\t<li>Higher values = more stable and less nose dive</li>\r\n\t\t\t\t</ul>\r\n\t\t\t</li>\r\n\t\t\t<li>Y (Roll - side-to-side lean)\r\n\t\t\t\t<ul>\r\n\t\t\t\t<li>Affects how much the vehicle leans during turns or in mid-air</li>\r\n\t\t\t\t<li>Lower values = more body roll, more playful/loose</li>\r\n\t\t\t\t<li>Higher values = stiffer turning and more stable</li>\r\n\t\t\t\t</ul>\r\n\t\t\t</li>\r\n\t\t\t<li>Z (Yaw - rotation/spin)\r\n\t\t\t\t<ul>\r\n\t\t\t\t<li>Controls how quickly the car rotates left/right when steering</li>\r\n\t\t\t\t<li>Lower values = fast, arcade-like steering</li>\r\n\t\t\t\t<li>Higher values = smoother, more realistic turning</li>\r\n\t\t\t\t<li>Recommended to keep above 2.0 for natural behavior</li>\r\n\t\t\t\t</ul>\r\n\t\t\t</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Note:</strong> Some vehicles (like police3, Gang Burrito, 190Z, and Zion Classic) respond unusually to this setting — they rotate too slowly unless you lower the values.</p>\r\n\t\t\t<p><strong>Motorcycles ignore this setting completely.</strong></p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fDriveBiasFront",
+    "d": "Controls how the engine power is distributed between the front and rear wheels — essentially determining if the vehicle is rear-wheel drive (RWD), front-wheel drive (FWD), or all-wheel drive (AWD/4WD).\r\n\t\t\t<p>This directly affects how the car launches, handles corners, and loses/gains traction under throttle.</p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.0</strong> — 100% Rear-Wheel Drive (RWD)\r\n\t\t\t\t<ul>\r\n\t\t\t\t<li>More oversteer and tail-happy behavior</li>\r\n\t\t\t\t<li>Better for drifting or high-speed stability</li>\r\n\t\t\t\t<li>Common in sports cars, muscle cars, supercars</li>\r\n\t\t\t\t</ul>\r\n\t\t\t</li>\r\n\t\t\t<li><strong>1.0</strong> — 100% Front-Wheel Drive (FWD)\r\n\t\t\t\t<ul>\r\n\t\t\t\t<li>More understeer and nose-heavy handling</li>\r\n\t\t\t\t<li>Good grip for everyday driving, poor for drifting</li>\r\n\t\t\t\t<li>Used in most economy and compact cars</li>\r\n\t\t\t\t</ul>\r\n\t\t\t</li>\r\n\t\t\t<li><strong>0.01 to 0.99</strong> — All-Wheel Drive / Four-Wheel Drive (AWD/4WD)\r\n\t\t\t\t<ul>\r\n\t\t\t\t<li>Power is split between front and rear axles</li>\r\n\t\t\t\t<li><strong>0.5</strong> = Perfect 50/50 split (true AWD)</li>\r\n\t\t\t\t<li>Higher values (e.g., 0.7) = front-biased AWD</li>\r\n\t\t\t\t<li>Lower values (e.g., 0.3) = rear-biased AWD</li>\r\n\t\t\t\t<li>Great for off-roading, rally cars, or traction-heavy builds</li>\r\n\t\t\t\t</ul>\r\n\t\t\t</li>\r\n\t\t\t</ul>\r\n\t\t\t<p><strong>Tip:</strong> Pair this setting with <code>fInitialDriveForce</code> and <code>fTractionCurve*</code> values to fine-tune handling behavior.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "nInitialDriveGears",
+    "d": "Sets the number of forward gears (transmission speeds) the vehicle has.\r\n\t\t\t<p>This value affects how the car accelerates and shifts through the gears during driving.</p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Minimum: <strong>1 gear</strong></li>\r\n\t\t\t<li>Maximum (safe): <strong>8 gears</strong> for stable shifting behavior</li>\r\n\t\t\t<li>Maximum (supported): <strong>10 gears</strong> starting from game version <code>1.0.1604.0</code> and above</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Important Notes:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Using more than 8 gears can lead to <strong>gear ratio issues</strong> and <strong>downshifting bugs</strong>, especially if the top gear is 9 or higher.</li>\r\n\t\t\t<li>Gear ratios beyond the 8th gear may <strong>overwrite unrelated data</strong> in the vehicle’s memory structure, leading to unpredictable behavior.</li>\r\n\t\t\t<li>The <strong>final gear ratio is static</strong> and does not adjust based on gear count — meaning 6th or 7th gear might be taller (faster) than the final gear, causing awkward shifts.</li>\r\n\t\t\t<li>For realistic or race-like behavior, <strong>6–7 gears</strong> are generally optimal.</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Recommended:</strong> Stay between <strong>4 to 7 gears</strong> unless you know how to manually adjust gear ratios properly in the transmission data.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fInitialDriveForce",
+    "d": "Controls the base engine torque applied to the wheels, directly influencing the vehicle’s acceleration. It is affected by the vehicle's weight.\r\n\r\n\t\t\t<p><strong>Formula:</strong> <code>fInitialDriveForce = TorqueWheelsNm / VehicleWeightKg</code></p>\r\n\r\n\t\t\t<p>This means heavier vehicles require more drive force to accelerate at the same rate as lighter vehicles.</p>\r\n\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.01 – 0.40:</strong> Typical range for most vehicles</li>\r\n\t\t\t<li><strong>1.0:</strong> Uses the calculated base drive force as-is (no scaling)</li>\r\n\t\t\t<li><strong>&gt; 1.0:</strong> Increases acceleration significantly — use for high-performance or unrealistic setups</li>\r\n\t\t\t<li><strong>&lt; 1.0:</strong> Decreases acceleration — good for trucks, buses, or realistic slow vehicles</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Effect:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Higher values = faster acceleration, stronger launch</li>\r\n\t\t\t<li>Lower values = slower, heavier-feeling car</li>\r\n\t\t\t<li>This value is not the same as horsepower, but it heavily contributes to it</li>\r\n\t\t\t<li>Best paired with correct values for <code>fInitialDriveMaxFlatVel</code> and <code>fDriveBiasFront</code> for realistic tuning</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> Start around <strong>0.20–0.35</strong> for most sedans or sports cars, and adjust based on feel. Test in-game with different vehicle weights for accurate results.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fDriveInertia",
+    "d": "Controls how quickly the engine RPM (revolutions per minute) can increase or decrease — essentially simulating the \"rotational momentum\" of the drivetrain.\r\n\r\n\t\t\t<p><strong>Think of it like:</strong> a lighter flywheel = faster engine revs (high inertia value), a heavier flywheel = slower revs (low inertia value).</p>\r\n\r\n\t\t\t<p><strong>Effects:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Higher values = faster RPM increase (engine revs up quickly)</li>\r\n\t\t\t<li>Lower values = slower RPM change (engine takes longer to reach redline)</li>\r\n\t\t\t<li>This affects how fast the engine responds to throttle input, <strong>not the actual vehicle acceleration</strong></li>\r\n\t\t\t<li>Too low (e.g., <strong>&lt; 0.5</strong>) can negatively affect performance in high-acceleration vehicles</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Value range:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.01 – 0.50:</strong> Slow-revving engines (trucks, heavy vehicles, realism)</li>\r\n\t\t\t<li><strong>0.50 – 1.0:</strong> Normal range (most standard vehicles)</li>\r\n\t\t\t<li><strong>1.0:</strong> Default — no RPM response modification</li>\r\n\t\t\t<li><strong>1.0 – 2.0+:</strong> Fast-revving engines (sports cars, race cars, tuned engines)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> Combine this setting with <code>fInitialDriveForce</code> and <code>fClutchChangeRate*</code> values to tune responsiveness and shifting behavior.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fClutchChangeRateScaleUpShift",
+    "d": "Controls how fast the clutch engages during an <strong>upshift</strong> (shifting to a higher gear while accelerating). This affects how quickly the vehicle transitions between gears under throttle.\r\n\r\n\t\t\t<p><strong>Higher values = faster shifts</strong>, with less time lost between gears. Lower values = slower, more realistic or smoother shifts.</p>\r\n\r\n\t\t\t<p><strong>Value guidelines:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>1.0</strong> = Approx. <strong>0.9 seconds</strong> per upshift (realistic for regular vehicles)</li>\r\n\t\t\t<li><strong>4.0 – 7.0</strong> = Snappy shifting (sports cars, tuned cars)</li>\r\n\t\t\t<li><strong>8.0 – 13.0</strong> = Very quick gear changes (race cars, arcade feel)</li>\r\n\t\t\t<li><strong>Above 13.0</strong> = Not recommended — may cause bugs or unrealistic shift behavior</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tips:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Use higher values for race or performance vehicles to reduce gear lag</li>\r\n\t\t\t<li>Use lower values for trucks, old/classic cars, or to simulate automatic transmissions</li>\r\n\t\t\t<li>Pair with <code>fClutchChangeRateScaleDownShift</code> for balanced shifting</li>\r\n\t\t\t</ul>"
+  },
+  {
+    "t": "automobile",
+    "n": "fClutchChangeRateScaleDownShift",
+    "d": "Controls how quickly the clutch engages when <strong>downshifting</strong> (shifting to a lower gear). This affects how fast the vehicle can drop gears, especially under braking or engine braking conditions.\r\n\r\n\t\t\t<p><strong>Higher values = quicker downshifts</strong>, which means faster throttle response when dropping gears. Lower values = slower, smoother, or more realistic downshifting.</p>\r\n\r\n\t\t\t<p><strong>Value guidelines:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>1.0</strong> = Approx. <strong>0.9 seconds</strong> per downshift (default baseline)</li>\r\n\t\t\t<li><strong>4.0 – 7.0</strong> = Fast and responsive downshifts (ideal for sports and performance cars)</li>\r\n\t\t\t<li><strong>8.0 – 13.0</strong> = Ultra-fast shifting (race cars or arcade-style handling)</li>\r\n\t\t\t<li><strong>Above 13.0</strong> = Not recommended — may cause glitches or shifting instability</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Notes:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>This setting does <em>not</em> directly affect engine braking strength, but it impacts how fast the lower gear is engaged</li>\r\n\t\t\t<li>Recommended to pair with <code>fClutchChangeRateScaleUpShift</code> for consistent transmission behavior</li>\r\n\t\t\t<li>Lower values (1.0–2.5) can simulate slower manual or automatic gearboxes</li>\r\n\t\t\t</ul>"
+  },
+  {
+    "t": "automobile",
+    "n": "fInitialDriveMaxFlatVel",
+    "d": "Sets the vehicle’s theoretical maximum speed at redline in top gear on flat terrain. This effectively adjusts the <strong>final drive ratio</strong> of the transmission, influencing how long each gear is.\r\n\r\n\t\t\t<p><strong>Important:</strong> This value does <em>not guarantee</em> the vehicle will reach this speed — acceleration, drag, and other factors like <code>fInitialDriveForce</code> and <code>fInitialDragCoeff</code> still apply.</p>\r\n\r\n\t\t\t<p><strong>Speed Conversion:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><code>fInitialDriveMaxFlatVel * 0.82</code> ≈ speed in mph</li>\r\n\t\t\t<li><code>fInitialDriveMaxFlatVel * 1.32</code> ≈ speed in km/h</li>\r\n\t\t\t<li><code>To get fInitialDriveMaxFlatVel from km/h:</code> km/h * 0.75</li>\r\n\t\t\t<li><code>To get fInitialDriveMaxFlatVel from mph:</code> mph * 1.22</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Gear Ratio Formula:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><code>TopSpeedKph = (fInitialDriveMaxFlatVel * 1.2) / GearRatio</code></li>\r\n\t\t\t<li>Default GTA top gear ratio is <code>0.9</code></li>\r\n\t\t\t<li>To calculate for a specific gear, replace <code>0.9</code> with that gear’s ratio</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Value Range:</strong> 0.00 – 500.0+</p>\r\n\r\n\t\t\t<p><strong>Tuning Tips:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Use higher values to simulate longer gearing and higher top speed potential</li>\r\n\t\t\t<li>Use lower values to shorten gear length, improve acceleration (especially in lower-powered cars)</li>\r\n\t\t\t<li>Best used in combination with <code>nInitialDriveGears</code> and <code>fInitialDriveForce</code> for balanced results</li>\r\n\t\t\t<li>Overly high values can make gears feel “flat” and reduce acceleration in all gears</li>\r\n\t\t\t</ul>"
+  },
+  {
+    "t": "automobile",
+    "n": "fBrakeForce",
+    "d": "Controls how strong the vehicle’s brakes are by multiplying the base deceleration calculated by the game. Affects how quickly the vehicle slows down when braking.\r\n\r\n\t\t\t<p><strong>Higher values = stronger braking</strong>, while lower values = longer stopping distances.</p>\r\n\r\n\t\t\t<p><strong>Value range:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.01 – 0.50:</strong> Weak brakes — used for heavy vehicles, realism, or slippery surfaces</li>\r\n\t\t\t<li><strong>0.50 – 1.0:</strong> Standard range — realistic braking for normal cars</li>\r\n\t\t\t<li><strong>1.0:</strong> Default — uses the game’s calculated braking force without adjustment</li>\r\n\t\t\t<li><strong>1.0 – 2.0+:</strong> Very strong brakes — great for sports, race, or arcade-style vehicles</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Important:</strong> Increasing <code>fBrakeForce</code> beyond a certain point will <em>not</em> increase stopping power if the wheels are already limited by traction.</p>\r\n\r\n\t\t\t<p><strong>Traction interaction:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>To ensure full braking potential is used, set:</li>\r\n\t\t\t<li><code>fBrakeForce &gt; fTractionCurveMax / 4</code> (tested mainly on cars)</li>\r\n\t\t\t<li>Otherwise, the brakes may lock up or lose grip before reaching full deceleration</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tips:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Pair with <code>fHandBrakeForce</code> for balanced tuning</li>\r\n\t\t\t<li>Too high of a value may cause vehicles to skid or stop unrealistically fast</li>\r\n\t\t\t<li>Test braking under different speeds and surfaces to tune for realism</li>\r\n\t\t\t</ul>"
+  },
+  {
+    "t": "automobile",
+    "n": "fBrakeBiasFront",
+    "d": "Determines how braking force is distributed between the <strong>front</strong> and <strong>rear axles</strong>.\r\n\r\n\t\t\t<p><strong>Value Range:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.0</strong> = 100% rear brake force</li>\r\n\t\t\t<li><strong>0.5</strong> = Equal braking force on front and rear axles (50/50)</li>\r\n\t\t\t<li><strong>1.0</strong> = 100% front brake force</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>How it works:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>Values between 0.01 – 0.49</strong> = rear-biased braking</li>\r\n\t\t\t<li><strong>Values between 0.51 – 0.99</strong> = front-biased braking</li>\r\n\t\t\t<li><strong>Typical real-world vehicles</strong> use around <strong>0.60 – 0.70</strong> for better braking stability (more braking force at the front due to weight transfer)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Things to keep in mind:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>A higher front bias (<code>&gt; 0.5</code>) does not always mean the front wheels will lock or trigger ABS before the rear</li>\r\n\t\t\t<li>ABS lock behavior depends on additional vehicle flags (see <code>strModelFlags</code> for advanced tuning)</li>\r\n\t\t\t<li>Too much rear brake bias can make the car unstable under heavy braking and increase spin risk</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Recommended Setup:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.60 – 0.70</strong> for most sedans, sports cars, and realistic setups</li>\r\n\t\t\t<li><strong>0.50</strong> for balanced or AWD vehicles</li>\r\n\t\t\t<li><strong>&lt; 0.50</strong> only for drift or stunt vehicles where rear bias is desired</li>\r\n\t\t\t</ul>"
+  },
+  {
+    "t": "automobile",
+    "n": "fHandBrakeForce",
+    "d": "Controls how strong the handbrake (usually bound to spacebar or controller trigger) applies braking force to the rear wheels. \r\n\t\t\t<p>Used primarily for drifting, sliding, or locking the rear wheels during cornering or stunts.</p>\r\n\r\n\t\t\t<p><strong>Higher values = stronger rear wheel lock-up</strong>. Lower values = softer, more gradual slide.</p>\r\n\r\n\t\t\t<p><strong>Typical Value Ranges:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.3 – 0.6:</strong> Light/moderate handbrake (street cars, AWD vehicles)</li>\r\n\t\t\t<li><strong>0.7 – 1.0:</strong> Aggressive lock-up (sport/rally cars)</li>\r\n\t\t\t<li><strong>1.0 – 2.0+:</strong> Extreme locking force (drift builds, arcade behavior)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Notes:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Only affects rear wheels — front wheels are unaffected</li>\r\n\t\t\t<li>Best paired with tuned <code>fBrakeBiasFront</code> and <code>fTractionCurve*</code> values for proper drift behavior</li>\r\n\t\t\t<li>Too high of a value may cause vehicles to spin or lose control easily</li>\r\n\t\t\t</ul>"
+  },
+  {
+    "t": "automobile",
+    "n": "fSteeringLock",
+    "d": "Defines the maximum steering angle (in degrees) the front wheels can turn. \r\n\t\t\t<p>A higher value allows for tighter low-speed turning (smaller turning radius), while a lower value limits steering angle for stability at higher speeds.</p>\r\n\r\n\t\t\t<p><strong>Typical Range:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>30 – 45:</strong> Normal for most street and sports cars</li>\r\n\t\t\t<li><strong>50 – 60:</strong> Suitable for drift cars or tight maneuvering vehicles</li>\r\n\t\t\t<li><strong>60 – 90:</strong> Extreme steering angle (use with caution)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Steering Behavior:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>At high speed, GTA V applies steering assist, reducing the steering angle proportionally based on <code>fSteeringLock</code></li>\r\n\t\t\t<li>Too low = car becomes unresponsive at speed</li>\r\n\t\t\t<li>Too high = car may oversteer or push front tires into understeer/skid</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tuning Tip:</strong> For optimal grip and control, align <code>fSteeringLock</code> with <code>fTractionCurveLateral</code>.</p>\r\n\t\t\t<p>Recommended formula:</p>\r\n\t\t\t<code>fSteeringLock = (fTractionCurveLateral * 1.25) + 10</code>\r\n\t\t\t<p>Example: If <code>fTractionCurveLateral</code> is <strong>22.5</strong>, then a good <code>fSteeringLock</code> would be around <strong>38</strong>.</p>\r\n\r\n\t\t\t<p><strong>Default:</strong> Many GTA V vehicles use <strong>40.0</strong> as a balanced value.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fTractionCurveMax",
+    "d": "Defines the maximum lateral grip (cornering force) the tires can produce before beginning to lose traction. \r\n\t\t\t<p>This is the peak value in the tire grip curve — essentially the point where the tires have the most control during cornering or acceleration before sliding starts.</p>\r\n\r\n\t\t\t<p><strong>Higher values = more grip</strong> during high-speed turns and sudden direction changes.</p>\r\n\r\n\t\t\t<p><strong>Typical Range:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>1.0 – 2.0:</strong> Slippery vehicles or poor tires (off-road, snow, worn tires)</li>\r\n\t\t\t<li><strong>2.0 – 2.5:</strong> Standard road cars</li>\r\n\t\t\t<li><strong>2.5 – 3.5:</strong> Sports and performance vehicles</li>\r\n\t\t\t<li><strong>3.5 – 5.0+:</strong> Racing tires, high-grip or arcade-style behavior</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Important:</strong> This value is closely tied to <code>fSteeringLock</code>. If <code>fTractionCurveMax</code> is too high without enough steering lock, the vehicle won’t turn sharply enough. If it's too low with too much steering, the car will lose grip easily.</p>\r\n\r\n\t\t\t<p><strong>Related Tuning Tips:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Pair with <code>fTractionCurveMin</code> to define grip during sliding or at high slip angles</li>\r\n\t\t\t<li>Use with <code>fLowSpeedTractionLossMult</code> to balance low-speed control</li>\r\n\t\t\t<li>Recommended <code>fSteeringLock</code> formula: <code>(fTractionCurveMax * 1.25) + 10</code></li>\r\n\t\t\t</ul>"
+  },
+  {
+    "t": "automobile",
+    "n": "fTractionCurveMin",
+    "d": "Controls the tire grip during sliding or loss-of-traction situations — such as wheel spin, drifting, oversteer, or understeer.\r\n\t\t\t<p>This value represents the <strong>minimum lateral grip</strong> after the vehicle exceeds the peak grip defined by <code>fTractionCurveMax</code>.</p>\r\n\r\n\t\t\t<p><strong>Lower values = more sliding</strong> (useful for drift cars), while higher values maintain control during slip.</p>\r\n\r\n\t\t\t<p><strong>Typical Range:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.5 – 1.5:</strong> Drift or stunt vehicles (easier to lose grip)</li>\r\n\t\t\t<li><strong>1.5 – 2.0:</strong> Standard cars with balanced slip behavior</li>\r\n\t\t\t<li><strong>2.0 – 3.0:</strong> High-grip race or performance vehicles</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tuning Tips:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Should generally be lower than <code>fTractionCurveMax</code></li>\r\n\t\t\t<li>Set a bigger gap between Max and Min for easier drifting (e.g., Max 3.0 / Min 1.0)</li>\r\n\t\t\t<li>Smaller gap = more grip retention during aggressive driving (e.g., Max 2.8 / Min 2.5)</li>\r\n\t\t\t<li>Use together with <code>fTractionCurveLateral</code> for full control of grip response</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Real-World Analogy:</strong> This is how much grip the tires still provide after you’ve pushed them too far — like sliding through a turn or spinning out under throttle.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fTractionCurveLateral",
+    "d": "Defines the shape and peak position of the tire's lateral traction curve, often referred to as the \"slip angle\" — the angle at which tires produce peak cornering grip.\r\n\r\n\t\t\t<p>This value determines how responsive or forgiving the vehicle is to quick steering and high-speed cornering:</p>\r\n\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>Lower values:</strong> Quick grip response, sharp handling — but more likely to lose traction if pushed too far (less forgiving)</li>\r\n\t\t\t<li><strong>Higher values:</strong> Slower steering response, but smoother and more stable grip transition (more forgiving)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Slip Angle Estimate:</strong> The actual peak grip angle is calculated as:\r\n\t\t\t<br><code>fTractionCurveLateral / 2</code> (in degrees)</p>\r\n\r\n\t\t\t<p><strong>Typical Range:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>16 – 22:</strong> High-performance or race cars (fast response)</li>\r\n\t\t\t<li><strong>22 – 28:</strong> Standard road cars (balanced behavior)</li>\r\n\t\t\t<li><strong>28 – 34+:</strong> Heavier or more stable vehicles (trucks, off-road)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Related Tuning Tips:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>This value pairs directly with <code>fSteeringLock</code> to ensure steering input matches optimal tire angle</li>\r\n\t\t\t<li>Recommended formula: <code>fSteeringLock = (fTractionCurveLateral * 1.25) + 10</code></li>\r\n\t\t\t<li>Too low = snappy but twitchy grip; too high = sluggish steering response</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Use this to balance how fast and how safely your vehicle responds to quick direction changes and cornering forces.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fTractionSpringDeltaMax",
+    "d": "Controls the maximum lateral sidewall travel (in meters) before traction loss begins to stabilize. This simulates how much the tire can flex sideways during cornering or sliding before it pulls back.\r\n\r\n\t\t\t<p><strong>Unit:</strong> meters of lateral sidewall flex (tire \"squish\")</p>\r\n\r\n\t\t\t<p>This setting adds a dynamic force that helps the car return to stability after a slide. The larger the delta, the more noticeable the vehicle will \"snap back\" into alignment after drifting or rapid turning.</p>\r\n\r\n\t\t\t<p><strong>Behavior:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Higher values = more noticeable rebound or pull-in effect after a slide</li>\r\n\t\t\t<li>Lower values = less stabilization, more floaty or loose drift behavior</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Common Use:</strong> Used to fine-tune post-slide control or responsiveness mid-corner. Particularly noticeable during transitions (drift → grip).</p>\r\n\r\n\t\t\t<p><strong>Typical Range:</strong> 0.01 – 0.15</p>\r\n\r\n\t\t\t<p><strong>Tuning Tip:</strong> Increase this value slightly if you want the vehicle to naturally realign itself faster after skidding or drifting.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Simulates tire deformation under lateral load. Affects how strongly the car “snaps” back into control during or after a corner or slide.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fLowSpeedTractionLossMult",
+    "d": "Controls how much traction is artificially reduced at low speeds. This primarily affects wheelspin when accelerating from a stop or during burnouts.\r\n\r\n\t\t\t<p><strong>Higher values = more burnout and sliding</strong> at low speed, especially when pressing the throttle aggressively.</p>\r\n\t\t\t<p><strong>Lower values = better grip from a standstill</strong>, reducing tire spin and making launches more stable.</p>\r\n\r\n\t\t\t<p><strong>Typical Effects:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.0:</strong> No artificial traction loss — full grip at low speed</li>\r\n\t\t\t<li><strong>0.5 – 1.0:</strong> Mild-to-moderate wheelspin (default balance)</li>\r\n\t\t\t<li><strong>1.5 – 3.0+:</strong> Heavy burnouts, high tire spin on launch</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Set <strong>low</strong> for race cars, AWD, or realistic street driving</li>\r\n\t\t\t<li>Set <strong>high</strong> for muscle cars, drag builds, or arcade-style launches</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Note:</strong> This is a completely artificial value — it doesn’t simulate real physics, but rather adds or removes tire spin behavior under low-speed conditions.</p>\r\n\r\n\t\t\t<p><strong>Default:</strong> Most GTA V vehicles use <strong>1.0</strong>.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fCamberStiffnesss",
+    "d": "Controls how much the vehicle is influenced by camber forces — primarily how much the suspension \"leans\" or rolls into corners due to road tilt or body roll.\r\n\r\n\t\t\t<p>This affects how strongly the vehicle is pushed in the direction of its body roll. It also accounts for the road’s camber (sideways slope).</p>\r\n\r\n\t\t\t<p><strong>Behavior:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>Higher values (closer to 1.0):</strong> More roll stiffness and force toward the inside of the turn</li>\r\n\t\t\t<li><strong>Lower values (closer to 0.0):</strong> Weaker camber response, more natural suspension lean</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Safe Range:</strong> 0.0 – 1.0<br>\r\n\t\t\t<strong>Warning:</strong> Values below 0.0 or above 1.0 can cause unstable or unrealistic physics behavior</p>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Set closer to <strong>0.5 – 0.7</strong> for most normal cars with balanced roll stiffness</li>\r\n\t\t\t<li>Use <strong>0.8+</strong> for racing cars or go-karts that require strong force against roll</li>\r\n\t\t\t<li>Use <strong>0.2 – 0.4</strong> for soft suspension vehicles like SUVs or off-roaders</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> Combine with <code>fSuspensionForce</code> and <code>fAntiRollBarForce</code> to fine-tune the vehicle’s handling balance during turns.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fTractionBiasFront",
+    "d": "Defines how grip (traction) is distributed between the front and rear wheels.\r\n\r\n\t\t\t<p><strong>Value Range:</strong> 0.01 – 0.99</p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.01:</strong> Rear axle gets all the grip (RWD behavior)</li>\r\n\t\t\t<li><strong>0.99:</strong> Front axle gets all the grip (FWD behavior)</li>\r\n\t\t\t<li><strong>0.50:</strong> Equal traction front and rear (balanced AWD/4WD)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Important:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.00 or 1.00:</strong> Invalid — causes tire physics to break (wheels won’t spawn or act properly)</li>\r\n\t\t\t<li><strong>Outside valid range:</strong> Vehicle will behave irrationally when touching the ground (floating, stuttering, or no control)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>Rear-biased (0.30 – 0.45):</strong> Drifting, RWD handling feel</li>\r\n\t\t\t<li><strong>Front-biased (0.55 – 0.70):</strong> Stable cornering and safer understeer</li>\r\n\t\t\t<li><strong>Balanced (≈ 0.50):</strong> True AWD / performance traction</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tuning Tip:</strong> Adjust this value together with <code>fDriveBiasFront</code> and <code>fTractionCurveMin</code> for refined acceleration and cornering behavior.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> This setting doesn’t control how power is delivered (like fDriveBiasFront), but how much grip each axle gets when driving and cornering.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fTractionLossMult",
+    "d": "Adjusts how much traction (grip) is affected by surface material types — like asphalt, gravel, dirt, or mud.\r\n\r\n\t\t\t<p><strong>Higher values:</strong> Amplify the effect of slippery surfaces, making the car more prone to sliding or losing control.</p>\r\n\t\t\t<p><strong>Lower values:</strong> Reduce the difference between road materials — making the car more stable across all terrain types.</p>\r\n\r\n\t\t\t<p><strong>Typical Value Range:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.5 – 0.9:</strong> Off-road stability (more consistent grip)</li>\r\n\t\t\t<li><strong>1.0 (default):</strong> Normal road behavior (standard material grip effects)</li>\r\n\t\t\t<li><strong>1.2 – 2.0:</strong> Slippery handling, more realistic surface-based sliding (use for drifting or unpredictable terrain)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Set <strong>lower</strong> for rally cars or vehicles that need grip on mixed surfaces</li>\r\n\t\t\t<li>Set <strong>higher</strong> for arcade-style sliding, stunt cars, or vehicles meant to feel light and loose</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> Pairs well with <code>fTractionCurveMin</code> and <code>fLowSpeedTractionLossMult</code> to control overall grip behavior across speed and terrain.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> This value multiplies how strongly the road surface material affects your grip. Lower = more stable, higher = more slide.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fSuspensionForce",
+    "d": "Controls the stiffness of the suspension springs. This determines how strongly the vehicle resists compression and extension (bouncing up and down).\r\n\r\n\t\t\t<p><strong>Higher values:</strong> Stiffer suspension — less bounce, better stability, but less comfort</p>\r\n\t\t\t<p><strong>Lower values:</strong> Softer suspension — more bounce and body movement, but better absorption over bumps</p>\r\n\r\n\t\t\t<p><strong>Technical Formula:</strong> <code>1 / (Force * NumWheels)</code> = suspension travel (how much suspension can move)</p>\r\n\r\n\t\t\t<p><strong>Typical Range:</strong> 1.0 – 10.0</p>\r\n\r\n\t\t\t<p><strong>Behavior:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Set higher for race cars, sports cars, or vehicles that flip too easily</li>\r\n\t\t\t<li>Set lower for off-road vehicles, trucks, or soft suspension setups</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> If your car feels floaty or bounces a lot when turning, increase this value.<br>\r\n\t\t\tCombine with <code>fSuspensionCompDamp</code> and <code>fSuspensionReboundDamp</code> for fine control over suspension behavior.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Controls how hard the vehicle springs push back when compressed. Affects ride comfort, cornering stability, and bouncing.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fSuspensionCompDamp",
+    "d": "Controls how much the suspension resists when it compresses — such as when landing, braking, or hitting a bump.\r\n\r\n\t\t\t<p><strong>Higher values:</strong> Stiffer compression — suspension compresses slower, reducing bounce and dive</p>\r\n\t\t\t<p><strong>Lower values:</strong> Softer compression — more body movement and smoother landings, but can feel floaty</p>\r\n\r\n\t\t\t<p><strong>Behavior:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>High damping helps reduce bouncing and keeps the car more planted</li>\r\n\t\t\t<li>Low damping allows more movement — useful for off-road or soft setups</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Typical Range:</strong> 0.5 – 4.0</p>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>2.0 – 3.5:</strong> Race cars and sports cars for better control and less dive</li>\r\n\t\t\t<li><strong>1.0 – 2.0:</strong> Balanced street vehicles</li>\r\n\t\t\t<li><strong>0.5 – 1.5:</strong> Off-road or comfort-oriented vehicles</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> Tune alongside <code>fSuspensionReboundDamp</code> and <code>fSuspensionForce</code> to achieve the right handling feel.<br>\r\n\t\t\tToo high a value may make the car feel stiff or skittish over uneven surfaces.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Compression damping affects how quickly the suspension squishes down under pressure — like from bumps or weight shifts.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fSuspensionReboundDamp",
+    "d": "Controls how much the suspension resists when it extends back after being compressed — such as after a bump, landing, or weight transfer.\r\n\r\n\t\t\t<p><strong>Higher values:</strong> Slower rebound — suspension takes longer to return to full height, creating a more planted and stable feel</p>\r\n\t\t\t<p><strong>Lower values:</strong> Faster rebound — suspension returns quickly, but may feel bouncy or unstable</p>\r\n\r\n\t\t\t<p><strong>Behavior:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Too low = bouncy or floaty ride (especially after bumps or jumps)</li>\r\n\t\t\t<li>Too high = suspension feels stuck or slow to reset after compression</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Typical Range:</strong> 0.5 – 4.0</p>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>2.0 – 3.5:</strong> Track or high-performance vehicles for tight, stable rebound</li>\r\n\t\t\t<li><strong>1.0 – 2.0:</strong> Street vehicles for balanced ride quality</li>\r\n\t\t\t<li><strong>0.5 – 1.5:</strong> Off-road or soft suspension for quicker recovery over uneven terrain</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> Rebound damping works with <code>fSuspensionCompDamp</code> to shape how the suspension reacts to movement. Rebound should generally be slightly stronger than compression for stable handling.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> This setting manages how quickly the suspension returns to its original position after compressing — directly affecting stability, cornering response, and post-jump behavior.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fSuspensionUpperLimit",
+    "d": "Sets how far the wheels can move upward (compress) from their resting position — measured in meters.\r\n\r\n\t\t\t<p><strong>Higher values:</strong> Allows more upward travel — softer feel, better for off-road or bumpy terrain</p>\r\n\t\t\t<p><strong>Lower values:</strong> Limits compression travel — stiffer ride, better for low-profile or track vehicles</p>\r\n\r\n\t\t\t<p><strong>Value Range:</strong> Typically -0.1 to 0.5</p>\r\n\t\t\t<p>Note: This is a <strong>positive upward offset</strong> in the vehicle model’s local axis. Negative values are rare and may cause visual bugs.</p>\r\n\r\n\t\t\t<p><strong>Behavior:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Impacts how much the suspension can absorb bumps and weight shifts</li>\r\n\t\t\t<li>If too small, suspension may bottom out or feel rigid</li>\r\n\t\t\t<li>If too large, wheels may clip into the fenders or body</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> Use together with <code>fSuspensionLowerLimit</code> to set total travel distance.<br>\r\n\t\t\tFor off-road or lifted vehicles, increase both upper and lower limits.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Controls how far the wheels can move upward into the wheel arch during suspension compression.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fSuspensionLowerLimit",
+    "d": "Sets how far the wheels can move downward (extend) from their original position — measured in meters.\r\n\r\n\t\t\t<p><strong>Higher (more negative) values:</strong> More suspension droop — useful for off-road, rally, or vehicles needing extended wheel travel</p>\r\n\t\t\t<p><strong>Lower (less negative) values:</strong> Less downward movement — tighter suspension feel for racing or lowered vehicles</p>\r\n\r\n\t\t\t<p><strong>Typical Range:</strong> -0.01 to -0.25</p>\r\n\r\n\t\t\t<p><strong>Behavior:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Too small (near 0) = suspension feels stiff and limited</li>\r\n\t\t\t<li>Too large (very negative) = vehicle may sag, bounce, or float excessively</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> This value is almost always negative and defines how far wheels can \"drop\" below the chassis. Works together with <code>fSuspensionUpperLimit</code> to define total suspension travel.</p>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>-0.1 to -0.2:</strong> Normal street vehicles</li>\r\n\t\t\t<li><strong>-0.2 to -0.4:</strong> Off-road or rally setups</li>\r\n\t\t\t<li><strong>-0.05 or less:</strong> Stiff sports/race setups with minimal droop</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Controls how far the suspension can stretch downward — key for determining grip and stability over uneven terrain.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fSuspensionRaise",
+    "d": "Adjusts the vertical position of the vehicle's body relative to its wheels — effectively raising or lowering the ride height visually, without changing actual suspension travel.\r\n\r\n\t\t\t<p><strong>Positive values:</strong> Raise the vehicle body — creates a lifted look (may expose suspension gaps)</p>\r\n\t\t\t<p><strong>Negative values:</strong> Lower the vehicle body — lowers stance, ideal for sport/street aesthetics</p>\r\n\r\n\t\t\t<p><strong>Typical Range:</strong> -0.10 to +0.10<br>\r\n\t\t\tFine adjustments often use <code>-0.01</code> to <code>+0.01</code></p>\r\n\r\n\t\t\t<p><strong>Behavior:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Does not affect suspension strength or travel directly</li>\r\n\t\t\t<li>Only changes how high or low the body sits on the wheels</li>\r\n\t\t\t<li>Too low: wheels may clip through fenders or float off suspension arms</li>\r\n\t\t\t<li>Too high: visible gap between wheels and body or disconnected-looking suspension</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>−0.02 to −0.04:</strong> Lowered stance for race cars or street tuners</li>\r\n\t\t\t<li><strong>0.00:</strong> Default, neutral ride height</li>\r\n\t\t\t<li><strong>+0.02 or more:</strong> Off-road, lifted trucks, or monster builds</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> This value should be adjusted in small steps (0.01–0.02) unless the model allows more room. Large changes can cause visual glitches.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Raises or lowers the vehicle’s body relative to the wheels, mostly for visual stance — does not affect performance unless extreme.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fSuspensionBiasFront",
+    "d": "Adjusts the distribution of suspension stiffness between the front and rear wheels — useful for balancing the vehicle when there’s uneven weight or different axle loads.\r\n\r\n\t\t\t<p><strong>Value Range:</strong> 0.0 to 1.0</p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.5:</strong> Equal suspension strength front and rear (default for balanced vehicles)</li>\r\n\t\t\t<li><strong>&gt; 0.5:</strong> Front suspension is stiffer — ideal for front-heavy vehicles or trucks with lighter rear ends</li>\r\n\t\t\t<li><strong>&lt; 0.5:</strong> Rear suspension is stiffer — good for rear-engine or rear-heavy vehicles</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Behavior:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Influences how the car reacts during braking, acceleration, and over bumps</li>\r\n\t\t\t<li>Too much front bias = rear feels soft or unstable under load</li>\r\n\t\t\t<li>Too much rear bias = front may dive too much during braking</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.55 – 0.65:</strong> Pickup trucks or front-heavy vehicles</li>\r\n\t\t\t<li><strong>0.45 – 0.50:</strong> Rear-heavy cars or balanced performance setups</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> Match this setting with your vehicle’s weight distribution and number of wheels per axle. For example, trucks with multiple rear wheels often need stronger front suspension bias.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Controls which end of the vehicle has stronger suspension support — affects body movement, weight transfer, and cornering stability.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fAntiRollBarForce",
+    "d": "Controls how much force is transferred from one wheel to the opposite wheel when the suspension compresses — simulating the effect of anti-roll (sway) bars.\r\n\r\n\t\t\t<p><strong>Higher values:</strong> Less body roll during turns, stiffer lateral stability</p>\r\n\t\t\t<p><strong>Lower values:</strong> More body roll, softer feel — better for off-road or uneven terrain</p>\r\n\r\n\t\t\t<p><strong>Typical Range:</strong> 0.0 to 1.5 (default ~0.5)</p>\r\n\r\n\t\t\t<p><strong>Behavior:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Reduces lean when cornering</li>\r\n\t\t\t<li>Improves stability in high-speed turns</li>\r\n\t\t\t<li>Too high = overly stiff, possible loss of grip on uneven roads</li>\r\n\t\t\t<li>Too low = excessive body roll, slower handling response</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.4 – 0.7:</strong> Balanced street and sport vehicles</li>\r\n\t\t\t<li><strong>0.8 – 1.2:</strong> High-performance or race cars</li>\r\n\t\t\t<li><strong>0.0 – 0.3:</strong> Off-road or rock-crawling vehicles (to allow articulation)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> Use in combination with <code>fAntiRollBarBiasFront</code> to adjust how this stiffness is distributed between the front and rear axles.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Controls body roll resistance during cornering — higher values = flatter turns and tighter handling.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fAntiRollBarBiasFront",
+    "d": "Distributes the anti-roll bar (sway bar) force between the front and rear axles. This determines which end of the vehicle resists body roll more during cornering.\r\n\r\n\t\t\t<p><strong>Value Range:</strong> 0.0 to 1.0</p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.0:</strong> 100% rear anti-roll force — rear is stiff, front is loose</li>\r\n\t\t\t<li><strong>0.5:</strong> 50/50 split — balanced roll resistance front and rear</li>\r\n\t\t\t<li><strong>1.0:</strong> 100% front anti-roll force — front is stiff, rear is loose</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Behavior:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>More front bias (e.g. 0.6 – 0.8):</strong> Reduces front body roll, increases understeer</li>\r\n\t\t\t<li><strong>More rear bias (e.g. 0.2 – 0.4):</strong> Reduces rear body roll, increases oversteer</li>\r\n\t\t\t<li><strong>Neutral (0.5):</strong> Balanced — good for general road use</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>Sports cars:</strong> ~0.55 to 0.65 (slight front bias for stability)</li>\r\n\t\t\t<li><strong>Drift cars:</strong> ~0.4 or lower (more rear stiffness = easier to swing out)</li>\r\n\t\t\t<li><strong>Off-road:</strong> ~0.5 or lower (for more articulation)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> Use together with <code>fAntiRollBarForce</code> to control overall stiffness, then fine-tune the balance using this value.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Controls how the anti-roll force is split between front and rear — affects understeer vs oversteer behavior in corners.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fRollCentreHeightFront",
+    "d": "Sets the height of the roll center for the front axle, measured from the base of the vehicle model (ground level), in meters. The roll center is a pivot point around which the vehicle rolls (leans) during cornering.\r\n\r\n\t\t\t<p><strong>How It Works:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>Higher values:</strong> Less body roll — front suspension resists leaning</li>\r\n\t\t\t<li><strong>Lower values:</strong> More body roll — front suspension leans more in turns</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Behavior:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>If the roll center is too high (above the center of mass), it can cause unnatural handling like the “Tyrus effect” — where the car leans inward (negative roll)</li>\r\n\t\t\t<li>If it’s too low (far below the center of mass), the vehicle may roll too much and become unstable or prone to rollover</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Suggested Values:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.20 – 0.45:</strong> Typical for most vehicles</li>\r\n\t\t\t<li><strong>0.50+:</strong> Use with caution — only if center of mass is very low</li>\r\n\t\t\t<li><strong>&lt; 0.15:</strong> Can cause excessive roll or instability</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tip:</strong> Match this value with your center of mass height (<code>vecCentreOfMassOffset.z</code>) to control lean without causing weird behavior. Use together with <code>fRollCentreHeightRear</code> to fine-tune front/rear roll balance.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Adjusts how much the front of the vehicle leans in corners. Higher = flatter handling, lower = more dramatic roll and weight shift.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fRollCentreHeightRear",
+    "d": "Sets the roll center height for the rear axle — the point around which the rear end of the vehicle rolls during cornering. Measured in meters from the bottom of the vehicle model (road level).\r\n\r\n\t\t\t<p><strong>How It Works:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>Higher values:</strong> Less rear body roll — tighter, flatter rear-end behavior</li>\r\n\t\t\t<li><strong>Lower values:</strong> More rear body roll — greater rear-end lean and weight shift</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Important Dynamics:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Raising the rear roll center relative to the front shifts more cornering load to the front, helping reduce understeer</li>\r\n\t\t\t<li>Lowering the rear roll center makes the rear roll more — potentially increasing understeer or allowing for drift-style oversteer depending on grip balance</li>\r\n\t\t\t<li>If the roll center is set above the vehicle’s center of mass, it can cause “negative roll” or odd leaning behavior (known as the “Tyrus Effect”)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Suggested Ranges:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.25 – 0.50:</strong> Balanced street or track cars</li>\r\n\t\t\t<li><strong>Above 0.50:</strong> Use cautiously — only when center of mass is very low</li>\r\n\t\t\t<li><strong>Below 0.20:</strong> Can cause excessive rear-end roll and instability</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Tips:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Use in combination with <code>fRollCentreHeightFront</code> to fine-tune cornering behavior</li>\r\n\t\t\t<li><strong>More rear roll center height than front:</strong> Increases turn-in response</li>\r\n\t\t\t<li><strong>More front roll center height than rear:</strong> Increases corner stability</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Controls how much the rear of the car leans in turns. Helps tune understeer/oversteer balance and body control during cornering.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fCollisionDamageMult",
+    "d": "Controls how much physical damage the vehicle takes from impacts such as crashes, bumps, and landings. This value multiplies the base damage the game applies when the vehicle collides with anything.\r\n\r\n\t\t\t<p><strong>What It Affects:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Body deformation (dents, crumples, parts falling off)</li>\r\n\t\t\t<li>Engine damage (can lead to smoke/fire/stall)</li>\r\n\t\t\t<li>Wheels or gas tank catching fire after severe impact</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Value Range:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.0:</strong> No collision damage at all (invincible car body and engine)</li>\r\n\t\t\t<li><strong>1.0:</strong> Normal GTA V collision damage</li>\r\n\t\t\t<li><strong>10.0:</strong> Ten times more damage from every crash</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>Low values (0.1–0.4):</strong> Useful for durable vehicles like off-roaders or armored cars</li>\r\n\t\t\t<li><strong>High values (2.0+):</strong> Good for fragile sports cars or hardcore realism</li>\r\n\t\t\t<li><strong>0.0:</strong> Makes the vehicle immune to crash damage (but may still explode from bullets or fire)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Note:</strong> This value also affects whether the engine is damaged from impacts. Setting it to 0 disables engine failure from collisions.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Multiplier for all collision-based damage to the vehicle body, engine, and more.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fWeaponDamageMult",
+    "d": "Multiplies how much damage the vehicle takes from weapons, including bullets, explosions, and melee attacks. This value adjusts how vulnerable the vehicle is to combat-related threats.\r\n\r\n\t\t\t<p><strong>What It Affects:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Bullet damage to body panels, windows, and tires</li>\r\n\t\t\t<li>Explosive damage from grenades, RPGs, sticky bombs, etc.</li>\r\n\t\t\t<li>Firearms causing engine failure or vehicle ignition</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Value Range:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.0:</strong> Vehicle is immune to all weapon damage</li>\r\n\t\t\t<li><strong>1.0:</strong> Default GTA V weapon damage</li>\r\n\t\t\t<li><strong>10.0:</strong> Takes ten times more damage from all weapons</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.0:</strong> Use for unbreakable props or cinematic-only vehicles</li>\r\n\t\t\t<li><strong>0.1 – 0.4:</strong> Makes vehicles more resistant to damage, like armored cars</li>\r\n\t\t\t<li><strong>2.0+:</strong> Increases realism or fragility for custom gameplay modes</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Note:</strong> This does <em>not</em> affect how weapons interact with pedestrians or environment — only vehicles.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Controls how easily the vehicle takes damage from bullets, explosives, and other weapons.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fDeformationDamageMult",
+    "d": "Controls how much the vehicle's body visually crumples or bends when damaged. This affects the visual deformation — like dents, twisted frames, or panels bending — but not actual engine or performance damage.\r\n\r\n\t\t\t<p><strong>What It Affects:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Visible body deformation from crashes or hard impacts</li>\r\n\t\t\t<li>Crushed hoods, doors, bumpers, fenders, etc.</li>\r\n\t\t\t<li>Severity of model distortion (especially for cinematic or crash-test builds)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Value Range:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.0:</strong> Vehicle body will not visually deform, regardless of impact force</li>\r\n\t\t\t<li><strong>1.0:</strong> Standard GTA V deformation</li>\r\n\t\t\t<li><strong>10.0:</strong> Extreme deformation — even small hits may crush panels significantly</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.0 – 0.2:</strong> Use for strong/rigid vehicles like trucks or armored vehicles</li>\r\n\t\t\t<li><strong>1.0:</strong> Balanced realism for regular cars</li>\r\n\t\t\t<li><strong>3.0+:</strong> Great for cinematic destruction, soft vehicles, or demolition derby setups</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Note:</strong> This is purely visual — it doesn’t affect drivability or engine performance unless combined with other damage multipliers.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Scales how much the car visually deforms when damaged. Higher = more crumpling.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fEngineDamageMult",
+    "d": "Controls how much damage the vehicle's engine takes from collisions or attacks. A higher value makes the engine more fragile and more likely to fail or catch fire. This affects gameplay performance — engine health, stalling, and explosions.\r\n\r\n\t\t\t<p><strong>What It Affects:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Engine health loss during impacts or crashes</li>\r\n\t\t\t<li>Increased chance of engine stalling or failing</li>\r\n\t\t\t<li>Engine fires and explosions when severely damaged</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Value Range:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.0:</strong> Engine is indestructible — no damage or failure</li>\r\n\t\t\t<li><strong>1.0:</strong> Standard engine damage calculation</li>\r\n\t\t\t<li><strong>10.0:</strong> Extremely fragile engine — small hits may destroy it</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>0.0 – 0.2:</strong> Ideal for armored or mission-critical vehicles</li>\r\n\t\t\t<li><strong>0.5 – 1.0:</strong> Balanced setting for realism</li>\r\n\t\t\t<li><strong>2.0+:</strong> For hardcore or cinematic setups where engine failure is common</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Note:</strong> Engine damage is most sensitive to direct hood impacts, especially on low vehicles. Tall vehicles may absorb more front-end impact without triggering engine loss.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Multiplies how fast the engine breaks down from crashes or hits. Higher = more engine damage.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fPetrolTankVolume",
+    "d": "Defines the size of the vehicle's fuel tank in liters. Affects how much fuel leaks when the tank is punctured and is also used by certain fuel-consumption or refueling scripts.\r\n\r\n\t\t\t<p><strong>What It Affects:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Amount of fuel that leaks when the gas tank is shot or damaged</li>\r\n\t\t\t<li>Integration with custom fuel systems (like LegacyFuel or other mods)</li>\r\n\t\t\t<li>May influence fire/explosion timing if fuel leaks and ignites</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Value Range:</strong> Any realistic value in liters (e.g., 40.0 – 120.0)</p>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>Motorcycles:</strong> ~15.0 – 20.0 L</li>\r\n\t\t\t<li><strong>Sports Cars:</strong> ~50.0 – 70.0 L</li>\r\n\t\t\t<li><strong>Trucks or SUVs:</strong> ~80.0 – 120.0 L</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Note:</strong> This value has no effect unless fuel-related logic (like damage, fire, or scripting) references it.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Sets how much fuel the vehicle holds. Impacts leaks and fuel-based mods.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fOilVolume",
+    "d": "Sets the total engine oil capacity in liters. This value influences how long the engine can operate while leaking oil — usually after major damage. Once oil depletes, the engine starts emitting black smoke and eventually fails.\r\n\r\n\t\t\t<p><strong>What It Affects:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>How long the engine can run after taking oil-related damage</li>\r\n\t\t\t<li>Length of time black smoke appears before engine shutdown</li>\r\n\t\t\t<li>Used by some mods to simulate oil pressure/failure</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Value Range:</strong> Typically between <code>2.0</code> and <code>12.0</code> liters</p>\r\n\r\n\t\t\t<p><strong>Use Cases:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>Motorcycles:</strong> ~2.0 – 3.0 L</li>\r\n\t\t\t<li><strong>Sports/Regular Cars:</strong> ~4.0 – 6.0 L</li>\r\n\t\t\t<li><strong>Trucks or High-Performance Engines:</strong> ~8.0 – 12.0 L</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Note:</strong> This value does not directly affect performance unless paired with scripts or damage behavior. However, black smoke and engine failure timing is indirectly influenced by it.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Sets how much engine oil is available. Affects how long the engine lasts after damage before it dies.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fSeatOffsetDistX",
+    "d": "Sets how far the seat is positioned sideways (left or right) relative to the vehicle’s center. This is most noticeable when entering or exiting the vehicle — it adjusts how far the character shifts toward the door.\r\n\r\n\t\t\t<p><strong>What It Affects:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Driver/passenger seating alignment with the vehicle door</li>\r\n\t\t\t<li>Character entry/exit animations and positioning</li>\r\n\t\t\t<li>Vehicle mod visuals and realism (e.g. when using custom models)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Value Range:</strong> Typically small values around <code>-0.3</code> to <code>+0.3</code></p>\r\n\r\n\t\t\t<p><strong>Interpretation:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>Negative (-):</strong> Moves the seat left (toward the driver side)</li>\r\n\t\t\t<li><strong>Positive (+):</strong> Moves the seat right (toward the passenger side)</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Example:</strong> Driver seat might use <code>-0.25</code>, passenger seat might use <code>+0.25</code></p>\r\n\r\n\t\t\t<p><strong>Note:</strong> This has no impact on vehicle handling — it’s purely visual and positional.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Controls how far the seat is placed side-to-side inside the vehicle cabin.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fSeatOffsetDistY",
+    "d": "Sets how far the seat is positioned forward or backward inside the vehicle (along the Y axis). It adjusts whether the seat is closer to the front or rear of the vehicle.\r\n\r\n\t\t\t<p><strong>What It Affects:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>How far the character sits toward the dashboard or the backrest</li>\r\n\t\t\t<li>Interior alignment — useful for tuning modded or custom vehicles</li>\r\n\t\t\t<li>Ensures animation and seating look realistic</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Value Range:</strong> Usually from <code>-1.0</code> (rear) to <code>+1.0</code> (front)</p>\r\n\r\n\t\t\t<p><strong>Interpretation:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>Negative (-):</strong> Moves the seat closer to the trunk/rear</li>\r\n\t\t\t<li><strong>Positive (+):</strong> Moves the seat closer to the hood/dashboard</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Example:</strong> Rear seats may use <code>-0.5</code>, front seats may use <code>+0.3</code></p>\r\n\r\n\t\t\t<p><strong>Note:</strong> This is a cosmetic positioning value, not related to handling or physics.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Controls front/back placement of the seat within the car's interior.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "fSeatOffsetDistZ",
+    "d": "Sets how high or low the seat is placed in the vehicle (along the Z axis). This determines how far the character sits from the vehicle's floor or roof.\r\n\r\n\t\t\t<p><strong>What It Affects:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>How high the driver or passenger sits inside the vehicle</li>\r\n\t\t\t<li>Visual alignment with steering wheels, dashboards, and windows</li>\r\n\t\t\t<li>Can help fix clipping issues in custom vehicles</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Value Range:</strong> Typically from <code>-1.0</code> (lower/closer to the floor) to <code>+1.0</code> (higher/closer to the roof)</p>\r\n\r\n\t\t\t<p><strong>Interpretation:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li><strong>Negative (-):</strong> Lowers the seat toward the undercarriage</li>\r\n\t\t\t<li><strong>Positive (+):</strong> Raises the seat toward the roof</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Example:</strong> Sports cars may use lower values like <code>-0.3</code>, while vans may use higher values like <code>+0.2</code></p>\r\n\r\n\t\t\t<p><strong>Note:</strong> This only affects seating position and visuals — it has no impact on handling or physics.</p>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Controls the vertical (up/down) placement of the seat inside the vehicle.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "nMonetaryValue",
+    "d": "Represents the in-game value (worth) of the vehicle in dollars. This is used by various game mechanics and scripts.\r\n\r\n\t\t\t<p><strong>What It Affects:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>Vehicle resale or insurance cost (in some game modes)</li>\r\n\t\t\t<li>Value displayed in vehicle shops or export missions</li>\r\n\t\t\t<li>Economy-based systems in roleplay or custom servers</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Value Range:</strong> Any positive integer. Typically from <code>500</code> to <code>2,000,000</code> depending on vehicle type.</p>\r\n\r\n\t\t\t<p><strong>Notes:</strong></p>\r\n\t\t\t<ul>\r\n\t\t\t<li>This value has no effect on performance or physics.</li>\r\n\t\t\t<li>Useful for sorting vehicle classes (e.g., economy, sports, supercars).</li>\r\n\t\t\t<li>Some modded shop or garage systems may use this to determine cost.</li>\r\n\t\t\t</ul>\r\n\r\n\t\t\t<p><strong>Summary:</strong> Sets how much the vehicle is worth in in-game currency.</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "strModelFlags",
+    "d": "<p>Model-level bitwise flags that control rendering, animation, suspension, and behavior logic for vehicles.</p>\r\n\r\n\t\t\t\t<p><strong>Basic Model Behavior:</strong></p>\r\n\t\t\t\t<table border=\"1\" cellpadding=\"4\" cellspacing=\"0\">\r\n\t\t\t\t\t<thead>\r\n\t\t\t\t\t\t<tr><th>Hex</th><th>Decimal</th><th>Flag</th><th>Description</th></tr>\r\n\t\t\t\t\t</thead>\r\n\t\t\t\t\t<tbody>\r\n\t\t\t\t\t\t<tr><td>0x1</td><td>1</td><td>MF_IS_VAN</td><td>Enables rear double doors (door_dside_r & door_pside_r)</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x8</td><td>8</td><td>MF_IS_BIG</td><td>Makes AI take wider turns</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x100</td><td>256</td><td>MF_NO_DOORS</td><td>Used for doorless models like boats</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x200</td><td>512</td><td>MF_TANDEM_SEATING</td><td>Enables tandem (inline) seating layout</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x400</td><td>1024</td><td>MF_SIT_IN_BOAT</td><td>Uses boat-style sitting animation</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x800</td><td>2048</td><td>MF_HAS_TRACKS</td><td>Enables tank-style continuous treads</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x1000</td><td>4096</td><td>MF_NO_EXHAUST</td><td>Disables exhaust particles</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x2000</td><td>8192</td><td>MF_DOUBLE_EXHAUST</td><td>Mirrors exhaust on both sides</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x4000</td><td>16384</td><td>MF_NO_1STPERSON_LOOKBEHIND</td><td>Disables \"look behind\" in first person</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x8000</td><td>32768</td><td>MF_CAN_ENTER_IF_NO_DOOR</td><td>Allows entering vehicle without a door</td></tr>\r\n\t\t\t\t\t</tbody>\r\n\t\t\t\t</table>\r\n\r\n\t\t\t\t<p><strong>Axle & Suspension Configuration:</strong></p>\r\n\t\t\t\t<table border=\"1\" cellpadding=\"4\" cellspacing=\"0\">\r\n\t\t\t\t\t<thead>\r\n\t\t\t\t\t\t<tr><th>Hex</th><th>Decimal</th><th>Flag</th></tr>\r\n\t\t\t\t\t</thead>\r\n\t\t\t\t\t<tbody>\r\n\t\t\t\t\t\t<tr><td>0x10000</td><td>65536</td><td>MF_AXLE_F_TORSION</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x20000</td><td>131072</td><td>MF_AXLE_F_SOLID</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x40000</td><td>262144</td><td>MF_AXLE_F_MCPHERSON</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x80000</td><td>524288</td><td>MF_ATTACH_PED_TO_BODYSHELL</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x100000</td><td>1048576</td><td>MF_AXLE_R_TORSION</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x200000</td><td>2097152</td><td>MF_AXLE_R_SOLID</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x400000</td><td>4194304</td><td>MF_AXLE_R_MCPHERSON</td></tr>\r\n\t\t\t\t\t</tbody>\r\n\t\t\t\t</table>\r\n\r\n\t\t\t\t<p><strong>Advanced Vehicle Features:</strong></p>\r\n\t\t\t\t<table border=\"1\" cellpadding=\"4\" cellspacing=\"0\">\r\n\t\t\t\t\t<thead>\r\n\t\t\t\t\t\t<tr><th>Hex</th><th>Decimal</th><th>Flag</th><th>Description</th></tr>\r\n\t\t\t\t\t</thead>\r\n\t\t\t\t\t<tbody>\r\n\t\t\t\t\t\t<tr><td>0x800000</td><td>8388608</td><td>MF_DONT_FORCE_GRND_CLEARANCE</td><td>Allows full suspension travel without enforcing ground clearance</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x1000000</td><td>16777216</td><td>MF_DONT_RENDER_STEER</td><td>Disables visible wheel rotation while steering</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x2000000</td><td>33554432</td><td>MF_NO_WHEEL_BURST</td><td>Wheels are bulletproof</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x4000000</td><td>67108864</td><td>MF_INDESTRUCTIBLE</td><td>Makes vehicle invulnerable to damage</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x8000000</td><td>134217728</td><td>MF_DOUBLE_FRONT_WHEELS</td><td>Adds extra wheels to the front axle</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x10000000</td><td>268435456</td><td>MF_IS_RC</td><td>Player becomes invisible when inside (RC vehicle)</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x20000000</td><td>536870912</td><td>MF_DOUBLE_REAR_WHEELS</td><td>Adds extra wheels to the rear axle</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x40000000</td><td>1073741824</td><td>MF_NO_WHEEL_BREAK</td><td>Prevents wheels from falling off on damage</td></tr>\r\n\t\t\t\t\t\t<tr><td>0x80000000</td><td>2147483648</td><td>MF_IS_HATCHBACK</td><td>Classifies model as a hatchback</td></tr>\r\n\t\t\t\t\t</tbody>\r\n\t\t\t\t</table>\r\n\r\n\t\t\t\t<p><strong>Usage:</strong> Flags are combined using <code>bitwise OR</code> or summed. Example: <code>0x1 | 0x400 | 0x8000000</code> (decimal: <code>1 + 1024 + 134217728 = 134218753</code>).</p>"
+  },
+  {
+    "t": "automobile",
+    "n": "strHandlingFlags",
+    "d": "<p>Bitwise flags that control handling behavior such as suspension, drivetrain, steering logic, traction systems, and off-road stability.</p>\r\n\r\n\t\t<p>Flags can be <strong>combined using bitwise OR</strong>. Each flag affects how the vehicle behaves under specific conditions.</p>\r\n\r\n\t\t<table border=\"1\" cellpadding=\"4\" cellspacing=\"0\">\r\n\t\t\t<thead>\r\n\t\t\t\t<tr>\r\n\t\t\t\t\t<th>Hex</th>\r\n\t\t\t\t\t<th>Decimal</th>\r\n\t\t\t\t\t<th>Flag</th>\r\n\t\t\t\t\t<th>Description</th>\r\n\t\t\t\t</tr>\r\n\t\t\t</thead>\r\n\t\t\t<tbody>\r\n\t\t\t\t<tr><td>0x1</td><td>1</td><td>HF_SMOOTHED_COMPRESSION</td><td>Makes suspension compression smoother</td></tr>\r\n\t\t\t\t<tr><td>0x2</td><td>2</td><td>HF_REDUCED_MOD_MASS</td><td>Reduces mod part weight</td></tr>\r\n\t\t\t\t<tr><td>0x4</td><td>4</td><td>HF_HAS_KERS</td><td>Partial KERS support; requires native to activate boost</td></tr>\r\n\t\t\t\t<tr><td>0x8</td><td>8</td><td>HF_HAS_RALLY_TYRES</td><td>Inverts grip logic (rarely used)</td></tr>\r\n\t\t\t\t<tr><td>0x10</td><td>16</td><td>HF_HAS_TRACKS</td><td>Mirrors model flag; mostly unused</td></tr>\r\n\t\t\t\t<tr><td>0x20</td><td>32</td><td>HF_NO_HANDBRAKE</td><td>Disables handbrake</td></tr>\r\n\t\t\t\t<tr><td>0x40</td><td>64</td><td>HF_STEER_REARWHEELS</td><td>Rear wheels steer instead of front</td></tr>\r\n\t\t\t\t<tr><td>0x80</td><td>128</td><td>HF_HANDBRAKE_REARWHEELSTEER</td><td>Handbrake triggers rear-wheel steer</td></tr>\r\n\t\t\t\t<tr><td>0x100</td><td>256</td><td>HF_STEER_ALL_WHEELS</td><td>All wheels can steer</td></tr>\r\n\t\t\t\t<tr><td>0x200</td><td>512</td><td>HF_FREEWHEEL_NO_GAS</td><td>Disables auto-braking when coasting</td></tr>\r\n\t\t\t\t<tr><td>0x400</td><td>1024</td><td>HF_NO_REVERSE</td><td>Disables reverse gear</td></tr>\r\n\t\t\t\t<tr><td>0x800</td><td>2048</td><td>HF_REDUCED_RIGHTING_FORCE</td><td>Reduces self-righting torque</td></tr>\r\n\t\t\t\t<tr><td>0x1000</td><td>4096</td><td>HF_REDUCED_DRIVE_OVER_DAMAGE</td><td>Less damage when running over peds</td></tr>\r\n\t\t\t\t<tr><td>0x2000</td><td>8192</td><td>HF_STEER_NO_WHEELS</td><td>Steering visuals disabled</td></tr>\r\n\t\t\t\t<tr><td>0x4000</td><td>16384</td><td>HF_CVT</td><td>Simulates electric vehicle drivetrain</td></tr>\r\n\t\t\t\t<tr><td>0x8000</td><td>32768</td><td>HF_ALT_EXT_WHEEL_BOUNDS_BEH</td><td>Alternate external wheel bounds behavior</td></tr>\r\n\t\t\t\t<tr><td>0x10000</td><td>65536</td><td>HF_DONT_RAISE_BOUNDS_AT_SPEED</td><td>Bounding box doesn't change at speed</td></tr>\r\n\t\t\t\t<tr><td>0x20000</td><td>131072</td><td>HF_EXT_WHEEL_BOUNDS_COL</td><td>External wheel bounds used for collisions</td></tr>\r\n\t\t\t\t<tr><td>0x40000</td><td>262144</td><td>HF_LESS_SNOW_SINK</td><td>Vehicle sinks less into snow</td></tr>\r\n\t\t\t\t<tr><td>0x80000</td><td>524288</td><td>HF_TYRES_CAN_CLIP</td><td>Tires clip into ground for better bump handling</td></tr>\r\n\t\t\t\t<tr><td>0x100000</td><td>1048576</td><td>HF_REDUCED_DRIVE_OVER_DAMAGE (alt hash)</td><td>Duplicate with different hash</td></tr>\r\n\t\t\t\t<tr><td>0x200000</td><td>2097152</td><td>HF_ALT_EXT_WHEEL_BOUNDS_SHRINK</td><td>Shrinks wheel bounds</td></tr>\r\n\t\t\t\t<tr><td>0x400000</td><td>4194304</td><td>HF_HEAVY_VEHICLE</td><td>Marks as heavy-duty vehicle</td></tr>\r\n\t\t\t\t<tr><td>0x1000000</td><td>16777216</td><td>HF_OFFROAD_ABILITIES</td><td>Gravity multiplier 1.1 (better off-road)</td></tr>\r\n\t\t\t\t<tr><td>0x2000000</td><td>33554432</td><td>HF_OFFROAD_ABILITIES_X2</td><td>Gravity multiplier 1.2 + foliage collision immunity</td></tr>\r\n\t\t\t\t<tr><td>0x4000000</td><td>67108864</td><td>HF_TYRES_RAISE_SIDE_IMPACT_THRESHOLD</td><td>Raises tire side impact threshold</td></tr>\r\n\t\t\t\t<tr><td>0x8000000</td><td>134217728</td><td>HF_OFFROAD_INCREASED_GRAVITY_NO_FOLIAGE_DRAG</td><td>Same as X2, but disables self-leveling</td></tr>\r\n\t\t\t\t<tr><td>0x10000000</td><td>268435456</td><td>HF_UNUSED_2</td><td>Unused flag</td></tr>\r\n\t\t\t\t<tr><td>0x20000000</td><td>536870912</td><td>HF_ENABLE_LEAN</td><td>Enables lean for ATVs/bikes</td></tr>\r\n\t\t\t\t<tr><td>0x40000000</td><td>1073741824</td><td>HF_FORCE_NO_TC_OR_SC</td><td>Disables traction/stability for bikes</td></tr>\r\n\t\t\t\t<tr><td>0x80000000</td><td>2147483648</td><td>HF_HEAVYARMOUR</td><td>Vehicle is armored</td></tr>\r\n\t\t\t</tbody>\r\n\t\t</table>\r\n\r\n\t\t<p><strong>Miscellaneous Extended Flags:</strong></p>\r\n\t\t<table border=\"1\" cellpadding=\"4\" cellspacing=\"0\">\r\n\t\t\t<thead>\r\n\t\t\t\t<tr>\r\n\t\t\t\t\t<th>Hex</th>\r\n\t\t\t\t\t<th>Decimal</th>\r\n\t\t\t\t\t<th>Flag</th>\r\n\t\t\t\t\t<th>Description</th>\r\n\t\t\t\t</tr>\r\n\t\t\t</thead>\r\n\t\t\t<tbody>\r\n\t\t\t\t<tr><td>0x100000000</td><td>4294967296</td><td>HF_SELF_RIGHTING_IN_WATER</td><td>Allows vehicle to self-right while floating</td></tr>\r\n\t\t\t\t<tr><td>0x200000000</td><td>8589934592</td><td>HF_IMPROVED_RIGHTING_FORCE</td><td>Stronger self-righting torque</td></tr>\r\n\t\t\t\t<tr><td>0x400000000</td><td>17179869184</td><td>HF_LOW_SPEED_WHEELIES</td><td>Allows low-speed wheelies (bikes)</td></tr>\r\n\t\t\t\t<tr><td>0x800000000</td><td>34359738368</td><td>HF_USE_EXTRA_SOFT_SURFACE_SUS</td><td>Soft suspension for terrain changes</td></tr>\r\n\t\t\t\t<tr><td>0x1000000000</td><td>68719476736</td><td>HF_LAST_AVAILABLE_FLAG</td><td>Placeholder; no effect</td></tr>\r\n\t\t\t</tbody>\r\n\t\t</table>\r\n\r\n\t\t<p><strong>Usage:</strong> Add decimal values or use <code>|</code> to combine flags in hex. Example: <code>0x4 | 0x400</code> or <code>4 + 1024 = 1028</code></p>"
+  },
+  {
+    "t": "automobile",
+    "n": "strDamageFlags",
+    "d": "Sets which vehicle doors and panels are <strong>non-breakable</strong> (indestructible) using a bitwise flag system.\r\n\r\n\t\t<p>Each flag corresponds to a specific vehicle component. You can <strong>combine flags</strong> by adding their decimal or hex values to make multiple parts indestructible at once.</p>\r\n\r\n\t\t<table border=\"1\" cellpadding=\"4\" cellspacing=\"0\">\r\n\t\t\t<thead>\r\n\t\t\t\t<tr>\r\n\t\t\t\t\t<th>Hex</th>\r\n\t\t\t\t\t<th>Decimal</th>\r\n\t\t\t\t\t<th>Name</th>\r\n\t\t\t\t\t<th>Effect</th>\r\n\t\t\t\t</tr>\r\n\t\t\t</thead>\r\n\t\t\t<tbody>\r\n\t\t\t\t<tr><td><code>0x01</code></td><td>1</td><td>DF_DRIVER_SIDE_FRONT_DOOR</td><td>Makes <code>door_dside_f</code> non-breakable</td></tr>\r\n\t\t\t\t<tr><td><code>0x02</code></td><td>2</td><td>DF_DRIVER_SIDE_REAR_DOOR</td><td>Makes <code>door_dside_r</code> non-breakable</td></tr>\r\n\t\t\t\t<tr><td><code>0x04</code></td><td>4</td><td>DF_PASSENGER_SIDE_FRONT_DOOR</td><td>Makes <code>door_pside_f</code> non-breakable</td></tr>\r\n\t\t\t\t<tr><td><code>0x08</code></td><td>8</td><td>DF_PASSENGER_SIDE_REAR_DOOR</td><td>Makes <code>door_pside_r</code> non-breakable</td></tr>\r\n\t\t\t\t<tr><td><code>0x10</code></td><td>16</td><td>DF_BONNET</td><td>Makes <code>bonnet</code> (hood) non-breakable</td></tr>\r\n\t\t\t\t<tr><td><code>0x20</code></td><td>32</td><td>DF_BOOT</td><td>Makes <code>boot</code> (trunk) non-breakable</td></tr>\r\n\t\t\t</tbody>\r\n\t\t</table>\r\n\r\n\t\t<p><strong>Examples:</strong></p>\r\n\t\t<ul>\r\n\t\t\t<li><code>17</code> (1 + 16) → Driver front door and bonnet</li>\r\n\t\t\t<li><code>63</code> (1 + 2 + 4 + 8 + 16 + 32) → All listed parts non-breakable</li>\r\n\t\t</ul>\r\n\r\n\t\t<p><em>Note:</em> These flags are based on observed behavior in GTA V and Red Dead Redemption II. Some flag names are unofficial and subject to change.</p>"
+  },
+  {
+    "t": "plane",
+    "n": "fMass",
+    "d": "Aircraft mass in kg."
+  },
+  {
+    "t": "plane",
+    "n": "fInitialDragCoeff",
+    "d": "Aerodynamic drag coefficient."
+  },
+  {
+    "t": "plane",
+    "n": "fPercentSubmerged",
+    "d": "Percent submerged before floating behavior."
+  },
+  {
+    "t": "plane",
+    "n": "vecCentreOfMassOffset",
+    "d": "Center of mass offset (x, y, z)."
+  },
+  {
+    "t": "plane",
+    "n": "vecInertiaMultiplier",
+    "d": "Inertia scaling (x, y, z)."
+  },
+  {
+    "t": "plane",
+    "n": "fInitialDriveForce",
+    "d": "Drive force (for compatibility)."
+  },
+  {
+    "t": "plane",
+    "n": "fInitialDriveMaxFlatVel",
+    "d": "Max flat velocity in m/s."
+  },
+  {
+    "t": "plane",
+    "n": "fDriveBiasFront",
+    "d": "Drive force bias to front wheels (usually 0)."
+  },
+  {
+    "t": "plane",
+    "n": "nInitialDriveGears",
+    "d": "Gear count (typically 1 for planes)."
+  },
+  {
+    "t": "plane",
+    "n": "fDriveInertia",
+    "d": "Inertia applied to engine power transfer."
+  },
+  {
+    "t": "plane",
+    "n": "fClutchChangeRateScaleUpShift",
+    "d": "Upshift speed."
+  },
+  {
+    "t": "plane",
+    "n": "fClutchChangeRateScaleDownShift",
+    "d": "Downshift speed."
+  },
+  {
+    "t": "plane",
+    "n": "fBrakeForce",
+    "d": "Brake force on wheels."
+  },
+  {
+    "t": "plane",
+    "n": "fBrakeBiasFront",
+    "d": "Brake bias front/back."
+  },
+  {
+    "t": "plane",
+    "n": "fHandBrakeForce",
+    "d": "Handbrake force (used rarely)."
+  },
+  {
+    "t": "plane",
+    "n": "fSteeringLock",
+    "d": "Yaw control range."
+  },
+  {
+    "t": "plane",
+    "n": "fTractionCurveMax",
+    "d": "Maximum aerodynamic lift."
+  },
+  {
+    "t": "plane",
+    "n": "fTractionCurveMin",
+    "d": "Minimum lift (stall behavior)."
+  },
+  {
+    "t": "plane",
+    "n": "fTractionCurveLateral",
+    "d": "Curve shape (controls turning tightness)."
+  },
+  {
+    "t": "plane",
+    "n": "fTractionSpringDeltaMax",
+    "d": "Grip drop per frame under load."
+  },
+  {
+    "t": "plane",
+    "n": "fLowSpeedTractionLossMult",
+    "d": "Low-speed traction loss multiplier."
+  },
+  {
+    "t": "plane",
+    "n": "fCamberStiffnesss",
+    "d": "Stiffness from camber (rarely used on planes)."
+  },
+  {
+    "t": "plane",
+    "n": "fTractionBiasFront",
+    "d": "Grip distribution front/back."
+  },
+  {
+    "t": "plane",
+    "n": "fTractionLossMult",
+    "d": "Overall grip loss multiplier."
+  },
+  {
+    "t": "plane",
+    "n": "fSuspensionForce",
+    "d": "Landing gear spring force."
+  },
+  {
+    "t": "plane",
+    "n": "fSuspensionCompDamp",
+    "d": "Suspension compression damping."
+  },
+  {
+    "t": "plane",
+    "n": "fSuspensionReboundDamp",
+    "d": "Suspension rebound damping."
+  },
+  {
+    "t": "plane",
+    "n": "fSuspensionUpperLimit",
+    "d": "Max compression height."
+  },
+  {
+    "t": "plane",
+    "n": "fSuspensionLowerLimit",
+    "d": "Max extension height."
+  },
+  {
+    "t": "plane",
+    "n": "fSuspensionRaise",
+    "d": "Vertical suspension offset."
+  },
+  {
+    "t": "plane",
+    "n": "fSuspensionBiasFront",
+    "d": "Suspension force distribution."
+  },
+  {
+    "t": "plane",
+    "n": "fAntiRollBarForce",
+    "d": "Anti-roll bar strength."
+  },
+  {
+    "t": "plane",
+    "n": "fAntiRollBarBiasFront",
+    "d": "Roll bar front/rear bias."
+  },
+  {
+    "t": "plane",
+    "n": "fRollCentreHeightFront",
+    "d": "Front roll center height."
+  },
+  {
+    "t": "plane",
+    "n": "fRollCentreHeightRear",
+    "d": "Rear roll center height."
+  },
+  {
+    "t": "plane",
+    "n": "fCollisionDamageMult",
+    "d": "Multiplier for collision damage."
+  },
+  {
+    "t": "plane",
+    "n": "fWeaponDamageMult",
+    "d": "Multiplier for weapon damage."
+  },
+  {
+    "t": "plane",
+    "n": "fDeformationDamageMult",
+    "d": "Deformation damage multiplier."
+  },
+  {
+    "t": "plane",
+    "n": "fEngineDamageMult",
+    "d": "Engine damage multiplier."
+  },
+  {
+    "t": "plane",
+    "n": "fPetrolTankVolume",
+    "d": "Fuel tank size in liters."
+  },
+  {
+    "t": "plane",
+    "n": "fOilVolume",
+    "d": "Oil tank size in liters."
+  },
+  {
+    "t": "plane",
+    "n": "fSeatOffsetDistX",
+    "d": "Seat offset X (left/right)."
+  },
+  {
+    "t": "plane",
+    "n": "fSeatOffsetDistY",
+    "d": "Seat offset Y (front/back)."
+  },
+  {
+    "t": "plane",
+    "n": "fSeatOffsetDistZ",
+    "d": "Seat offset Z (up/down)."
+  },
+  {
+    "t": "plane",
+    "n": "nMonetaryValue",
+    "d": "Vehicle value in game currency."
+  },
+  {
+    "t": "plane",
+    "n": "strModelFlags",
+    "d": "Model flags."
+  },
+  {
+    "t": "plane",
+    "n": "strHandlingFlags",
+    "d": "Handling flags."
+  },
+  {
+    "t": "plane",
+    "n": "strDamageFlags",
+    "d": "Damage flags."
+  },
+  {
+    "t": "plane",
+    "n": "fThrust",
+    "d": "Engine thrust output."
+  },
+  {
+    "t": "plane",
+    "n": "fThrustFallOff",
+    "d": "Thrust loss over time."
+  },
+  {
+    "t": "plane",
+    "n": "fThrustVectoring",
+    "d": "VTOL thrust vectoring factor."
+  },
+  {
+    "t": "plane",
+    "n": "fYawMult",
+    "d": "Yaw input multiplier."
+  },
+  {
+    "t": "plane",
+    "n": "fYawStabilise",
+    "d": "Yaw auto-stabilization."
+  },
+  {
+    "t": "plane",
+    "n": "fSideSlipMult",
+    "d": "Side slip effect multiplier."
+  },
+  {
+    "t": "plane",
+    "n": "fRollMult",
+    "d": "Roll input multiplier."
+  },
+  {
+    "t": "plane",
+    "n": "fRollStabilise",
+    "d": "Roll auto-stabilization."
+  },
+  {
+    "t": "plane",
+    "n": "fPitchMult",
+    "d": "Pitch input multiplier."
+  },
+  {
+    "t": "plane",
+    "n": "fPitchStabilise",
+    "d": "Pitch auto-stabilization."
+  },
+  {
+    "t": "plane",
+    "n": "fFormLiftMult",
+    "d": "Passive lift multiplier."
+  },
+  {
+    "t": "plane",
+    "n": "fAttackLiftMult",
+    "d": "Lift from pulling up."
+  },
+  {
+    "t": "plane",
+    "n": "fAttackDiveMult",
+    "d": "Lift loss from diving."
+  },
+  {
+    "t": "plane",
+    "n": "fGearDownDragV",
+    "d": "Drag added when landing gear is down."
+  },
+  {
+    "t": "plane",
+    "n": "fGearDownLiftMult",
+    "d": "Lift with landing gear down."
+  },
+  {
+    "t": "plane",
+    "n": "fWindMult",
+    "d": "Wind resistance multiplier."
+  },
+  {
+    "t": "plane",
+    "n": "fMoveRes",
+    "d": "General movement resistance."
+  },
+  {
+    "t": "plane",
+    "n": "vecTurnRes",
+    "d": "Turning resistance vector (X, Y, Z)."
+  },
+  {
+    "t": "plane",
+    "n": "vecSpeedRes",
+    "d": "Speed resistance vector (X, Y, Z)."
+  },
+  {
+    "t": "plane",
+    "n": "fTurublenceMagnitudeMax",
+    "d": "Max turbulence strength."
+  },
+  {
+    "t": "plane",
+    "n": "fTurublenceForceMulti",
+    "d": "Turbulence force multiplier."
+  },
+  {
+    "t": "plane",
+    "n": "fTurublenceRollTorqueMulti",
+    "d": "Turbulence roll torque."
+  },
+  {
+    "t": "plane",
+    "n": "fTurublencePitchTorqueMulti",
+    "d": "Turbulence pitch torque."
+  },
+  {
+    "t": "plane",
+    "n": "fBodyDamageControlEffectMult",
+    "d": "Control loss when damaged."
+  },
+  {
+    "t": "plane",
+    "n": "fInputSensitivityForDifficulty",
+    "d": "Input sensitivity scaling."
+  },
+  {
+    "t": "plane",
+    "n": "fOnGroundYawBoostSpeedPeak",
+    "d": "Yaw assist on ground (peak speed)."
+  },
+  {
+    "t": "plane",
+    "n": "fOnGroundYawBoostSpeedCap",
+    "d": "Yaw assist speed cap."
+  },
+  {
+    "t": "plane",
+    "n": "fEngineOffGlideMulti",
+    "d": "Glide performance when engine off."
+  },
+  {
+    "t": "plane",
+    "n": "fUvAnimationMult",
+    "d": "UV animation multiplier (missile pods, etc.)."
+  },
+  {
+    "t": "plane",
+    "n": "fMiscGadgetVar",
+    "d": "Extra gadget multiplier (experimental)."
+  },
+  {
+    "t": "plane",
+    "n": "fWheelImpactOffset",
+    "d": "Effect offset on wheel impact."
+  },
+  {
+    "t": "heli",
+    "n": "fMass",
+    "d": "Helicopter mass in kg."
+  },
+  {
+    "t": "heli",
+    "n": "fInitialDragCoeff",
+    "d": "Drag coefficient."
+  },
+  {
+    "t": "heli",
+    "n": "fPercentSubmerged",
+    "d": "Submerged percent before floating."
+  },
+  {
+    "t": "heli",
+    "n": "vecCentreOfMassOffset",
+    "d": "Center of mass offset (X,Y,Z)."
+  },
+  {
+    "t": "heli",
+    "n": "vecInertiaMultiplier",
+    "d": "Inertia multiplier (X,Y,Z)."
+  },
+  {
+    "t": "heli",
+    "n": "fDriveInertia",
+    "d": "Drive inertia."
+  },
+  {
+    "t": "heli",
+    "n": "fBrakeForce",
+    "d": "Brake force."
+  },
+  {
+    "t": "heli",
+    "n": "fSteeringLock",
+    "d": "Max steering lock angle."
+  },
+  {
+    "t": "heli",
+    "n": "fThrust",
+    "d": "Thrust output."
+  },
+  {
+    "t": "heli",
+    "n": "fThrustFallOff",
+    "d": "Thrust falloff rate."
+  },
+  {
+    "t": "heli",
+    "n": "fThrustVectoring",
+    "d": "Thrust vectoring (VTOL)."
+  },
+  {
+    "t": "heli",
+    "n": "fYawMult",
+    "d": "Yaw control multiplier."
+  },
+  {
+    "t": "heli",
+    "n": "fYawStabilise",
+    "d": "Yaw stabilisation."
+  },
+  {
+    "t": "heli",
+    "n": "fSideSlipMult",
+    "d": "Side slip control."
+  },
+  {
+    "t": "heli",
+    "n": "fRollMult",
+    "d": "Roll control multiplier."
+  },
+  {
+    "t": "heli",
+    "n": "fRollStabilise",
+    "d": "Roll stabilisation."
+  },
+  {
+    "t": "heli",
+    "n": "fPitchMult",
+    "d": "Pitch control multiplier."
+  },
+  {
+    "t": "heli",
+    "n": "fPitchStabilise",
+    "d": "Pitch stabilisation."
+  },
+  {
+    "t": "heli",
+    "n": "fFormLiftMult",
+    "d": "Form lift multiplier."
+  },
+  {
+    "t": "heli",
+    "n": "fAttackLiftMult",
+    "d": "Lift gain when pitching up."
+  },
+  {
+    "t": "heli",
+    "n": "fAttackDiveMult",
+    "d": "Lift loss when diving."
+  },
+  {
+    "t": "heli",
+    "n": "fGearDownDragV",
+    "d": "Drag with gear down."
+  },
+  {
+    "t": "heli",
+    "n": "fGearDownLiftMult",
+    "d": "Lift with gear down."
+  },
+  {
+    "t": "heli",
+    "n": "fWindMult",
+    "d": "Wind resistance multiplier."
+  },
+  {
+    "t": "heli",
+    "n": "fMoveRes",
+    "d": "Movement resistance."
+  },
+  {
+    "t": "heli",
+    "n": "vecTurnRes",
+    "d": "Turning resistance vector."
+  },
+  {
+    "t": "heli",
+    "n": "vecSpeedRes",
+    "d": "Speed resistance vector."
+  },
+  {
+    "t": "heli",
+    "n": "fTurublenceMagnitudeMax",
+    "d": "Max turbulence magnitude."
+  },
+  {
+    "t": "heli",
+    "n": "fTurublenceForceMulti",
+    "d": "Turbulence force multiplier."
+  },
+  {
+    "t": "heli",
+    "n": "fTurublenceRollTorqueMulti",
+    "d": "Turbulence roll torque."
+  },
+  {
+    "t": "heli",
+    "n": "fTurublencePitchTorqueMulti",
+    "d": "Turbulence pitch torque."
+  },
+  {
+    "t": "heli",
+    "n": "fBodyDamageControlEffectMult",
+    "d": "Control loss when damaged."
+  },
+  {
+    "t": "heli",
+    "n": "fInputSensitivityForDifficulty",
+    "d": "Input sensitivity scaling."
+  },
+  {
+    "t": "heli",
+    "n": "fOnGroundYawBoostSpeedPeak",
+    "d": "Yaw assist peak speed."
+  },
+  {
+    "t": "heli",
+    "n": "fOnGroundYawBoostSpeedCap",
+    "d": "Yaw assist max speed."
+  },
+  {
+    "t": "heli",
+    "n": "fEngineOffGlideMulti",
+    "d": "Glide multiplier with engine off."
+  },
+  {
+    "t": "heli",
+    "n": "fUvAnimationMult",
+    "d": "UV animation multiplier (missiles, etc)."
+  },
+  {
+    "t": "heli",
+    "n": "fMiscGadgetVar",
+    "d": "Experimental gadget control."
+  },
+  {
+    "t": "heli",
+    "n": "fWheelImpactOffset",
+    "d": "Effect offset on wheel impact."
+  },
+  {
+    "t": "heli",
+    "n": "fEngineDamageMult",
+    "d": "Engine damage multiplier."
+  },
+  {
+    "t": "heli",
+    "n": "fCollisionDamageMult",
+    "d": "Collision damage multiplier."
+  },
+  {
+    "t": "heli",
+    "n": "fDeformationDamageMult",
+    "d": "Deformation damage multiplier."
+  },
+  {
+    "t": "heli",
+    "n": "fWeaponDamageMult",
+    "d": "Weapon damage multiplier."
+  },
+  {
+    "t": "boat",
+    "n": "fMass",
+    "d": "Boat mass in kg."
+  },
+  {
+    "t": "boat",
+    "n": "fInitialDragCoeff",
+    "d": "Water drag coefficient."
+  },
+  {
+    "t": "boat",
+    "n": "fPercentSubmerged",
+    "d": "Submersion percent to float."
+  },
+  {
+    "t": "boat",
+    "n": "vecCentreOfMassOffset",
+    "d": "Center of mass offset (X, Y, Z)."
+  },
+  {
+    "t": "boat",
+    "n": "vecInertiaMultiplier",
+    "d": "Inertia scaling (X, Y, Z)."
+  },
+  {
+    "t": "boat",
+    "n": "fDriveBiasFront",
+    "d": "Drive bias (usually 0 for boats)."
+  },
+  {
+    "t": "boat",
+    "n": "nInitialDriveGears",
+    "d": "Number of gears (usually 1)."
+  },
+  {
+    "t": "boat",
+    "n": "fInitialDriveForce",
+    "d": "Thrust force."
+  },
+  {
+    "t": "boat",
+    "n": "fDriveInertia",
+    "d": "Inertia of propulsion system."
+  },
+  {
+    "t": "boat",
+    "n": "fInitialDriveMaxFlatVel",
+    "d": "Max speed on flat water."
+  },
+  {
+    "t": "boat",
+    "n": "fSteeringLock",
+    "d": "Max rudder angle for steering."
+  },
+  {
+    "t": "boat",
+    "n": "fTractionCurveMax",
+    "d": "Max lateral grip."
+  },
+  {
+    "t": "boat",
+    "n": "fTractionCurveMin",
+    "d": "Min lateral grip."
+  },
+  {
+    "t": "boat",
+    "n": "fTractionBiasFront",
+    "d": "Grip bias (unused for most boats)."
+  },
+  {
+    "t": "boat",
+    "n": "fTractionLossMult",
+    "d": "Grip loss multiplier."
+  },
+  {
+    "t": "boat",
+    "n": "fCollisionDamageMult",
+    "d": "Damage taken from impacts."
+  },
+  {
+    "t": "boat",
+    "n": "fWeaponDamageMult",
+    "d": "Weapon damage multiplier."
+  },
+  {
+    "t": "boat",
+    "n": "fDeformationDamageMult",
+    "d": "Hull deformation factor."
+  },
+  {
+    "t": "boat",
+    "n": "fEngineDamageMult",
+    "d": "Engine damage sensitivity."
+  },
+  {
+    "t": "boat",
+    "n": "fPetrolTankVolume",
+    "d": "Fuel tank size in liters."
+  },
+  {
+    "t": "boat",
+    "n": "fOilVolume",
+    "d": "Engine oil volume in liters."
+  },
+  {
+    "t": "submarine",
+    "n": "fMass",
+    "d": "Submarine mass in kg."
+  },
+  {
+    "t": "submarine",
+    "n": "fInitialDragCoeff",
+    "d": "Hydrodynamic drag coefficient."
+  },
+  {
+    "t": "submarine",
+    "n": "fPercentSubmerged",
+    "d": "How submerged the sub must be before floating/neutral buoyancy."
+  },
+  {
+    "t": "submarine",
+    "n": "vecCentreOfMassOffset",
+    "d": "Center of mass offset (X, Y, Z)."
+  },
+  {
+    "t": "submarine",
+    "n": "vecInertiaMultiplier",
+    "d": "Inertia scaling (X, Y, Z)."
+  },
+  {
+    "t": "submarine",
+    "n": "fDriveBiasFront",
+    "d": "Front drive bias (usually 0)."
+  },
+  {
+    "t": "submarine",
+    "n": "nInitialDriveGears",
+    "d": "Number of gears (typically 1)."
+  },
+  {
+    "t": "submarine",
+    "n": "fInitialDriveForce",
+    "d": "Propulsion force."
+  },
+  {
+    "t": "submarine",
+    "n": "fDriveInertia",
+    "d": "Engine inertia."
+  },
+  {
+    "t": "submarine",
+    "n": "fInitialDriveMaxFlatVel",
+    "d": "Max horizontal speed under water."
+  },
+  {
+    "t": "submarine",
+    "n": "fSteeringLock",
+    "d": "Turning angle (affects pitch/yaw response)."
+  },
+  {
+    "t": "submarine",
+    "n": "fTractionCurveMax",
+    "d": "Max lateral hydrodynamic grip."
+  },
+  {
+    "t": "submarine",
+    "n": "fTractionCurveMin",
+    "d": "Min grip under strain."
+  },
+  {
+    "t": "submarine",
+    "n": "fTractionBiasFront",
+    "d": "Grip bias front/back (rarely used)."
+  },
+  {
+    "t": "submarine",
+    "n": "fTractionLossMult",
+    "d": "Grip loss multiplier."
+  },
+  {
+    "t": "submarine",
+    "n": "fCollisionDamageMult",
+    "d": "Damage multiplier from collisions."
+  },
+  {
+    "t": "submarine",
+    "n": "fWeaponDamageMult",
+    "d": "Damage multiplier from weapons."
+  },
+  {
+    "t": "submarine",
+    "n": "fDeformationDamageMult",
+    "d": "Hull deformation from impacts."
+  },
+  {
+    "t": "submarine",
+    "n": "fEngineDamageMult",
+    "d": "Engine failure rate from damage."
+  },
+  {
+    "t": "submarine",
+    "n": "fPetrolTankVolume",
+    "d": "Fuel tank size in liters."
+  },
+  {
+    "t": "submarine",
+    "n": "fOilVolume",
+    "d": "Oil tank volume in liters."
+  },
+  {
+    "t": "bike",
+    "n": "fMass",
+    "d": "Motorcycle mass in kg."
+  },
+  {
+    "t": "bike",
+    "n": "fInitialDragCoeff",
+    "d": "Aerodynamic drag coefficient."
+  },
+  {
+    "t": "bike",
+    "n": "fPercentSubmerged",
+    "d": "Submersion percent for floating behavior."
+  },
+  {
+    "t": "bike",
+    "n": "vecCentreOfMassOffset",
+    "d": "Center of mass offset (X, Y, Z)."
+  },
+  {
+    "t": "bike",
+    "n": "vecInertiaMultiplier",
+    "d": "Inertia scaling (X, Y, Z)."
+  },
+  {
+    "t": "bike",
+    "n": "fDriveBiasFront",
+    "d": "Drive force distribution (usually 0 for RWD bikes)."
+  },
+  {
+    "t": "bike",
+    "n": "nInitialDriveGears",
+    "d": "Number of gears."
+  },
+  {
+    "t": "bike",
+    "n": "fInitialDriveForce",
+    "d": "Engine force output."
+  },
+  {
+    "t": "bike",
+    "n": "fDriveInertia",
+    "d": "Inertia of the drivetrain."
+  },
+  {
+    "t": "bike",
+    "n": "fInitialDriveMaxFlatVel",
+    "d": "Max speed on flat terrain."
+  },
+  {
+    "t": "bike",
+    "n": "fClutchChangeRateScaleUpShift",
+    "d": "Upshift speed under throttle."
+  },
+  {
+    "t": "bike",
+    "n": "fClutchChangeRateScaleDownShift",
+    "d": "Downshift speed under throttle."
+  },
+  {
+    "t": "bike",
+    "n": "fBrakeForce",
+    "d": "Overall braking strength."
+  },
+  {
+    "t": "bike",
+    "n": "fBrakeBiasFront",
+    "d": "Front/rear brake balance."
+  },
+  {
+    "t": "bike",
+    "n": "fHandBrakeForce",
+    "d": "Handbrake strength (rare for bikes)."
+  },
+  {
+    "t": "bike",
+    "n": "fSteeringLock",
+    "d": "Maximum steering angle (handlebar turn)."
+  },
+  {
+    "t": "bike",
+    "n": "fTractionCurveMax",
+    "d": "Peak lateral grip in a corner."
+  },
+  {
+    "t": "bike",
+    "n": "fTractionCurveMin",
+    "d": "Minimum grip (under slip)."
+  },
+  {
+    "t": "bike",
+    "n": "fTractionCurveLateral",
+    "d": "Lateral traction curve shape."
+  },
+  {
+    "t": "bike",
+    "n": "fTractionSpringDeltaMax",
+    "d": "Grip loss rate per frame."
+  },
+  {
+    "t": "bike",
+    "n": "fLowSpeedTractionLossMult",
+    "d": "Grip loss multiplier at low speed."
+  },
+  {
+    "t": "bike",
+    "n": "fCamberStiffnesss",
+    "d": "Stiffness caused by bike lean (camber)."
+  },
+  {
+    "t": "bike",
+    "n": "fTractionBiasFront",
+    "d": "Traction distribution front/back."
+  },
+  {
+    "t": "bike",
+    "n": "fTractionLossMult",
+    "d": "Overall traction loss multiplier."
+  },
+  {
+    "t": "bike",
+    "n": "fSuspensionForce",
+    "d": "Spring stiffness (higher = less bounce)."
+  },
+  {
+    "t": "bike",
+    "n": "fSuspensionCompDamp",
+    "d": "Damping when compressing suspension."
+  },
+  {
+    "t": "bike",
+    "n": "fSuspensionReboundDamp",
+    "d": "Damping when rebound occurs."
+  },
+  {
+    "t": "bike",
+    "n": "fSuspensionUpperLimit",
+    "d": "Max upward suspension travel."
+  },
+  {
+    "t": "bike",
+    "n": "fSuspensionLowerLimit",
+    "d": "Max downward suspension travel."
+  },
+  {
+    "t": "bike",
+    "n": "fSuspensionRaise",
+    "d": "Height offset for suspension travel."
+  },
+  {
+    "t": "bike",
+    "n": "fSuspensionBiasFront",
+    "d": "Suspension force distribution."
+  },
+  {
+    "t": "bike",
+    "n": "fAntiRollBarForce",
+    "d": "Anti-roll bar strength (some bikes use this to reduce wobble)."
+  },
+  {
+    "t": "bike",
+    "n": "fAntiRollBarBiasFront",
+    "d": "Roll bar bias front/rear."
+  },
+  {
+    "t": "bike",
+    "n": "fRollCentreHeightFront",
+    "d": "Roll center height front (affects balance)."
+  },
+  {
+    "t": "bike",
+    "n": "fRollCentreHeightRear",
+    "d": "Roll center height rear."
+  },
+  {
+    "t": "bike",
+    "n": "fCollisionDamageMult",
+    "d": "Multiplier for collision damage."
+  },
+  {
+    "t": "bike",
+    "n": "fWeaponDamageMult",
+    "d": "Multiplier for weapon damage."
+  },
+  {
+    "t": "bike",
+    "n": "fDeformationDamageMult",
+    "d": "Body deformation on impact."
+  },
+  {
+    "t": "bike",
+    "n": "fEngineDamageMult",
+    "d": "Engine damage from impacts."
+  },
+  {
+    "t": "bike",
+    "n": "fPetrolTankVolume",
+    "d": "Fuel tank capacity in liters."
+  },
+  {
+    "t": "bike",
+    "n": "fOilVolume",
+    "d": "Engine oil capacity in liters."
+  },
+  {
+    "t": "bike",
+    "n": "fSeatOffsetDistX",
+    "d": "Seat position X offset (sideways)."
+  },
+  {
+    "t": "bike",
+    "n": "fSeatOffsetDistY",
+    "d": "Seat position Y offset (forward/back)."
+  },
+  {
+    "t": "bike",
+    "n": "fSeatOffsetDistZ",
+    "d": "Seat position Z offset (up/down)."
+  },
+  {
+    "t": "bike",
+    "n": "nMonetaryValue",
+    "d": "In-game value of the bike."
+  },
+  {
+    "t": "bike",
+    "n": "strModelFlags",
+    "d": "Model behavior flags."
+  },
+  {
+    "t": "bike",
+    "n": "strHandlingFlags",
+    "d": "Handling flags."
+  },
+  {
+    "t": "bike",
+    "n": "strDamageFlags",
+    "d": "Damage flags."
+  },
+  {
+    "t": "trailer",
+    "n": "fMass",
+    "d": "Trailer mass in kg."
+  },
+  {
+    "t": "trailer",
+    "n": "fInitialDragCoeff",
+    "d": "Drag coefficient (affects movement resistance)."
+  },
+  {
+    "t": "trailer",
+    "n": "fPercentSubmerged",
+    "d": "Submersion percent for floating behavior."
+  },
+  {
+    "t": "trailer",
+    "n": "vecCentreOfMassOffset",
+    "d": "Center of mass offset (X, Y, Z)."
+  },
+  {
+    "t": "trailer",
+    "n": "vecInertiaMultiplier",
+    "d": "Inertia scaling (X, Y, Z)."
+  },
+  {
+    "t": "trailer",
+    "n": "fSuspensionForce",
+    "d": "Spring force (stiffness of suspension)."
+  },
+  {
+    "t": "trailer",
+    "n": "fSuspensionCompDamp",
+    "d": "Damping during compression."
+  },
+  {
+    "t": "trailer",
+    "n": "fSuspensionReboundDamp",
+    "d": "Damping during rebound."
+  },
+  {
+    "t": "trailer",
+    "n": "fSuspensionUpperLimit",
+    "d": "Max upward travel of suspension."
+  },
+  {
+    "t": "trailer",
+    "n": "fSuspensionLowerLimit",
+    "d": "Max downward travel of suspension."
+  },
+  {
+    "t": "trailer",
+    "n": "fSuspensionRaise",
+    "d": "Vertical offset of the suspension."
+  },
+  {
+    "t": "trailer",
+    "n": "fSuspensionBiasFront",
+    "d": "Suspension balance front vs rear."
+  },
+  {
+    "t": "trailer",
+    "n": "fAntiRollBarForce",
+    "d": "Anti-roll force (prevents tipping)."
+  },
+  {
+    "t": "trailer",
+    "n": "fAntiRollBarBiasFront",
+    "d": "Roll bar bias (front vs rear)."
+  },
+  {
+    "t": "trailer",
+    "n": "fRollCentreHeightFront",
+    "d": "Height of roll center (front axle)."
+  },
+  {
+    "t": "trailer",
+    "n": "fRollCentreHeightRear",
+    "d": "Height of roll center (rear axle)."
+  },
+  {
+    "t": "trailer",
+    "n": "fCollisionDamageMult",
+    "d": "Damage taken from collisions."
+  },
+  {
+    "t": "trailer",
+    "n": "fWeaponDamageMult",
+    "d": "Damage taken from weapons."
+  },
+  {
+    "t": "trailer",
+    "n": "fDeformationDamageMult",
+    "d": "Body deformation under impact."
+  },
+  {
+    "t": "trailer",
+    "n": "fEngineDamageMult",
+    "d": "Applies to trailer-mounted machinery (if any)."
+  },
+  {
+    "t": "trailer",
+    "n": "fPetrolTankVolume",
+    "d": "Fuel tank volume in liters."
+  },
+  {
+    "t": "trailer",
+    "n": "fOilVolume",
+    "d": "Oil volume (for powered trailers or generators)."
+  },
+  {
+    "t": "trailer",
+    "n": "fSeatOffsetDistX",
+    "d": "Seat offset X (sideways)."
+  },
+  {
+    "t": "trailer",
+    "n": "fSeatOffsetDistY",
+    "d": "Seat offset Y (front/back)."
+  },
+  {
+    "t": "trailer",
+    "n": "fSeatOffsetDistZ",
+    "d": "Seat offset Z (vertical)."
+  },
+  {
+    "t": "trailer",
+    "n": "nMonetaryValue",
+    "d": "Value of the trailer in game currency."
+  },
+  {
+    "t": "trailer",
+    "n": "strModelFlags",
+    "d": "Model flags."
+  },
+  {
+    "t": "trailer",
+    "n": "strHandlingFlags",
+    "d": "Handling behavior flags."
+  },
+  {
+    "t": "trailer",
+    "n": "strDamageFlags",
+    "d": "Damage behavior flags."
+  }
+]

@@ -1,10 +1,14 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Car, FolderOpen, Loader2 } from "lucide-react";
 import FilterBar from "./ui/FilterBar";
+import Navbar from "./ui/Navbar";
+import Sidebar from "./ui/Sidebar";
 import StatusBar from "./ui/StatusBar";
 import Toast, { type ToastData } from "./ui/Toast";
 import Toolbar from "./ui/Toolbar";
+import GlossaryView from "./features/handling/GlossaryView";
 import VehicleTable from "./features/handling/VehicleTable";
+import { demoScan } from "./features/handling/demoData";
 import { pickFolder, scanFolder, updateFiles } from "./shared/api";
 import {
   rowKey,
@@ -12,6 +16,7 @@ import {
   type VehicleChange,
   type VehicleRow,
 } from "./shared/models";
+import { version as APP_VERSION } from "../package.json";
 
 export default function App() {
   const [folder, setFolder] = useState<string | null>(null);
@@ -24,8 +29,30 @@ export default function App() {
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [classFilter, setClassFilter] = useState("ALL");
   const [scanId, setScanId] = useState(0);
+  const [view, setView] = useState<"home" | "glossary">("home");
   const [toast, setToast] = useState<ToastData | null>(null);
   const toastTimer = useRef<number | null>(null);
+
+  const isDemo =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("demo");
+
+  // Dev-only: populate the grid with sample data so it can be inspected in a
+  // plain browser (the Tauri backend is unavailable there). `?demo=150` renders
+  // 150 rows so the virtualized table path can be stress-tested.
+  useEffect(() => {
+    if (!isDemo) return;
+    const raw = new URLSearchParams(window.location.search).get("demo") ?? "";
+    const count = /^\d+$/.test(raw)
+      ? Math.min(Math.max(parseInt(raw, 10), 1), 2000)
+      : 8;
+    setFolder("[demo]");
+    setResult(demoScan(count));
+    setEdits({});
+    setScanId((n) => n + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDemo]);
 
   const showToast = useCallback((t: ToastData) => {
     setToast(t);
@@ -213,7 +240,7 @@ export default function App() {
               Select the folder that contains your FiveM vehicle resources.
             </p>
             <p className="text-xs text-gray-500">
-              e.g. <code className="text-gray-400">resources/[mbo-vehicles]</code>
+              e.g. <code className="text-gray-400">resources/[vehicles]</code>
             </p>
             <button
               onClick={() => void chooseFolder()}
@@ -239,6 +266,16 @@ export default function App() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gray-950 text-gray-200">
+      <Navbar version={APP_VERSION} active={view} onNavigate={setView} />
+
+      {/* Both panes stay mounted; the inactive one is only hidden via CSS, so
+          switching between Home and Glossary is instant (the grid is never
+          torn down and re-built). */}
+      <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
+        <div className={view === "home" ? "absolute inset-0 flex flex-col" : "hidden"}>
+          <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+            <Sidebar />
+            <main className="flex min-h-0 min-w-0 flex-1 flex-col">
       <Toolbar
         folder={folder}
         scanning={scanning}
@@ -280,6 +317,14 @@ export default function App() {
         skippedCount={result?.skipped.length ?? 0}
         skipped={result?.skipped ?? []}
       />
+          </main>
+          </div>
+        </div>
+
+        <div className={view === "glossary" ? "absolute inset-0 flex flex-col" : "hidden"}>
+          <GlossaryView />
+        </div>
+      </div>
 
       <Toast toast={toast} />
     </div>

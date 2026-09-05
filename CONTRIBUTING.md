@@ -73,17 +73,64 @@ $env:GT_TEST_VEHICLES = "C:\path\to\your\vehicles"
 cd app/src-tauri && cargo test -- --ignored
 ```
 
-## Git workflow
+## How contributions work (pull-request flow)
 
-1. Fork the repo (or create a branch) and make your changes.
-2. Run the checks above.
-3. Open a pull request with a clear description of what changed and why.
-4. Be kind and constructive in review threads.
+`main` is protected — nobody pushes to it directly. Every change lands through a
+**pull request** that is reviewed and merged by the maintainers
+(Apollo Flight Program).
 
-Prefer small, focused PRs. For larger changes or questions, open a discussion
-first so we can align before you invest the time.
+- **Who can push?** Only maintainers (repo owner / collaborators with write
+  access). As an external contributor you cannot push to this repo — that's
+  normal and expected.
+- **How to contribute:** *fork* the repo, make changes in your fork, then open a
+  **Pull Request (PR)** here. Maintainers review it and merge it when ready.
+- **Releases:** created by maintainers pushing version tags (`v0.1.0`, …). A
+  merged PR never ships an installer on its own.
+
+## Contributing step-by-step (fork & PR)
+
+1. **Fork** the repo on GitHub (top-right "Fork" button).
+2. **Clone your fork** and add the original as `upstream`:
+
+   ```bash
+   git clone https://github.com/<your-username>/GrandTheftMeta.git
+   cd GrandTheftMeta
+   git remote add upstream https://github.com/yossebastiands/GrandTheftMeta.git
+   ```
+
+3. **Create a branch** for your change:
+
+   ```bash
+   git checkout -b fix/my-change
+   ```
+
+4. Make your changes, then **run the checks** from the [Testing](#testing) section.
+5. **Commit and push** to your fork:
+
+   ```bash
+   git add .
+   git commit -m "Describe your change"
+   git push -u origin fix/my-change
+   ```
+
+6. **Open a Pull Request** here with a clear title and a short description of
+   what changed and why.
+7. **Address review feedback** — push more commits to the same branch and they
+   update the PR automatically.
+8. A maintainer reviews and **merges** your PR. 🎉
+
+Later, keep your fork in sync:
+
+```bash
+git fetch upstream
+git merge upstream/main
+```
+
+Prefer small, focused PRs. For larger changes or questions, open a
+discussion first so we can align before you invest the time. Be kind and
+constructive in review threads.
 
 ## License
 
 By contributing you agree that your contributions are licensed under the
-[MIT License](./LICENSE).
+[GNU General Public License v3](./LICENSE).
