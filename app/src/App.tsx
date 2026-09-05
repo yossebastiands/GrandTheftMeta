@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Car, FolderOpen, Loader2 } from "lucide-react";
 import FilterBar from "./ui/FilterBar";
 import Navbar from "./ui/Navbar";
-import Sidebar, { type EditorId } from "./ui/Sidebar";
+import Sidebar, { type EditorMode } from "./ui/Sidebar";
 import StatusBar from "./ui/StatusBar";
 import Toast, { type ToastData } from "./ui/Toast";
 import Toolbar from "./ui/Toolbar";
@@ -31,8 +31,8 @@ export default function App() {
   const [classFilter, setClassFilter] = useState("ALL");
   const [scanId, setScanId] = useState(0);
   const [view, setView] = useState<"home" | "glossary">("home");
-  // Which editor is active in the left Editors sidebar (Vehicles category).
-  const [editor, setEditor] = useState<EditorId>("handling");
+  // Which editor is active in the left sidebar (Handling.meta → Bulk/Single).
+  const [editor, setEditor] = useState<EditorMode>("bulk");
   const [toast, setToast] = useState<ToastData | null>(null);
   const toastTimer = useRef<number | null>(null);
 
@@ -287,7 +287,7 @@ export default function App() {
       <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
         <div className={view === "home" ? "absolute inset-0 flex flex-col" : "hidden"}>
           <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-            <Sidebar active={editor} onSelect={setEditor} />
+            <Sidebar activeMode={editor} onSelect={setEditor} />
             <main className="flex min-h-0 min-w-0 flex-1 flex-col">
       <Toolbar
         folder={folder}
@@ -301,7 +301,7 @@ export default function App() {
         onUpdate={() => void handleUpdate()}
       />
 
-      {editor === "handling" && (
+      {editor === "bulk" && (
         <FilterBar
           search={search}
           onSearch={setSearch}
