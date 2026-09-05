@@ -14,6 +14,7 @@ import {
   demoCarvariations,
   demoScan,
   demoVehiclelayouts,
+  demoVehicleweapons,
   demoVehicles,
   demoWeapons,
 } from "./features/handling/demoData";
@@ -23,12 +24,14 @@ import {
   scanCarvariations,
   scanFolder,
   scanVehiclelayouts,
+  scanVehicleweapons,
   scanVehicles,
   scanWeapons,
   updateCarcolsFiles,
   updateCarvariationsFiles,
   updateFiles,
   updateVehiclelayoutsFiles,
+  updateVehicleweaponsFiles,
   updateVehicleFiles,
   updateWeaponFiles,
 } from "./shared/api";
@@ -42,6 +45,7 @@ type PanelId =
   | "carcols"
   | "carvariations"
   | "vehiclelayouts"
+  | "vehicleweapons"
   | "weapons";
 
 /** Weapon table labels (folder column shows the relative .meta file path). */
@@ -66,6 +70,14 @@ const CARCOLS_LABELS = {
   type: "Kind",
   klass: "Group",
   name: "Item",
+};
+
+/** vehicleweapons table labels (file / Kind / group / weapon Name). */
+const VEHICLEWEAPONS_LABELS = {
+  folder: "File",
+  type: "Kind",
+  klass: "Group",
+  name: "Name",
 };
 
 /** metas without guides yet — suppress the handling fallback. */
@@ -136,6 +148,17 @@ const PANELS: Record<PanelId, DomainCfg> = {
     note: "One layout entry (seat, entry point, extra point…) in one vehiclelayouts.meta — edits update only that entry.",
     pickText:
       "Select a folder that contains your vehicle resources (vehiclelayouts.meta / vehiclelayouts*.meta, any layout).",
+  },
+  vehicleweapons: {
+    noun: "entries",
+    nounShort: "vehicle-weapon",
+    labels: VEHICLEWEAPONS_LABELS,
+    hintFor: noHint,
+    metaFile: "vehicleweapons.meta",
+    coreLabel: "Entry",
+    note: "One mounted weapon / ammo / weapon-data entry in one vehicleweapons*.meta — edits update only that entry.",
+    pickText:
+      "Select a folder that contains your vehicle resources (vehicleweapons*.meta, any layout).",
   },
   weapons: {
     noun: "weapons",
@@ -214,6 +237,12 @@ export default function App() {
     notify,
     onScanStart: resetFilters,
   });
+  const vw = useMetaDomain({
+    scan: scanVehicleweapons,
+    write: updateVehicleweaponsFiles,
+    notify,
+    onScanStart: resetFilters,
+  });
 
   const domains = {
     handling: veh,
@@ -222,6 +251,7 @@ export default function App() {
     carcols: car,
     carvariations: carv,
     vehiclelayouts: lay,
+    vehicleweapons: vw,
   };
   const d = domains[panel];
   const cfg = PANELS[panel];
@@ -301,6 +331,18 @@ export default function App() {
     setPanel("vehiclelayouts");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVehiclelayoutsDemo]);
+
+  // ?vw — dev-only vehicleweapons.meta demo.
+  const isVehicleweaponsDemo =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("vw");
+  useEffect(() => {
+    if (!isVehicleweaponsDemo) return;
+    vw.load(demoVehicleweapons(), "[demo-vehicleweapons]");
+    setPanel("vehicleweapons");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVehicleweaponsDemo]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

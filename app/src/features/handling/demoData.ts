@@ -228,3 +228,33 @@ export function demoVehiclelayouts(count = 6): ScanResult {
   }
   return { vehicles, columns, skipped: [] };
 }
+
+// Dev-only vehicleweapons.meta sample rows (`?vw`) so the vehicle-weapon editors
+// can be inspected without the Tauri backend. Mirrors the scanner: handling_name
+// = entry Name, vehicle_type = Kind (Vehicle Weapon / Ammo / Weapon Data),
+// params = scalar leaves incl. ref links (AmmoInfo.ref).
+export function demoVehicleweapons(count = 6): ScanResult {
+  const base: Array<[string, string, string, string, Record<string, string>]> = [
+    ["[mbo-vehicles]/Tank_t90m/vehicleweapons_t90m.meta", "VEHICLE_WEAPON_T90M_CANNON", "Vehicle Weapon", "", { DamageType: "EXPLOSIVE", FireType: "PROJECTILE", "AmmoInfo.ref": "AMMO_T90M", ClipSize: "1", AccuracySpread: "1.000000" }],
+    ["[mbo-vehicles]/Tank_t90m/vehicleweapons_t90m.meta", "VEHICLE_WEAPON_T90M_MG", "Vehicle Weapon", "", { DamageType: "NONE", FireType: "INSTANT_HIT", "AmmoInfo.ref": "AMMO_T90M_MG", ClipSize: "150" }],
+    ["[mbo-vehicles]/Tank_t90m/vehicleweapons_t90m.meta", "AMMO_T90M", "Ammo", "", { Damage: "0.000000", LifeTime: "4.000000", LaunchSpeed: "400.000000", ProjectileFlags: "DestroyOnImpact ProcessImpacts" }],
+    ["[mbo-vehicles]/Tank_t90m/vehicleweapons_t90m.meta", "AMMO_T90M_CANNON_APFSDS", "Ammo", "", { Damage: "5000.000000", LifeTime: "2.000000", LaunchSpeed: "500.000000", ProjectileFlags: "DestroyOnImpact ProcessImpacts", ClusterExplosionCount: "5" }],
+    ["[mbo-vehicles]/Tank_t90m/vehicleweapons_t90m.meta", "VEHICLE_DATA_KHANJALI_CANNON", "Weapon Data", "", { KickbackAmplitude: "0.005000", KickbackImpulse: "0.800000" }],
+    ["[mbo-vehicles]/Tank_t90m/vehicleweapons_t90m.meta", "VEHICLE_DATA_KHANJALI_MG", "Weapon Data", "", { KickbackAmplitude: "0.001000", KickbackImpulse: "0.025000" }],
+  ];
+  const columns = Array.from(new Set(base.flatMap((b) => Object.keys(b[4])))).sort();
+  const vehicles: VehicleRow[] = [];
+  for (let i = 0; i < count; i++) {
+    const [file, name, kind, group, params] = base[i % base.length];
+    const dup = Math.floor(i / base.length);
+    vehicles.push({
+      folder_name: dup ? file.replace(".meta", `_${i}.meta`) : file,
+      meta_path: "",
+      handling_name: dup ? `${name}_${i}` : name,
+      vehicle_type: kind,
+      vehicle_class: group,
+      params,
+    });
+  }
+  return { vehicles, columns, skipped: [] };
+}

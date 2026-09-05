@@ -100,3 +100,16 @@ export function updateVehiclelayoutsFiles(
 ): Promise<UpdateResult> {
   return invoke<UpdateResult>("update_vehiclelayouts_files", { folderPath, changes });
 }
+
+/** Scan a folder for vehicleweapons*.meta → one row per weapon/ammo/data entry. */
+export function scanVehicleweapons(folderPath: string): Promise<ScanResult> {
+  return invoke<ScanResult>("scan_vehicleweapons", { folderPath });
+}
+
+/** Write edited vehicle-weapon entries back into the original files. */
+export function updateVehicleweaponsFiles(
+  folderPath: string,
+  changes: VehicleChange[]
+): Promise<UpdateResult> {
+  return invoke<UpdateResult>("update_vehicleweapons_files", { folderPath, changes });
+}

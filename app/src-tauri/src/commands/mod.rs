@@ -6,4 +6,5 @@ pub mod textnav;
 pub mod update;
 pub mod vehiclelayouts;
 pub mod vehicles;
+pub mod vehicleweapons;
 pub mod weapons;
