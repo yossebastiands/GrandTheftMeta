@@ -75,6 +75,14 @@ for (const h of HINTS) {
   if (!byName.has(h.n)) byName.set(h.n, h.d);
 }
 
+// Richest original text per element (any module) — keeps the deep per-module
+// write-ups and the big flag tables (strHandlingFlags/strModelFlags/…) intact.
+const bestOriginal = new Map<string, string>();
+for (const h of HINTS) {
+  const cur = bestOriginal.get(h.n) ?? "";
+  if (h.d.length > cur.length) bestOriginal.set(h.n, h.d);
+}
+
 // Hand-written fallbacks for common params the debugger glossary doesn't cover
 // (mainly CVehicleWeaponHandlingData + a few CBoatHandlingData fields).
 const EXTRA: Record<string, string> = {
@@ -107,18 +115,32 @@ const EXTRA: Record<string, string> = {
   fImpellerForceMult: "Jet-drive impeller thrust multiplier.",
 };
 
-/** Returns the HTML description for a parameter column, or undefined. */
-export function paramHint(col: string, vehicleType?: string): string | undefined {
+/** Module-resolved ORIGINAL text for a column (undefined when unknown). */
+function originalFor(col: string, vehicleType?: string): string | undefined {
   const el = elementName(col);
-  // Plain-language rewrite wins when we have one.
-  const plain = handlingPlain(el);
-  if (plain) return plain;
   const mod = moduleFor(col, vehicleType);
   if (mod) {
     const d = byModule.get(mod)?.get(el);
     if (d) return d;
   }
-  return byName.get(el) ?? EXTRA[el];
+  return byName.get(el);
+}
+
+/** Short plain summary on top, full original below (whichever exist). */
+function withSummary(
+  plain: string | undefined,
+  orig: string | undefined
+): string {
+  if (plain && orig) return `${plain}\n${orig}`;
+  return plain ?? orig ?? "";
+}
+
+/** Returns the HTML description for a parameter column, or undefined. */
+export function paramHint(col: string, vehicleType?: string): string | undefined {
+  const el = elementName(col);
+  const plain = handlingPlain(el);
+  if (plain) return withSummary(plain, originalFor(col, vehicleType));
+  return originalFor(col, vehicleType) ?? EXTRA[el];
 }
 
 // ---------------------------------------------------------------------------
@@ -151,7 +173,7 @@ export function handlingGlossary(): GlossaryEntry[] {
       byName.set(h.n, {
         name: h.n,
         moduleLabel: plain ? "Handling" : (MODULE_LABEL[h.t] ?? h.t),
-        description: plain ?? h.d,
+        description: withSummary(plain, bestOriginal.get(h.n) ?? h.d),
       });
     }
   }
