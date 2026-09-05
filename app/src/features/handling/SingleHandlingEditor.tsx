@@ -22,6 +22,8 @@ interface Props {
   coreLabel?: string;
   /** Helper line under the header (defaults to the handling wording). */
   note?: string;
+  /** Domain hint lookup for the '?' icons (defaults to the handling glossary). */
+  hintFor?: (col: string) => string | undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -137,6 +139,7 @@ export default function SingleHandlingEditor({
   metaLabel = "handling.meta",
   coreLabel = "Vehicle",
   note = "One handlingName in one handling.meta — edits update only this entry.",
+  hintFor,
 }: Props) {
   const [q, setQ] = useState("");
   const [selKey, setSelKey] = useState<string | null>(null);
@@ -327,7 +330,9 @@ export default function SingleHandlingEditor({
                             const edited =
                               rowEdits?.[col] !== undefined &&
                               rowEdits[col] !== original;
-                            const hint = paramHint(col, selected.vehicle_type);
+                            const hint = hintFor
+                              ? hintFor(col)
+                              : paramHint(col, selected.vehicle_type);
                             return (
                               <ParamField
                                 key={col}

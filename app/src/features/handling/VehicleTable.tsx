@@ -31,6 +31,8 @@ export interface VehicleTableProps {
   onCommitEdit: (row: VehicleRow, col: string, value: string) => void;
   /** Column headers for the four fixed meta columns (defaults = vehicles). */
   labels?: { folder: string; type: string; klass: string; name: string };
+  /** Domain hint lookup (defaults to the handling glossary). */
+  hintFor?: (col: string, kind?: string) => string | undefined;
 }
 
 const W_VEHICLE = 200;
@@ -239,6 +241,7 @@ interface RowContentProps {
   onStartCell: (row: VehicleRow, col: string) => void;
   onCancelCell: () => void;
   onHintOpen: (e: MouseEvent<HTMLElement>, row: VehicleRow, col: string) => void;
+  hintFor: (col: string, kind?: string) => string | undefined;
 }
 
 const GridRowContent = memo(function GridRowContent({
@@ -251,6 +254,7 @@ const GridRowContent = memo(function GridRowContent({
   onStartCell,
   onCancelCell,
   onHintOpen,
+  hintFor,
 }: RowContentProps) {
   const k = rowKey(original);
   const zebra = visualIndex % 2 === 1;
@@ -282,7 +286,7 @@ const GridRowContent = memo(function GridRowContent({
         const cellKey = `${k}\u0001${l.id}`;
         const isEditing = editingKey === cellKey;
         const bg = dirty ? DIRTY_BG : rowBg;
-        const hintHtml = paramHint(l.id, original.vehicle_type);
+        const hintHtml = hintFor(l.id, original.vehicle_type);
 
         const hintButton = hintHtml ? (
           <button
@@ -350,6 +354,7 @@ function VehicleTableImpl({
   edits,
   onCommitEdit,
   labels,
+  hintFor,
 }: VehicleTableProps) {
   const metaLabels = labels ?? {
     folder: "Folder",
@@ -357,6 +362,7 @@ function VehicleTableImpl({
     klass: "Class",
     name: "handlingName",
   };
+  const resolver = hintFor ?? paramHint;
   const [sorting, setSorting] = useState<SortingState>([]);
   const [editing, setEditing] = useState<EditingState | null>(null);
   const [hintPop, setHintPop] = useState<HintPop | null>(null);
@@ -440,7 +446,7 @@ function VehicleTableImpl({
 
   const onHintOpen = useCallback(
     (e: MouseEvent<HTMLElement>, row: VehicleRow, col: string) => {
-      const html = paramHint(col, row.vehicle_type);
+      const html = resolver(col, row.vehicle_type);
       if (!html) return;
       const r = e.currentTarget.getBoundingClientRect();
       const width = 340;
@@ -450,7 +456,7 @@ function VehicleTableImpl({
         r.bottom + 12 + est <= window.innerHeight - 8 ? r.bottom + 8 : Math.max(8, r.top - est - 8);
       setHintPop({ x, y, title: col, html });
     },
-    []
+    [resolver]
   );
 
   // Close the hint popover with Escape.
@@ -564,6 +570,7 @@ function VehicleTableImpl({
                       layout={layout}
                       rowEdits={edits[k]}
                       editingKey={editingKey}
+                      hintFor={resolver}
                       onCommitCell={onCommitCell}
                       onStartCell={onStartCell}
                       onCancelCell={onCancelCell}

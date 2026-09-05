@@ -10,6 +10,7 @@ import GlossaryView from "./features/handling/GlossaryView";
 import SingleHandlingEditor from "./features/handling/SingleHandlingEditor";
 import VehicleTable from "./features/handling/VehicleTable";
 import { demoScan, demoWeapons } from "./features/handling/demoData";
+import { paramHintWeapon } from "./features/handling/weaponHints";
 import {
   scanFolder,
   scanWeapons,
@@ -139,6 +140,7 @@ export default function App() {
         onCommitEdit={d.commitEdit}
         metaLabel={isWeapon ? "weapons.meta" : "handling.meta"}
         coreLabel={isWeapon ? "Weapon" : "Vehicle"}
+        hintFor={isWeapon ? paramHintWeapon : undefined}
         note={
           isWeapon
             ? "One weapon (CWeaponInfo) in one weapons.meta — edits update only this weapon."
@@ -155,6 +157,7 @@ export default function App() {
         edits={d.edits}
         onCommitEdit={d.commitEdit}
         labels={isWeapon ? WEAPON_LABELS : undefined}
+        hintFor={isWeapon ? paramHintWeapon : undefined}
       />
     );
   } else {
