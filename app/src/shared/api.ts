@@ -87,3 +87,16 @@ export function updateCarvariationsFiles(
 ): Promise<UpdateResult> {
   return invoke<UpdateResult>("update_carvariations_files", { folderPath, changes });
 }
+
+/** Scan a folder (any layout) for vehiclelayouts.meta → one row per list entry. */
+export function scanVehiclelayouts(folderPath: string): Promise<ScanResult> {
+  return invoke<ScanResult>("scan_vehiclelayouts", { folderPath });
+}
+
+/** Write edited vehiclelayouts entries back into the original files. */
+export function updateVehiclelayoutsFiles(
+  folderPath: string,
+  changes: VehicleChange[]
+): Promise<UpdateResult> {
+  return invoke<UpdateResult>("update_vehiclelayouts_files", { folderPath, changes });
+}

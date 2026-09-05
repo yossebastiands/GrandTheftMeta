@@ -108,8 +108,7 @@ const CATEGORIES: Category[] = [
         file: "vehiclelayouts.meta",
         label: "Vehicle Layouts",
         aliasHint: "matches vehiclelayouts*.meta",
-        status: BOTH_SOON,
-        modes: [soon("single", BOTH_SOON), soon("bulk", BOTH_SOON)],
+        modes: BOTH(),
       },
       {
         id: "vehicleweapons",
@@ -170,12 +169,13 @@ const CATEGORIES: Category[] = [
 ];
 
 // Meta panels currently wired to live editors: handling.meta, vehicles.meta,
-// carcols.meta, carvariations.meta + weapons.meta.
+// carcols.meta, carvariations.meta, vehiclelayouts.meta + weapons.meta.
 const LIVE_PANELS: string[] = [
   "handling",
   "vehicles",
   "carcols",
   "carvariations",
+  "vehiclelayouts",
   "weapons",
 ];
 

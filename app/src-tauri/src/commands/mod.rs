@@ -4,5 +4,6 @@ pub mod pick;
 pub mod scan;
 pub mod textnav;
 pub mod update;
+pub mod vehiclelayouts;
 pub mod vehicles;
 pub mod weapons;

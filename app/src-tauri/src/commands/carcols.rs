@@ -76,6 +76,16 @@ pub(crate) fn kind_label(name: &str) -> String {
         "colors" => "Colour".to_string(),
         "kits" => "Kit".to_string(),
         "Probabilities" => "Plate Probability".to_string(),
+        // vehiclelayouts containers
+        "VehicleLayoutInfos" => "Layout".to_string(),
+        "VehicleEntryPointInfos" => "Entry Point".to_string(),
+        "VehicleExtraPointsInfos" => "Extra Points".to_string(),
+        "VehicleEntryPointAnimInfos" => "Entry Point Anim".to_string(),
+        "VehicleSeatAnimInfos" => "Seat Anim".to_string(),
+        "Seats" => "Seat".to_string(),
+        "EntryPoints" => "Layout Entry Point".to_string(),
+        "AccessableSeats" => "Accessible Seat".to_string(),
+        "ExtraVehiclePoints" => "Extra Vehicle Point".to_string(),
         _ => prettify_camel(name),
     }
 }
@@ -169,18 +179,30 @@ fn emit_row(
             params.insert(child.name.clone(), v.trim().to_string());
             continue;
         }
+        if let Some(v) = child.attr("ref") {
+            let v = v.trim().to_string();
+            if !v.is_empty() {
+                params.insert(format!("{}.ref", child.name), v);
+            }
+            continue;
+        }
         let text = child.text.split_whitespace().collect::<Vec<_>>().join(" ");
         if !text.is_empty() {
             params.insert(child.name.clone(), text);
         }
     }
     if params.is_empty() && item.children.is_empty() {
-        // Leaf entry (no child elements): expose the item's own value attr, or
-        // its own text (e.g. `<kits><Item>951_modkit</Item></kits>`).
+        // Leaf entry (no child elements): expose the item's own value / ref attr,
+        // or its own text (e.g. `<kits><Item>951_modkit</Item></kits>`).
         if let Some(v) = item.attr("value") {
             let v = v.trim().to_string();
             if !v.is_empty() {
                 params.insert("Item.value".to_string(), v);
+            }
+        } else if let Some(v) = item.attr("ref") {
+            let v = v.trim().to_string();
+            if !v.is_empty() {
+                params.insert("Item.ref".to_string(), v);
             }
         } else {
             let text = item.text.split_whitespace().collect::<Vec<_>>().join(" ");
@@ -210,7 +232,7 @@ fn walk_item(
     item: &XmlNode,
     path: &mut Vec<String>,
     section: &str,
-    identity: &str,
+    identity: &[&str],
     group_of: &dyn Fn(&XmlNode) -> String,
     rel: &str,
     abs: &str,
@@ -230,7 +252,7 @@ fn walk_elem(
     node: &XmlNode,
     path: &mut Vec<String>,
     section: &str,
-    identity: &str,
+    identity: &[&str],
     group_of: &dyn Fn(&XmlNode) -> String,
     rel: &str,
     abs: &str,
@@ -244,10 +266,11 @@ fn walk_elem(
     if is_pure_list {
         for (idx, item) in items.iter().enumerate() {
             path.push(idx.to_string());
-            // Group context: members of the identity container (e.g. <Kits> for
-            // carcols, <variationData> for carvariations) get their own label;
-            // every other list inherits the group passed down.
-            let group = if node.name == identity {
+            // Group context: members of an identity container (e.g. <Kits> for
+            // carcols, <variationData> for carvariations, the typed top-level
+            // sections for vehiclelayouts) get their own label; every other list
+            // inherits the group passed down.
+            let group = if identity.contains(&node.name.as_str()) {
                 group_of(item)
             } else {
                 section.to_string()
@@ -280,7 +303,7 @@ pub(crate) fn collect_list_rows(
     rel: &str,
     abs: &str,
     cols: &mut BTreeSet<String>,
-    identity: &str,
+    identity: &[&str],
     group_of: &dyn Fn(&XmlNode) -> String,
 ) -> Vec<VehicleRow> {
     let mut out = Vec::new();
@@ -350,7 +373,7 @@ pub fn scan_carcols(folder_path: String) -> Result<ScanResult, String> {
             }
         };
         let abs = path.to_string_lossy().into_owned();
-        let rows = collect_list_rows(&roots, &rel, &abs, &mut cols, "Kits", &kit_label);
+        let rows = collect_list_rows(&roots, &rel, &abs, &mut cols, &["Kits"], &kit_label);
         if rows.is_empty() {
             skipped.push(format!("{rel}: no editable entries found"));
             continue;
@@ -385,37 +408,47 @@ pub(crate) fn patch_path(
             missing.push(format!("{name}: entry not found"));
             continue;
         };
-        // Leaf-item params patch the entry's own value attr / text, not a child.
-        if name == "Item.value" || name == "Item.text" {
-            let Some((os, oe)) = item_open_span(work, lo) else {
-                missing.push(format!("{name}: entry open tag not found"));
-                continue;
-            };
-            if name == "Item.value" {
-                match attr_value(&work[os..oe], "value") {
-                    Some(old) => {
-                        if old.trim() == new_val.trim() {
-                            unchanged += 1;
-                        } else {
-                            *work = replace_attr_value(work, os, oe, "value", new_val.trim());
-                            applied += 1;
-                        }
+        // Leaf-item params patch the entry itself (value/ref attr or text).
+        if let Some(kind) = name.strip_prefix("Item.") {
+            match kind {
+                "text" => {
+                    let old = work[lo..hi].split_whitespace().collect::<Vec<_>>().join(" ");
+                    let new = new_val.trim();
+                    if old == new {
+                        unchanged += 1;
+                    } else {
+                        *work = replace_text(work, lo, hi, &escape_xml(new));
+                        applied += 1;
                     }
-                    None => missing.push(format!("{name}: no value to edit")),
                 }
-            } else {
-                let old = work[lo..hi].split_whitespace().collect::<Vec<_>>().join(" ");
-                let new = new_val.trim();
-                if old == new {
-                    unchanged += 1;
-                } else {
-                    *work = replace_text(work, lo, hi, &escape_xml(new));
-                    applied += 1;
+                attr @ ("value" | "ref") => {
+                    let Some((os, oe)) = item_open_span(work, lo) else {
+                        missing.push(format!("{name}: entry open tag not found"));
+                        continue;
+                    };
+                    match attr_value(&work[os..oe], attr) {
+                        Some(old) => {
+                            if old.trim() == new_val.trim() {
+                                unchanged += 1;
+                            } else {
+                                *work = replace_attr_value(work, os, oe, attr, new_val.trim());
+                                applied += 1;
+                            }
+                        }
+                        None => missing.push(format!("{name}: no {attr} to edit")),
+                    }
                 }
+                _ => missing.push(format!("{name}: unknown leaf param")),
             }
             continue;
         }
-        let locs = elem_locs(work, lo, hi, name);
+
+        // Child element to patch; `ref`-style params carry a `.ref` suffix.
+        let (elem, attr) = match name.strip_suffix(".ref") {
+            Some(e) => (e.to_string(), "ref".to_string()),
+            None => (name.clone(), "value".to_string()),
+        };
+        let locs = elem_locs(work, lo, hi, &elem);
         let Some((os, oe, close)) = locs.first().cloned() else {
             missing.push(format!("{name} not found"));
             continue;
@@ -441,16 +474,16 @@ pub(crate) fn patch_path(
             *work = replace_text(work, oe, cs, &out_val);
             applied += 1;
         } else {
-            match attr_value(&work[os..oe], "value") {
+            match attr_value(&work[os..oe], &attr) {
                 Some(old) => {
                     if old.trim() == new_val.trim() {
                         unchanged += 1;
                     } else {
-                        *work = replace_attr_value(work, os, oe, "value", new_val.trim());
+                        *work = replace_attr_value(work, os, oe, &attr, new_val.trim());
                         applied += 1;
                     }
                 }
-                None => missing.push(format!("{name} has no value to edit")),
+                None => missing.push(format!("{name} has no {attr} to edit")),
             }
         }
     }
@@ -610,7 +643,7 @@ mod tests {
     fn scan_sample() -> (Vec<VehicleRow>, Vec<String>) {
         let roots = parse_xml(SAMPLE).unwrap();
         let mut cols = BTreeSet::new();
-        let rows = collect_list_rows(&roots, "veh/t90m/carcols.meta", "abs", &mut cols, "Kits", &kit_label);
+        let rows = collect_list_rows(&roots, "veh/t90m/carcols.meta", "abs", &mut cols, &["Kits"], &kit_label);
         (rows, cols.into_iter().collect())
     }
 

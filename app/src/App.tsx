@@ -13,6 +13,7 @@ import {
   demoCarcols,
   demoCarvariations,
   demoScan,
+  demoVehiclelayouts,
   demoVehicles,
   demoWeapons,
 } from "./features/handling/demoData";
@@ -21,11 +22,13 @@ import {
   scanCarcols,
   scanCarvariations,
   scanFolder,
+  scanVehiclelayouts,
   scanVehicles,
   scanWeapons,
   updateCarcolsFiles,
   updateCarvariationsFiles,
   updateFiles,
+  updateVehiclelayoutsFiles,
   updateVehicleFiles,
   updateWeaponFiles,
 } from "./shared/api";
@@ -33,7 +36,13 @@ import { useMetaDomain, type Notify } from "./shared/useMetaDomain";
 import { version as APP_VERSION } from "../package.json";
 
 /** Which live meta panel the Home editors are showing. */
-type PanelId = "handling" | "vehicles" | "carcols" | "carvariations" | "weapons";
+type PanelId =
+  | "handling"
+  | "vehicles"
+  | "carcols"
+  | "carvariations"
+  | "vehiclelayouts"
+  | "weapons";
 
 /** Weapon table labels (folder column shows the relative .meta file path). */
 const WEAPON_LABELS = {
@@ -117,6 +126,17 @@ const PANELS: Record<PanelId, DomainCfg> = {
     pickText:
       "Select a folder that contains your vehicle resources (carvariations.meta / carvariations*.meta, any layout).",
   },
+  vehiclelayouts: {
+    noun: "entries",
+    nounShort: "vehicle-layout",
+    labels: CARCOLS_LABELS,
+    hintFor: noHint,
+    metaFile: "vehiclelayouts.meta",
+    coreLabel: "Entry",
+    note: "One layout entry (seat, entry point, extra point…) in one vehiclelayouts.meta — edits update only that entry.",
+    pickText:
+      "Select a folder that contains your vehicle resources (vehiclelayouts.meta / vehiclelayouts*.meta, any layout).",
+  },
   weapons: {
     noun: "weapons",
     nounShort: "weapon",
@@ -188,6 +208,12 @@ export default function App() {
     notify,
     onScanStart: resetFilters,
   });
+  const lay = useMetaDomain({
+    scan: scanVehiclelayouts,
+    write: updateVehiclelayoutsFiles,
+    notify,
+    onScanStart: resetFilters,
+  });
 
   const domains = {
     handling: veh,
@@ -195,6 +221,7 @@ export default function App() {
     vehicles: vmeta,
     carcols: car,
     carvariations: carv,
+    vehiclelayouts: lay,
   };
   const d = domains[panel];
   const cfg = PANELS[panel];
@@ -262,6 +289,18 @@ export default function App() {
     setPanel("carvariations");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCarvariationsDemo]);
+
+  // ?vl — dev-only vehiclelayouts.meta demo.
+  const isVehiclelayoutsDemo =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("vl");
+  useEffect(() => {
+    if (!isVehiclelayoutsDemo) return;
+    lay.load(demoVehiclelayouts(), "[demo-vehiclelayouts]");
+    setPanel("vehiclelayouts");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVehiclelayoutsDemo]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

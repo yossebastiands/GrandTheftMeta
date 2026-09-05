@@ -198,3 +198,33 @@ export function demoCarvariations(count = 7): ScanResult {
   }
   return { vehicles, columns, skipped: [] };
 }
+
+// Dev-only vehiclelayouts.meta sample rows (`?vl`) so the layout editors can be
+// inspected without the Tauri backend. Mirrors the scanner: handling_name =
+// structural path, vehicle_type = Kind, vehicle_class = the typed entry's Name
+// (group), params = scalar leaves incl. ref attributes (SeatInfo.ref etc.).
+export function demoVehiclelayouts(count = 6): ScanResult {
+  const base: Array<[string, string, string, string, Record<string, string>]> = [
+    ["[mbo-vehicles]/Tank_t90m/vehiclelayouts.meta", "VehicleLayoutInfos/0", "Layout", "LAYOUT_T90M", { Name: "LAYOUT_T90M", LayoutFlags: "StreamAnims DisableJackingAndBusting", MaxXAcceleration: "25.000000" }],
+    ["[mbo-vehicles]/Tank_t90m/vehiclelayouts.meta", "VehicleLayoutInfos/0/Seats/0", "Seat", "LAYOUT_T90M", { "SeatInfo.ref": "SEAT_TANK_KHANJALI_FRONT_LEFT", "SeatAnimInfo.ref": "SEAT_ANIM_T90M_DRIVER" }],
+    ["[mbo-vehicles]/Tank_t90m/vehiclelayouts.meta", "VehicleLayoutInfos/0/Seats/1", "Seat", "LAYOUT_T90M", { "SeatInfo.ref": "SEAT_TANK_APC_FRONT_RIGHT", "SeatAnimInfo.ref": "SEAT_ANIM_TANK_APC_FRONT_RIGHT" }],
+    ["[mbo-vehicles]/Tank_t90m/vehiclelayouts.meta", "VehicleEntryPointInfos/0", "Entry Point", "ENTRY_POINT_MP_T90M_WARP_REAR_LEFT", { Name: "ENTRY_POINT_MP_T90M_WARP_REAR_LEFT", DoorBoneName: "door_dside_r", WindowId: "INVALID", VehicleSide: "SIDE_LEFT" }],
+    ["[mbo-vehicles]/Tank_t90m/vehiclelayouts.meta", "VehicleEntryPointInfos/0/AccessableSeats/0", "Accessible Seat", "ENTRY_POINT_MP_T90M_WARP_REAR_LEFT", { "Item.ref": "SEAT_STANDARD_NO_SHUFFLE_REAR_LEFT" }],
+    ["[mbo-vehicles]/Tank_t90m/vehiclelayouts.meta", "VehicleExtraPointsInfos/0/ExtraVehiclePoints/0", "Extra Vehicle Point", "EXTRA_VEHICLE_POINTS_INVALID_DRIVER", { LocationType: "SEAT_RELATIVE", PointType: "GET_IN", Heading: "1.570000" }],
+  ];
+  const columns = Array.from(new Set(base.flatMap((b) => Object.keys(b[4])))).sort();
+  const vehicles: VehicleRow[] = [];
+  for (let i = 0; i < count; i++) {
+    const [file, path, kind, group, params] = base[i % base.length];
+    const dup = Math.floor(i / base.length);
+    vehicles.push({
+      folder_name: dup ? file.replace(".meta", `_${i}.meta`) : file,
+      meta_path: "",
+      handling_name: dup ? `${path}/${i}` : path,
+      vehicle_type: kind,
+      vehicle_class: group,
+      params,
+    });
+  }
+  return { vehicles, columns, skipped: [] };
+}

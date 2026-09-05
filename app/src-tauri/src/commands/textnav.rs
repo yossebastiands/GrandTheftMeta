@@ -123,7 +123,9 @@ pub fn elem_locs(
 }
 
 /// Global spans `[start, end)` of every TOP-LEVEL `<Item>` (not nested inside
-/// another Item) within `text[lo..hi]` — commented items are ignored.
+/// another Item) within `text[lo..hi]` — commented items are ignored. Both block
+/// entries `<Item>…</Item>` and self-closing leaf entries `<Item …/>` are
+/// returned (in DOM order, so indexes match the scanner).
 pub fn top_item_spans(text: &str, lo: usize, hi: usize) -> Vec<(usize, usize)> {
     let m = masked(text);
     if lo >= m.len() || hi > m.len() || lo > hi {
@@ -142,6 +144,8 @@ pub fn top_item_spans(text: &str, lo: usize, hi: usize) -> Vec<(usize, usize)> {
         };
         let gt = start + gt_rel;
         if sub[start..=gt].ends_with("/>") {
+            // Self-closing leaf entry: span is just its open tag.
+            out.push((lo + start, lo + gt + 1));
             i = gt + 1;
             continue;
         }
@@ -186,11 +190,16 @@ pub fn navigate(text: &str, steps: &[PathStep]) -> Option<(usize, usize)> {
             PathStep::Item(idx) => {
                 let spans = top_item_spans(text, lo, hi);
                 let (s, e) = *spans.get(*idx)?;
-                // interior between the Item open tag's '>' and its closing tag
                 let gt_rel = text[s..e].find('>')?;
                 let gt = s + gt_rel + 1;
-                let close_start = e.checked_sub("</Item>".len())?;
-                (lo, hi) = (gt, close_start);
+                if text[s..e].trim_end().ends_with("/>") {
+                    // Self-closing leaf entry: no interior; point at the open tag.
+                    (lo, hi) = (gt, gt);
+                } else {
+                    // Interior between the Item open tag's '>' and its closing tag.
+                    let close_start = e.checked_sub("</Item>".len())?;
+                    (lo, hi) = (gt, close_start);
+                }
             }
         }
         if lo > hi {

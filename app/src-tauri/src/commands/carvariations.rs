@@ -85,7 +85,7 @@ pub fn scan_carvariations(folder_path: String) -> Result<ScanResult, String> {
             }
         };
         let abs = path.to_string_lossy().into_owned();
-        let rows = collect_list_rows(&roots, &rel, &abs, &mut cols, "variationData", &model_label);
+        let rows = collect_list_rows(&roots, &rel, &abs, &mut cols, &["variationData"], &model_label);
         if rows.is_empty() {
             skipped.push(format!("{rel}: no editable entries found"));
             continue;
@@ -167,7 +167,7 @@ mod tests {
         let roots = parse_xml(SAMPLE).unwrap();
         let mut cols = BTreeSet::new();
         let rows =
-            collect_list_rows(&roots, "veh/t90m/carvariations.meta", "abs", &mut cols, "variationData", &model_label);
+            collect_list_rows(&roots, "veh/t90m/carvariations.meta", "abs", &mut cols, &["variationData"], &model_label);
         (rows, cols.into_iter().collect())
     }
 
