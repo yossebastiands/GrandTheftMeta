@@ -5,6 +5,7 @@
 // Schema of hints.json: Array<{ t: module, n: element name, d: html }>
 
 import hintsData from "./hints.json";
+import { handlingPlain } from "./handlingGuide";
 
 export interface HintEntry {
   /** Module: automobile | bike | boat | heli | plane | submarine | trailer */
@@ -109,6 +110,9 @@ const EXTRA: Record<string, string> = {
 /** Returns the HTML description for a parameter column, or undefined. */
 export function paramHint(col: string, vehicleType?: string): string | undefined {
   const el = elementName(col);
+  // Plain-language rewrite wins when we have one.
+  const plain = handlingPlain(el);
+  if (plain) return plain;
   const mod = moduleFor(col, vehicleType);
   if (mod) {
     const d = byModule.get(mod)?.get(el);
@@ -143,10 +147,11 @@ export function handlingGlossary(): GlossaryEntry[] {
   const byName = new Map<string, GlossaryEntry>();
   for (const h of HINTS) {
     if (!byName.has(h.n)) {
+      const plain = handlingPlain(h.n);
       byName.set(h.n, {
         name: h.n,
-        moduleLabel: MODULE_LABEL[h.t] ?? h.t,
-        description: h.d,
+        moduleLabel: plain ? "Handling" : (MODULE_LABEL[h.t] ?? h.t),
+        description: plain ?? h.d,
       });
     }
   }
