@@ -55,15 +55,15 @@ pub struct ScanResult {
 // ---------------------------------------------------------------------------
 
 #[derive(Default, Debug, Clone)]
-struct XmlNode {
-    name: String,
-    attrs: Vec<(String, String)>,
-    text: String,
-    children: Vec<XmlNode>,
+pub(crate) struct XmlNode {
+    pub(crate) name: String,
+    pub(crate) attrs: Vec<(String, String)>,
+    pub(crate) text: String,
+    pub(crate) children: Vec<XmlNode>,
 }
 
 impl XmlNode {
-    fn attr(&self, key: &str) -> Option<&str> {
+    pub(crate) fn attr(&self, key: &str) -> Option<&str> {
         self.attrs
             .iter()
             .find(|(k, _)| k == key)
@@ -71,14 +71,14 @@ impl XmlNode {
     }
 }
 
-fn push_child(stack: &mut Vec<XmlNode>, roots: &mut Vec<XmlNode>, node: XmlNode) {
+pub(crate) fn push_child(stack: &mut Vec<XmlNode>, roots: &mut Vec<XmlNode>, node: XmlNode) {
     match stack.last_mut() {
         Some(parent) => parent.children.push(node),
         None => roots.push(node),
     }
 }
 
-fn parse_xml(text: &str) -> Result<Vec<XmlNode>, String> {
+pub(crate) fn parse_xml(text: &str) -> Result<Vec<XmlNode>, String> {
     let mut reader = Reader::from_str(text);
     reader.config_mut().trim_text(true);
     let mut stack: Vec<XmlNode> = Vec::new();
@@ -281,7 +281,7 @@ fn parse_handling_doc(roots: &[XmlNode]) -> Vec<HashMap<String, String>> {
 // ---------------------------------------------------------------------------
 
 /// Collapsed text of a direct child element, or "" when absent.
-fn child_text(node: &XmlNode, name: &str) -> String {
+pub(crate) fn child_text(node: &XmlNode, name: &str) -> String {
     node.children
         .iter()
         .find(|c| c.name == name)
@@ -290,7 +290,7 @@ fn child_text(node: &XmlNode, name: &str) -> String {
 }
 
 /// Every `<Item>` node in the tree (vehicles.meta holds one per model).
-fn collect_items(roots: &[XmlNode]) -> Vec<&XmlNode> {
+pub(crate) fn collect_items(roots: &[XmlNode]) -> Vec<&XmlNode> {
     fn rec<'a>(node: &'a XmlNode, out: &mut Vec<&'a XmlNode>) {
         if node.name == "Item" {
             out.push(node);
