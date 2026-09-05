@@ -144,8 +144,7 @@ const CATEGORIES: Category[] = [
         file: "weaponanimations.meta",
         label: "Weapon Animations",
         aliasHint: "matches weaponanimations*.meta",
-        status: BOTH_SOON,
-        modes: [soon("single", BOTH_SOON), soon("bulk", BOTH_SOON)],
+        modes: BOTH(),
       },
       {
         id: "weaponarchetypes",
@@ -168,8 +167,8 @@ const CATEGORIES: Category[] = [
 ];
 
 // Meta panels currently wired to live editors: handling.meta, vehicles.meta,
-// carcols.meta, carvariations.meta, vehiclelayouts.meta, vehicleweapons.meta
-// + weapons.meta.
+// carcols.meta, carvariations.meta, vehiclelayouts.meta, vehicleweapons.meta,
+// weaponanimations.meta + weapons.meta.
 const LIVE_PANELS: string[] = [
   "handling",
   "vehicles",
@@ -177,6 +176,7 @@ const LIVE_PANELS: string[] = [
   "carvariations",
   "vehiclelayouts",
   "vehicleweapons",
+  "weaponanimations",
   "weapons",
 ];
 

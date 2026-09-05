@@ -258,3 +258,33 @@ export function demoVehicleweapons(count = 6): ScanResult {
   }
   return { vehicles, columns, skipped: [] };
 }
+
+// Dev-only weaponanimations.meta sample rows (`?wa`) so the weapon-anim editors
+// can be inspected without the Tauri backend. Mirrors the scanner: handling_name
+// = structural path (set index/weapon index), vehicle_type = personality Set,
+// vehicle_class = Weapon key, params = the weapon's clip-set leaves/modifiers.
+export function demoWeaponanimations(count = 6): ScanResult {
+  const base: Array<[string, string, string, string, Record<string, string>]> = [
+    ["weapons/WEAPON_PISTOL/weaponanimations.meta", "WeaponAnimationsSets/0/WeaponAnimations/0", "Default", "WEAPON_PISTOL", { CoverWeaponClipSetHash: "Cover_Wpn_Pistol", MotionClipSetHash: "weapons@pistol@pistol", SwapWeaponFilterHash: "RightArm_NoSpine_filter", AnimFireRateModifier: "1.000000", UseFromStrafeUpperBodyAimNetwork: "true", "WeaponSwapData.ref": "SWAP_DEFAULT" }],
+    ["weapons/WEAPON_PISTOL/weaponanimations.meta", "WeaponAnimationsSets/0/WeaponAnimations/1", "Default", "WEAPON_SNIPERRIFLE", { MotionClipSetHash: "weapons@rifle@rifle", "WeaponSwapData.ref": "SWAP_SNIPER" }],
+    ["weapons/WEAPON_PISTOL/weaponanimations.meta", "WeaponAnimationsSets/1/WeaponAnimations/0", "Gang", "WEAPON_PISTOL", { MotionClipSetHash: "weapons@pistol_1h@gang", AnimFireRateModifier: "1.000000" }],
+    ["weapons/WEAPON_PISTOL/weaponanimations.meta", "WeaponAnimationsSets/2/WeaponAnimations/0", "FirstPerson", "WEAPON_PISTOL", { MotionClipSetHash: "weapons@pistol@fp", AimingDownTheBarrel: "true" }],
+    ["weapons/WEAPON_SMG/weaponanimations.meta", "WeaponAnimationsSets/0/WeaponAnimations/0", "Default", "WEAPON_SMG", { MotionClipSetHash: "weapons@smg@smg", CoverWeaponClipSetHash: "Cover_Wpn_SMG" }],
+    ["weapons/WEAPON_SMG/weaponanimations.meta", "WeaponAnimationsSets/1/WeaponAnimations/0", "Gang", "WEAPON_SMG", { MotionClipSetHash: "weapons@smg_1h@gang" }],
+  ];
+  const columns = Array.from(new Set(base.flatMap((b) => Object.keys(b[4])))).sort();
+  const vehicles: VehicleRow[] = [];
+  for (let i = 0; i < count; i++) {
+    const [file, path, setKey, weapon, params] = base[i % base.length];
+    const dup = Math.floor(i / base.length);
+    vehicles.push({
+      folder_name: dup ? file.replace(".meta", `_${i}.meta`) : file,
+      meta_path: "",
+      handling_name: dup ? `${path}/${i}` : path,
+      vehicle_type: setKey,
+      vehicle_class: weapon,
+      params,
+    });
+  }
+  return { vehicles, columns, skipped: [] };
+}

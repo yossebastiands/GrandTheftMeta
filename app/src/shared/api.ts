@@ -113,3 +113,16 @@ export function updateVehicleweaponsFiles(
 ): Promise<UpdateResult> {
   return invoke<UpdateResult>("update_vehicleweapons_files", { folderPath, changes });
 }
+
+/** Scan a folder for weaponanimations.meta → one row per personality × weapon. */
+export function scanWeaponanimations(folderPath: string): Promise<ScanResult> {
+  return invoke<ScanResult>("scan_weaponanimations", { folderPath });
+}
+
+/** Write edited weapon-animation entries back into the original files. */
+export function updateWeaponanimationsFiles(
+  folderPath: string,
+  changes: VehicleChange[]
+): Promise<UpdateResult> {
+  return invoke<UpdateResult>("update_weaponanimations_files", { folderPath, changes });
+}

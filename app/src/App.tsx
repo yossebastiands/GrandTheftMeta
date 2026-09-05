@@ -16,6 +16,7 @@ import {
   demoVehiclelayouts,
   demoVehicleweapons,
   demoVehicles,
+  demoWeaponanimations,
   demoWeapons,
 } from "./features/handling/demoData";
 import { paramHintWeapon } from "./features/handling/weaponHints";
@@ -26,6 +27,7 @@ import {
   scanVehiclelayouts,
   scanVehicleweapons,
   scanVehicles,
+  scanWeaponanimations,
   scanWeapons,
   updateCarcolsFiles,
   updateCarvariationsFiles,
@@ -33,6 +35,7 @@ import {
   updateVehiclelayoutsFiles,
   updateVehicleweaponsFiles,
   updateVehicleFiles,
+  updateWeaponanimationsFiles,
   updateWeaponFiles,
 } from "./shared/api";
 import { useMetaDomain, type Notify } from "./shared/useMetaDomain";
@@ -46,6 +49,7 @@ type PanelId =
   | "carvariations"
   | "vehiclelayouts"
   | "vehicleweapons"
+  | "weaponanimations"
   | "weapons";
 
 /** Weapon table labels (folder column shows the relative .meta file path). */
@@ -78,6 +82,14 @@ const VEHICLEWEAPONS_LABELS = {
   type: "Kind",
   klass: "Group",
   name: "Name",
+};
+
+/** weaponanimations table labels (file / personality Set / Weapon / entry path). */
+const WEAPONANIMATIONS_LABELS = {
+  folder: "File",
+  type: "Set",
+  klass: "Weapon",
+  name: "Entry",
 };
 
 /** metas without guides yet — suppress the handling fallback. */
@@ -159,6 +171,17 @@ const PANELS: Record<PanelId, DomainCfg> = {
     note: "One mounted weapon / ammo / weapon-data entry in one vehicleweapons*.meta — edits update only that entry.",
     pickText:
       "Select a folder that contains your vehicle resources (vehicleweapons*.meta, any layout).",
+  },
+  weaponanimations: {
+    noun: "entries",
+    nounShort: "weapon-anim",
+    labels: WEAPONANIMATIONS_LABELS,
+    hintFor: noHint,
+    metaFile: "weaponanimations.meta",
+    coreLabel: "Entry",
+    note: "One weapon × personality animation set in one weaponanimations.meta — edits update only that entry.",
+    pickText:
+      "Select a folder that contains your weapon resources (weaponanimations.meta / weaponanimations*.meta, any layout).",
   },
   weapons: {
     noun: "weapons",
@@ -243,6 +266,12 @@ export default function App() {
     notify,
     onScanStart: resetFilters,
   });
+  const wan = useMetaDomain({
+    scan: scanWeaponanimations,
+    write: updateWeaponanimationsFiles,
+    notify,
+    onScanStart: resetFilters,
+  });
 
   const domains = {
     handling: veh,
@@ -252,6 +281,7 @@ export default function App() {
     carvariations: carv,
     vehiclelayouts: lay,
     vehicleweapons: vw,
+    weaponanimations: wan,
   };
   const d = domains[panel];
   const cfg = PANELS[panel];
@@ -343,6 +373,18 @@ export default function App() {
     setPanel("vehicleweapons");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVehicleweaponsDemo]);
+
+  // ?wa — dev-only weaponanimations.meta demo.
+  const isWeaponanimationsDemo =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("wa");
+  useEffect(() => {
+    if (!isWeaponanimationsDemo) return;
+    wan.load(demoWeaponanimations(), "[demo-weaponanimations]");
+    setPanel("weaponanimations");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isWeaponanimationsDemo]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
