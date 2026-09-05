@@ -26,7 +26,7 @@ export default function FilterBar({
   return (
     <div className="flex items-center gap-3 border-b border-gray-800 bg-gray-900 px-3 py-1.5">
       <div className="relative">
-        <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500" />
+        <Search className="pointer-events-none absolute bottom-0 left-2 top-0 m-auto h-3.5 w-3.5 text-gray-500" />
         <input
           value={search}
           onChange={(e) => onSearch(e.target.value)}

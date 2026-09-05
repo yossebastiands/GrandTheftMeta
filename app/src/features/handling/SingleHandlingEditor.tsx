@@ -180,17 +180,19 @@ export default function SingleHandlingEditor({
     <div className="flex min-h-0 min-w-0 flex-1">
       {/* Left: searchable list of handling names */}
       <aside className="flex w-72 shrink-0 flex-col border-r border-gray-800 bg-gray-900/40">
-        <div className="relative border-b border-gray-800 p-2">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500" />
-          <input
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setHintCol(null);
-            }}
-            placeholder="Search handling name…"
-            className="w-full rounded-md border border-gray-700 bg-gray-950 py-1 pl-7 pr-2 text-xs text-gray-200 placeholder:text-gray-500 focus:border-accent focus:outline-none"
-          />
+        <div className="border-b border-gray-800 p-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute bottom-0 left-2 top-0 m-auto h-3.5 w-3.5 text-gray-500" />
+            <input
+              value={q}
+              onChange={(e) => {
+                setQ(e.target.value);
+                setHintCol(null);
+              }}
+              placeholder="Search handling name…"
+              className="w-full rounded-md border border-gray-700 bg-gray-950 py-1 pl-7 pr-2 text-xs text-gray-200 placeholder:text-gray-500 focus:border-accent focus:outline-none"
+            />
+          </div>
           <p className="mt-1.5 px-1 text-2xs text-gray-600">
             {filtered.length} handling {filtered.length === 1 ? "entry" : "entries"}
           </p>
