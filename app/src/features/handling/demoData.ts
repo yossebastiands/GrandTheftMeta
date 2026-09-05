@@ -102,3 +102,34 @@ export function demoWeapons(count = 6): ScanResult {
   }
   return { vehicles, columns, skipped: [] };
 }
+
+// Dev-only vehicles.meta sample rows (`?dv`) so the vehicle-model editors can be
+// inspected without the Tauri backend. Rows mirror the vehicles.meta scanner:
+// folder_name = relative meta file, handling_name = modelName, vehicle_type /
+// vehicle_class = FRIENDLY native labels, params = direct scalar leaves of the
+// model item (raw type / vehicleClass / flags / value attrs / arrays…).
+export function demoVehicles(count = 4): ScanResult {
+  const base: Array<[string, string, string, string, Record<string, string>]> = [
+    ["[mbo-vehicles]/Tank_t90m/vehicles.meta", "t90m", "Car", "Military", { txdName: "t90m", handlingId: "t90m", gameName: "T90M", audioNameHash: "RHINO", layout: "LAYOUT_T90M", explosionInfo: "EXPLOSION_INFO_DEFAULT", flags: "FLAG_HAS_LIVERY FLAG_IS_TANK FLAG_DONT_SPAWN_IN_CARGEN FLAG_DONT_SPAWN_AS_AMBIENT", type: "VEHICLE_TYPE_CAR", plateType: "VPT_NONE", vehicleClass: "VC_MILITARY", wheelType: "VWT_SPORT", defaultBodyHealth: "1000.000000", frequency: "100", maxNum: "5", diffuseTint: "0x00FFFFFF", wheelScale: "0.510000", lodDistances: "25 50 90 180 500 500" }],
+    ["[mbo-vehicles]/Aircraft_j20s/vehicles.meta", "j20s", "Plane", "Plane", { txdName: "j20s", handlingId: "j20s", gameName: "J20S", audioNameHash: "LAZER", layout: "LAYOUT_J20S", explosionInfo: "EXPLOSION_INFO_DEFAULT", flags: "FLAG_NO_BOOT FLAG_HAS_LIVERY FLAG_DRIVER_NO_DRIVE_BY FLAG_DONT_SPAWN_IN_CARGEN FLAG_DONT_SPAWN_AS_AMBIENT FLAG_USE_PILOT_HELMET", type: "VEHICLE_TYPE_PLANE", plateType: "VPT_NONE", vehicleClass: "VC_PLANE", wheelType: "VWT_SPORT", defaultBodyHealth: "1000.000000", frequency: "60", maxNum: "5", diffuseTint: "0x00FFFFFF", wheelScale: "1.000000", lodDistances: "25 50 90 180 500 500" }],
+    ["[mbo-vehicles]/Car_m3g80/vehicles.meta", "m3g80", "Car", "Super", { txdName: "m3g80", handlingId: "m3g80", gameName: "M3", audioNameHash: "SENTINEL", layout: "LAYOUT_M3G80", flags: "FLAG_HAS_LIVERY FLAG_USE_SCRIPT_DOORS", type: "VEHICLE_TYPE_CAR", plateType: "VPT_FRONT_AND_REAR_PLATES", vehicleClass: "VC_SUPER", wheelType: "VWT_SPORT", defaultBodyHealth: "1000.000000", frequency: "10", maxNumOfSameColor: "10", diffuseTint: "0x00FFFFFF", wheelScale: "1.000000", lodDistances: "25 50 90 180 500 500" }],
+    ["[mbo-vehicles]/Helicopter_ah64e/vehicles.meta", "ah64e", "Helicopter", "Helicopter", { txdName: "ah64e", handlingId: "ah64e", gameName: "AH64E", audioNameHash: "BUZZARD", layout: "LAYOUT_AH64E", flags: "FLAG_HAS_LIVERY FLAG_DRIVER_NO_DRIVE_BY FLAG_DONT_SPAWN_IN_CARGEN FLAG_DONT_SPAWN_AS_AMBIENT", type: "VEHICLE_TYPE_HELI", plateType: "VPT_NONE", vehicleClass: "VC_HELICOPTER", defaultBodyHealth: "1000.000000", frequency: "10", maxNum: "5", diffuseTint: "0x00FFFFFF", wheelScale: "1.000000", lodDistances: "25 50 90 180 500 500" }],
+  ];
+  const columns = [
+    "AllowBodyColorMapping", "audioNameHash", "defaultBodyHealth", "diffuseTint", "explosionInfo", "flags", "frequency", "gameName", "handlingId", "layout", "lodDistances", "maxNum", "maxNumOfSameColor", "plateType", "txdName", "type", "vehicleClass", "vehicleMakeName", "wheelScale", "wheelType",
+  ].sort();
+  const vehicles: VehicleRow[] = [];
+  for (let i = 0; i < count; i++) {
+    const [file, model, type, klass, params] = base[i % base.length];
+    const dup = Math.floor(i / base.length);
+    vehicles.push({
+      folder_name: dup ? file.replace(".meta", `_${i}.meta`) : file,
+      meta_path: "",
+      handling_name: dup ? `${model}_${i}` : model,
+      vehicle_type: type,
+      vehicle_class: klass,
+      params,
+    });
+  }
+  return { vehicles, columns, skipped: [] };
+}

@@ -48,3 +48,16 @@ export function updateWeaponFiles(
 ): Promise<UpdateResult> {
   return invoke<UpdateResult>("update_weapon_files", { folderPath, changes });
 }
+
+/** Scan a folder (any layout) for vehicles.meta / vehicles_*.meta → one row per model. */
+export function scanVehicles(folderPath: string): Promise<ScanResult> {
+  return invoke<ScanResult>("scan_vehicles", { folderPath });
+}
+
+/** Write edited vehicle-model params back into the original vehicles.meta files. */
+export function updateVehicleFiles(
+  folderPath: string,
+  changes: VehicleChange[]
+): Promise<UpdateResult> {
+  return invoke<UpdateResult>("update_vehicle_files", { folderPath, changes });
+}

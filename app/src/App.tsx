@@ -9,19 +9,21 @@ import Toolbar from "./ui/Toolbar";
 import GlossaryView from "./features/handling/GlossaryView";
 import SingleHandlingEditor from "./features/handling/SingleHandlingEditor";
 import VehicleTable from "./features/handling/VehicleTable";
-import { demoScan, demoWeapons } from "./features/handling/demoData";
+import { demoScan, demoVehicles, demoWeapons } from "./features/handling/demoData";
 import { paramHintWeapon } from "./features/handling/weaponHints";
 import {
   scanFolder,
+  scanVehicles,
   scanWeapons,
   updateFiles,
+  updateVehicleFiles,
   updateWeaponFiles,
 } from "./shared/api";
 import { useMetaDomain, type Notify } from "./shared/useMetaDomain";
 import { version as APP_VERSION } from "../package.json";
 
 /** Which live meta panel the Home editors are showing. */
-type PanelId = "handling" | "weapons";
+type PanelId = "handling" | "weapons" | "vehicles";
 
 /** Weapon table labels (folder column shows the relative .meta file path). */
 const WEAPON_LABELS = {
@@ -30,6 +32,17 @@ const WEAPON_LABELS = {
   klass: "Group",
   name: "Name",
 };
+
+/** Vehicle-model table labels (rel file path / friendly type / friendly class / modelName). */
+const VEHICLE_LABELS = {
+  folder: "File",
+  type: "Type",
+  klass: "Class",
+  name: "Name",
+};
+
+/** vehicles.meta params have no guides yet — suppress the handling fallback. */
+const noHint = () => undefined;
 
 export default function App() {
   const [view, setView] = useState<"home" | "glossary">("home");
@@ -71,9 +84,27 @@ export default function App() {
     notify,
     onScanStart: resetFilters,
   });
+  const vmeta = useMetaDomain({
+    scan: scanVehicles,
+    write: updateVehicleFiles,
+    notify,
+    onScanStart: resetFilters,
+  });
 
-  const d = panel === "weapons" ? wpn : veh;
+  const d = panel === "weapons" ? wpn : panel === "vehicles" ? vmeta : veh;
   const isWeapon = panel === "weapons";
+  const isVehiclesMeta = panel === "vehicles";
+  const metaLabels = isWeapon
+    ? WEAPON_LABELS
+    : isVehiclesMeta
+      ? VEHICLE_LABELS
+      : undefined;
+  const hintFor = isWeapon ? paramHintWeapon : isVehiclesMeta ? noHint : undefined;
+  const metaFileLabel = isWeapon
+    ? "weapons.meta"
+    : isVehiclesMeta
+      ? "vehicles.meta"
+      : "handling.meta";
 
   // Dev-only demos (Tauri backend absent in a plain browser).
   const isDemo =
@@ -103,6 +134,18 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isWeaponDemo]);
 
+  // ?dv — dev-only vehicles.meta demo.
+  const isVehicleDemo =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("dv");
+  useEffect(() => {
+    if (!isVehicleDemo) return;
+    vmeta.load(demoVehicles(), "[demo-vehicles]");
+    setPanel("vehicles");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVehicleDemo]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return (d.result?.vehicles ?? []).filter((v) => {
@@ -116,7 +159,7 @@ export default function App() {
   }, [d.result, search, typeFilter, classFilter]);
 
   const onSelect = useCallback((panelId: string, mode: EditorMode) => {
-    if (panelId === "handling" || panelId === "weapons") {
+    if (panelId === "handling" || panelId === "weapons" || panelId === "vehicles") {
       setPanel(panelId);
       setEditor(mode);
     }
@@ -138,13 +181,15 @@ export default function App() {
         columns={d.result?.columns ?? []}
         edits={d.edits}
         onCommitEdit={d.commitEdit}
-        metaLabel={isWeapon ? "weapons.meta" : "handling.meta"}
+        metaLabel={metaFileLabel}
         coreLabel={isWeapon ? "Weapon" : "Vehicle"}
-        hintFor={isWeapon ? paramHintWeapon : undefined}
+        hintFor={hintFor}
         note={
           isWeapon
             ? "One weapon (CWeaponInfo) in one weapons.meta — edits update only this weapon."
-            : undefined
+            : isVehiclesMeta
+              ? "One vehicle model (modelName) in one vehicles.meta — edits update only that model."
+              : undefined
         }
       />
     );
@@ -156,8 +201,8 @@ export default function App() {
         columns={d.result?.columns ?? []}
         edits={d.edits}
         onCommitEdit={d.commitEdit}
-        labels={isWeapon ? WEAPON_LABELS : undefined}
-        hintFor={isWeapon ? paramHintWeapon : undefined}
+        labels={metaLabels}
+        hintFor={hintFor}
       />
     );
   } else {
@@ -190,7 +235,9 @@ export default function App() {
             <p className="text-sm text-gray-300">
               {isWeapon
                 ? "Select a folder that contains your weapon resources (weapons.meta / weapons_*.meta, any layout)."
-                : "Select the folder that contains your FiveM vehicle resources."}
+                : isVehiclesMeta
+                  ? "Select a folder that contains your vehicle resources (vehicles.meta / vehicles_*.meta, any layout)."
+                  : "Select the folder that contains your FiveM vehicle resources."}
             </p>
             <button
               onClick={() => void d.chooseFolder()}

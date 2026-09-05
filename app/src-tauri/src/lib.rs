@@ -3,6 +3,7 @@ mod commands;
 use commands::pick::pick_folder;
 use commands::scan::scan_folder;
 use commands::update::update_files;
+use commands::vehicles::{scan_vehicles, update_vehicle_files};
 use commands::weapons::{scan_weapons, update_weapon_files};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -14,6 +15,8 @@ pub fn run() {
             scan_folder,
             update_files,
             pick_folder,
+            scan_vehicles,
+            update_vehicle_files,
             scan_weapons,
             update_weapon_files
         ])
