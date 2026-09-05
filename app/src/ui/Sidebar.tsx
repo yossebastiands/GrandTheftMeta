@@ -94,8 +94,7 @@ const CATEGORIES: Category[] = [
         file: "carcols.meta",
         label: "Car Colours",
         aliasHint: "matches carcols*.meta",
-        status: BOTH_SOON,
-        modes: [soon("single", BOTH_SOON), soon("bulk", BOTH_SOON)],
+        modes: BOTH(),
       },
       {
         id: "carvariations",
@@ -171,8 +170,9 @@ const CATEGORIES: Category[] = [
   },
 ];
 
-// Meta panels currently wired to live editors: handling.meta, vehicles.meta + weapons.meta.
-const LIVE_PANELS: string[] = ["handling", "vehicles", "weapons"];
+// Meta panels currently wired to live editors: handling.meta, vehicles.meta,
+// carcols.meta + weapons.meta.
+const LIVE_PANELS: string[] = ["handling", "vehicles", "carcols", "weapons"];
 
 interface SidebarProps {
   activePanel: string;

@@ -1,5 +1,6 @@
 mod commands;
 
+use commands::carcols::{scan_carcols, update_carcols_files};
 use commands::pick::pick_folder;
 use commands::scan::scan_folder;
 use commands::update::update_files;
@@ -15,6 +16,8 @@ pub fn run() {
             scan_folder,
             update_files,
             pick_folder,
+            scan_carcols,
+            update_carcols_files,
             scan_vehicles,
             update_vehicle_files,
             scan_weapons,

@@ -133,3 +133,36 @@ export function demoVehicles(count = 4): ScanResult {
   }
   return { vehicles, columns, skipped: [] };
 }
+
+// Dev-only carcols.meta sample rows (`?dc`) so the list-style editors can be
+// inspected without the Tauri backend. Rows mirror the carcols scanner:
+// handling_name = structural path into the file, vehicle_type = Kind
+// (Kit / Visible Mod / Stat Mod / Slot Name…), vehicle_class = the kit name,
+// params = the entry's direct scalar leaves.
+export function demoCarcols(count = 8): ScanResult {
+  const base: Array<[string, string, string, string, Record<string, string>]> = [
+    ["[mbo-vehicles]/Tank_t90m/carcols.meta", "Kits/0", "Kit", "951_t90m_modkit", { kitName: "951_t90m_modkit", id: "951", kitType: "MKT_SPECIAL" }],
+    ["[mbo-vehicles]/Tank_t90m/carcols.meta", "Kits/0/visibleMods/0", "Visible Mod", "951_t90m_modkit", { modelName: "t90m_barrels", modShopLabel: "WT_T90MBARREL", type: "VMT_SPOILER", bone: "mod_c", collisionBone: "mod_col_1", cameraPos: "VMCP_DEFAULT", audioApply: "1.000000", weight: "500", turnOffExtra: "false", disableBonnetCamera: "false", allowBonnetSlide: "true" }],
+    ["[mbo-vehicles]/Tank_t90m/carcols.meta", "Kits/0/visibleMods/1", "Visible Mod", "951_t90m_modkit", { modelName: "t90m_barrels_2", type: "VMT_SPOILER", bone: "mod_c", audioApply: "1.000000", weight: "250", turnOffExtra: "false" }],
+    ["[mbo-vehicles]/Tank_t90m/carcols.meta", "Kits/0/statMods/0", "Stat Mod", "951_t90m_modkit", { modifier: "25", audioApply: "1.000000", weight: "20", type: "VMT_ENGINE" }],
+    ["[mbo-vehicles]/Tank_t90m/carcols.meta", "Kits/0/statMods/1", "Stat Mod", "951_t90m_modkit", { modifier: "100", audioApply: "1.000000", weight: "40", type: "VMT_ARMOUR" }],
+    ["[mbo-vehicles]/Tank_t90m/carcols.meta", "Kits/0/slotNames/0", "Slot Name", "951_t90m_modkit", { slot: "VMT_SPOILER", name: "WT_T90CHASSIS" }],
+    ["[mbo-vehicles]/Aircraft_f16c/carcols.meta", "Kits/0", "Kit", "f16c_modkit", { kitName: "f16c_modkit", id: "916", kitType: "MKT_SPECIAL" }],
+    ["[mbo-vehicles]/Aircraft_f16c/carcols.meta", "Kits/0/visibleMods/0", "Visible Mod", "f16c_modkit", { modelName: "f16c_pylon", type: "VMT_SPOILER", bone: "chassis", weight: "10" }],
+  ];
+  const columns = Array.from(new Set(base.flatMap((b) => Object.keys(b[4])))).sort();
+  const vehicles: VehicleRow[] = [];
+  for (let i = 0; i < count; i++) {
+    const [file, path, kind, kit, params] = base[i % base.length];
+    const dup = Math.floor(i / base.length);
+    vehicles.push({
+      folder_name: dup ? file.replace(".meta", `_${i}.meta`) : file,
+      meta_path: "",
+      handling_name: dup ? `${path}/${i}` : path,
+      vehicle_type: kind,
+      vehicle_class: kit,
+      params,
+    });
+  }
+  return { vehicles, columns, skipped: [] };
+}

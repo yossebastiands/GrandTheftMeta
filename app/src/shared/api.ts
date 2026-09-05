@@ -61,3 +61,16 @@ export function updateVehicleFiles(
 ): Promise<UpdateResult> {
   return invoke<UpdateResult>("update_vehicle_files", { folderPath, changes });
 }
+
+/** Scan a folder (any layout) for carcols.meta / carcols*.meta → one row per list entry. */
+export function scanCarcols(folderPath: string): Promise<ScanResult> {
+  return invoke<ScanResult>("scan_carcols", { folderPath });
+}
+
+/** Write edited carcols list-entry params back into the original carcols.meta files. */
+export function updateCarcolsFiles(
+  folderPath: string,
+  changes: VehicleChange[]
+): Promise<UpdateResult> {
+  return invoke<UpdateResult>("update_carcols_files", { folderPath, changes });
+}

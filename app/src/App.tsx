@@ -9,12 +9,19 @@ import Toolbar from "./ui/Toolbar";
 import GlossaryView from "./features/handling/GlossaryView";
 import SingleHandlingEditor from "./features/handling/SingleHandlingEditor";
 import VehicleTable from "./features/handling/VehicleTable";
-import { demoScan, demoVehicles, demoWeapons } from "./features/handling/demoData";
+import {
+  demoCarcols,
+  demoScan,
+  demoVehicles,
+  demoWeapons,
+} from "./features/handling/demoData";
 import { paramHintWeapon } from "./features/handling/weaponHints";
 import {
+  scanCarcols,
   scanFolder,
   scanVehicles,
   scanWeapons,
+  updateCarcolsFiles,
   updateFiles,
   updateVehicleFiles,
   updateWeaponFiles,
@@ -23,7 +30,7 @@ import { useMetaDomain, type Notify } from "./shared/useMetaDomain";
 import { version as APP_VERSION } from "../package.json";
 
 /** Which live meta panel the Home editors are showing. */
-type PanelId = "handling" | "weapons" | "vehicles";
+type PanelId = "handling" | "vehicles" | "carcols" | "weapons";
 
 /** Weapon table labels (folder column shows the relative .meta file path). */
 const WEAPON_LABELS = {
@@ -41,8 +48,73 @@ const VEHICLE_LABELS = {
   name: "Name",
 };
 
-/** vehicles.meta params have no guides yet — suppress the handling fallback. */
+/** carcols table labels (file / Kind / kit-group / structural entry path). */
+const CARCOLS_LABELS = {
+  folder: "File",
+  type: "Kind",
+  klass: "Group",
+  name: "Item",
+};
+
+/** metas without guides yet — suppress the handling fallback. */
 const noHint = () => undefined;
+
+/** Per-panel configuration (copy, labels, hints) so adding a meta is additive. */
+interface DomainCfg {
+  /** Plural noun for the status bar / filter copy. */
+  noun: string;
+  /** Short noun for the “Scanning …” line. */
+  nounShort: string;
+  labels?: { folder: string; type: string; klass: string; name: string };
+  hintFor?: (col: string, kind?: string) => string | undefined;
+  metaFile: string;
+  coreLabel: string;
+  note?: string;
+  pickText: string;
+}
+
+const PANELS: Record<PanelId, DomainCfg> = {
+  handling: {
+    noun: "vehicles",
+    nounShort: "vehicle",
+    metaFile: "handling.meta",
+    coreLabel: "Vehicle",
+    pickText: "Select the folder that contains your FiveM vehicle resources.",
+  },
+  vehicles: {
+    noun: "vehicles",
+    nounShort: "vehicle model",
+    labels: VEHICLE_LABELS,
+    hintFor: noHint,
+    metaFile: "vehicles.meta",
+    coreLabel: "Vehicle",
+    note: "One vehicle model (modelName) in one vehicles.meta — edits update only that model.",
+    pickText:
+      "Select a folder that contains your vehicle resources (vehicles.meta / vehicles_*.meta, any layout).",
+  },
+  carcols: {
+    noun: "entries",
+    nounShort: "car-colour",
+    labels: CARCOLS_LABELS,
+    hintFor: noHint,
+    metaFile: "carcols.meta",
+    coreLabel: "Part",
+    note: "One mod part / colour / list entry in one carcols.meta — edits update only that entry.",
+    pickText:
+      "Select a folder that contains your vehicle resources (carcols.meta / carcols*.meta, any layout).",
+  },
+  weapons: {
+    noun: "weapons",
+    nounShort: "weapon",
+    labels: WEAPON_LABELS,
+    hintFor: paramHintWeapon,
+    metaFile: "weapons.meta",
+    coreLabel: "Weapon",
+    note: "One weapon (CWeaponInfo) in one weapons.meta — edits update only this weapon.",
+    pickText:
+      "Select a folder that contains your weapon resources (weapons.meta / weapons_*.meta, any layout).",
+  },
+};
 
 export default function App() {
   const [view, setView] = useState<"home" | "glossary">("home");
@@ -71,7 +143,7 @@ export default function App() {
     setClassFilter("ALL");
   }, []);
 
-  // Two independent editor domains: vehicles/handling.meta and weapons.meta.
+  // One independent editor domain per meta panel.
   const veh = useMetaDomain({
     scan: scanFolder,
     write: updateFiles,
@@ -90,21 +162,16 @@ export default function App() {
     notify,
     onScanStart: resetFilters,
   });
+  const car = useMetaDomain({
+    scan: scanCarcols,
+    write: updateCarcolsFiles,
+    notify,
+    onScanStart: resetFilters,
+  });
 
-  const d = panel === "weapons" ? wpn : panel === "vehicles" ? vmeta : veh;
-  const isWeapon = panel === "weapons";
-  const isVehiclesMeta = panel === "vehicles";
-  const metaLabels = isWeapon
-    ? WEAPON_LABELS
-    : isVehiclesMeta
-      ? VEHICLE_LABELS
-      : undefined;
-  const hintFor = isWeapon ? paramHintWeapon : isVehiclesMeta ? noHint : undefined;
-  const metaFileLabel = isWeapon
-    ? "weapons.meta"
-    : isVehiclesMeta
-      ? "vehicles.meta"
-      : "handling.meta";
+  const domains = { handling: veh, weapons: wpn, vehicles: vmeta, carcols: car };
+  const d = domains[panel];
+  const cfg = PANELS[panel];
 
   // Dev-only demos (Tauri backend absent in a plain browser).
   const isDemo =
@@ -146,6 +213,18 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVehicleDemo]);
 
+  // ?dc — dev-only carcols.meta demo.
+  const isCarcolsDemo =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("dc");
+  useEffect(() => {
+    if (!isCarcolsDemo) return;
+    car.load(demoCarcols(), "[demo-carcols]");
+    setPanel("carcols");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCarcolsDemo]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return (d.result?.vehicles ?? []).filter((v) => {
@@ -159,8 +238,8 @@ export default function App() {
   }, [d.result, search, typeFilter, classFilter]);
 
   const onSelect = useCallback((panelId: string, mode: EditorMode) => {
-    if (panelId === "handling" || panelId === "weapons" || panelId === "vehicles") {
-      setPanel(panelId);
+    if (Object.prototype.hasOwnProperty.call(PANELS, panelId)) {
+      setPanel(panelId as PanelId);
       setEditor(mode);
     }
   }, []);
@@ -170,7 +249,7 @@ export default function App() {
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-gray-500">
         <Loader2 className="h-8 w-8 animate-spin text-accent" />
-        <p className="text-sm">Scanning {isWeapon ? "weapon" : "vehicle"} meta…</p>
+        <p className="text-sm">Scanning {cfg.nounShort} meta…</p>
       </div>
     );
   } else if (d.hasData && editor === "single") {
@@ -181,16 +260,10 @@ export default function App() {
         columns={d.result?.columns ?? []}
         edits={d.edits}
         onCommitEdit={d.commitEdit}
-        metaLabel={metaFileLabel}
-        coreLabel={isWeapon ? "Weapon" : "Vehicle"}
-        hintFor={hintFor}
-        note={
-          isWeapon
-            ? "One weapon (CWeaponInfo) in one weapons.meta — edits update only this weapon."
-            : isVehiclesMeta
-              ? "One vehicle model (modelName) in one vehicles.meta — edits update only that model."
-              : undefined
-        }
+        metaLabel={cfg.metaFile}
+        coreLabel={cfg.coreLabel}
+        hintFor={cfg.hintFor}
+        note={cfg.note}
       />
     );
   } else if (d.hasData && filtered.length > 0) {
@@ -201,8 +274,8 @@ export default function App() {
         columns={d.result?.columns ?? []}
         edits={d.edits}
         onCommitEdit={d.commitEdit}
-        labels={metaLabels}
-        hintFor={hintFor}
+        labels={cfg.labels}
+        hintFor={cfg.hintFor}
       />
     );
   } else {
@@ -216,7 +289,7 @@ export default function App() {
           <>
             <Car className="h-10 w-10 text-gray-700" />
             <p className="text-sm text-gray-400">
-              No {isWeapon ? "weapons" : "vehicles"} match the current filters.
+              No {cfg.noun} match the current filters.
             </p>
             <button
               onClick={() => {
@@ -232,13 +305,7 @@ export default function App() {
         ) : !d.folder ? (
           <>
             <FolderOpen className="h-12 w-12 text-gray-700" />
-            <p className="text-sm text-gray-300">
-              {isWeapon
-                ? "Select a folder that contains your weapon resources (weapons.meta / weapons_*.meta, any layout)."
-                : isVehiclesMeta
-                  ? "Select a folder that contains your vehicle resources (vehicles.meta / vehicles_*.meta, any layout)."
-                  : "Select the folder that contains your FiveM vehicle resources."}
-            </p>
+            <p className="text-sm text-gray-300">{cfg.pickText}</p>
             <button
               onClick={() => void d.chooseFolder()}
               className="mt-1 flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500"
@@ -309,7 +376,7 @@ export default function App() {
               {content}
 
               <StatusBar
-                noun={isWeapon ? "weapons" : "vehicles"}
+                noun={cfg.noun}
                 vehicleCount={d.result?.vehicles.length ?? 0}
                 paramCount={d.result?.columns.length ?? 0}
                 modifiedRows={d.modifiedRows}
