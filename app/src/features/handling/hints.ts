@@ -1,6 +1,13 @@
-// Parameter hints, sourced from the "afp Vehicle Advanced Debugger" glossary
-// (its config.lua `ConfigModules.<type>.Fields`). Descriptions contain light
-// HTML (lists etc.) and are rendered inside the hint popover.
+// Parameter hints, sourced from the "afp Vehicle Advanced Debugger" glossary.
+// Source of truth (provenance):
+//   Modern-Battle-Operations/MBO-Server-Legacy/resources/[mbo-projects]/
+//     afp-VehicleAdvancedDebugger/config.lua   →  ConfigModules.<module>.Fields
+// hints.json is generated 1:1 from those Fields tables (module `t`, element `n`,
+// full html description `d` — including the large HTML flag tables). Verified
+// identical 2026-09-05 (290/290 entries). Regenerate with a Lua-subset parser
+// if the afp resource is ever updated.
+// Descriptions contain light HTML (lists, tables etc.) and are rendered inside
+// the hint popover and the handling glossary page.
 //
 // Schema of hints.json: Array<{ t: module, n: element name, d: html }>
 
