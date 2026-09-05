@@ -166,3 +166,35 @@ export function demoCarcols(count = 8): ScanResult {
   }
   return { vehicles, columns, skipped: [] };
 }
+
+// Dev-only carvariations.meta sample rows (`?cv`) so the variation editors can
+// be inspected without the Tauri backend. Mirrors the scanner: handling_name =
+// structural path, vehicle_type = Kind (Variation/Colour/Kit/Livery/Plate…),
+// vehicle_class = the model name, params = the entry's scalar leaves
+// (leaf entries expose Item.text / Item.value).
+export function demoCarvariations(count = 7): ScanResult {
+  const base: Array<[string, string, string, string, Record<string, string>]> = [
+    ["[mbo-vehicles]/Tank_t90m/carvariations.meta", "variationData/0", "Variation", "t90m", { modelName: "t90m", lightSettings: "18", sirenSettings: "0" }],
+    ["[mbo-vehicles]/Tank_t90m/carvariations.meta", "variationData/0/colors/0", "Colour", "t90m", { indices: "132 92 8 156" }],
+    ["[mbo-vehicles]/Tank_t90m/carvariations.meta", "variationData/0/kits/0", "Kit", "t90m", { "Item.text": "951_t90m_modkit" }],
+    ["[mbo-vehicles]/Tank_t90m/carvariations.meta", "variationData/0/plateProbabilities/Probabilities/0", "Plate Probability", "t90m", { Name: "police guv plate", Value: "100" }],
+    ["[mbo-vehicles]/Tank_t90m/carvariations.meta", "variationData/0/plateProbabilities/Probabilities/1", "Plate Probability", "t90m", { Name: "normal", Value: "0" }],
+    ["[mbo-vehicles]/Aircraft_f16c/carvariations.meta", "variationData/0", "Variation", "f16c", { modelName: "f16c", lightSettings: "18", sirenSettings: "0" }],
+    ["[mbo-vehicles]/Aircraft_f16c/carvariations.meta", "variationData/0/kits/0", "Kit", "f16c", { "Item.text": "947_f16c_modkit" }],
+  ];
+  const columns = Array.from(new Set(base.flatMap((b) => Object.keys(b[4])))).sort();
+  const vehicles: VehicleRow[] = [];
+  for (let i = 0; i < count; i++) {
+    const [file, path, kind, model, params] = base[i % base.length];
+    const dup = Math.floor(i / base.length);
+    vehicles.push({
+      folder_name: dup ? file.replace(".meta", `_${i}.meta`) : file,
+      meta_path: "",
+      handling_name: dup ? `${path}/${i}` : path,
+      vehicle_type: kind,
+      vehicle_class: model,
+      params,
+    });
+  }
+  return { vehicles, columns, skipped: [] };
+}

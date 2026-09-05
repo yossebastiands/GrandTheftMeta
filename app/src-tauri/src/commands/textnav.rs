@@ -156,6 +156,17 @@ pub fn top_item_spans(text: &str, lo: usize, hi: usize) -> Vec<(usize, usize)> {
     out
 }
 
+/// Byte span of the `<Item …>` open tag whose `>` ends right at `open_end`
+/// (i.e. the start of an Item interior returned by `navigate`).
+pub fn item_open_span(text: &str, open_end: usize) -> Option<(usize, usize)> {
+    if open_end > text.len() || open_end < "<Item>".len() {
+        return None;
+    }
+    let head = &text[..open_end];
+    let rel = head.rfind("<Item")?;
+    Some((rel, open_end))
+}
+
 /// Navigate a path to the final entry and return the interior region
 /// `[open_end, close_start)` of that Item where its scalar fields live.
 pub fn navigate(text: &str, steps: &[PathStep]) -> Option<(usize, usize)> {

@@ -25,7 +25,7 @@ use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 use super::scan::{child_text, parse_xml, ScanResult, VehicleRow, XmlNode};
-use super::textnav::{elem_locs, navigate, parse_path, PathStep};
+use super::textnav::{elem_locs, item_open_span, navigate, parse_path, PathStep};
 use super::update::{attr_value, replace_attr_value, replace_text, UpdateResult, VehicleChange};
 
 /// Does this file look like a car-colours meta? (`carcols.meta`, `carcols*.meta`)
@@ -55,7 +55,7 @@ fn escape_xml(s: &str) -> String {
 }
 
 /// Friendly row "Kind" from the list container element name.
-fn kind_label(name: &str) -> String {
+pub(crate) fn kind_label(name: &str) -> String {
     match name {
         "Kits" => "Kit".to_string(),
         "visibleMods" => "Visible Mod".to_string(),
@@ -71,6 +71,11 @@ fn kind_label(name: &str) -> String {
         "secondary" => "Secondary".to_string(),
         "tertiary" => "Tertiary".to_string(),
         "pearl" => "Pearl".to_string(),
+        // carvariations containers
+        "variationData" => "Variation".to_string(),
+        "colors" => "Colour".to_string(),
+        "kits" => "Kit".to_string(),
+        "Probabilities" => "Plate Probability".to_string(),
         _ => prettify_camel(name),
     }
 }
@@ -169,6 +174,21 @@ fn emit_row(
             params.insert(child.name.clone(), text);
         }
     }
+    if params.is_empty() && item.children.is_empty() {
+        // Leaf entry (no child elements): expose the item's own value attr, or
+        // its own text (e.g. `<kits><Item>951_modkit</Item></kits>`).
+        if let Some(v) = item.attr("value") {
+            let v = v.trim().to_string();
+            if !v.is_empty() {
+                params.insert("Item.value".to_string(), v);
+            }
+        } else {
+            let text = item.text.split_whitespace().collect::<Vec<_>>().join(" ");
+            if !text.is_empty() {
+                params.insert("Item.text".to_string(), text);
+            }
+        }
+    }
     if params.is_empty() {
         return;
     }
@@ -190,6 +210,8 @@ fn walk_item(
     item: &XmlNode,
     path: &mut Vec<String>,
     section: &str,
+    identity: &str,
+    group_of: &dyn Fn(&XmlNode) -> String,
     rel: &str,
     abs: &str,
     cols: &mut BTreeSet<String>,
@@ -197,7 +219,7 @@ fn walk_item(
 ) {
     for (name, occ, child) in element_children_occ(item) {
         push_elem(path, name, occ);
-        walk_elem(child, path, section, rel, abs, cols, out);
+        walk_elem(child, path, section, identity, group_of, rel, abs, cols, out);
         path.pop();
     }
 }
@@ -208,6 +230,8 @@ fn walk_elem(
     node: &XmlNode,
     path: &mut Vec<String>,
     section: &str,
+    identity: &str,
+    group_of: &dyn Fn(&XmlNode) -> String,
     rel: &str,
     abs: &str,
     cols: &mut BTreeSet<String>,
@@ -220,15 +244,16 @@ fn walk_elem(
     if is_pure_list {
         for (idx, item) in items.iter().enumerate() {
             path.push(idx.to_string());
-            // Group context: inside <Kits> use the kit's own name; elsewhere the
-            // top-level section (Paint, …) passed down.
-            let group = if node.name == "Kits" {
-                kit_label(item)
+            // Group context: members of the identity container (e.g. <Kits> for
+            // carcols, <variationData> for carvariations) get their own label;
+            // every other list inherits the group passed down.
+            let group = if node.name == identity {
+                group_of(item)
             } else {
                 section.to_string()
             };
             emit_row(item, path, &kind_label(&node.name), &group, rel, abs, cols, out);
-            walk_item(item, path, &group, rel, abs, cols, out);
+            walk_item(item, path, &group, identity, group_of, rel, abs, cols, out);
             path.pop();
         }
         return;
@@ -236,29 +261,32 @@ fn walk_elem(
 
     for (name, occ, child) in elems {
         push_elem(path, name, occ);
-        walk_elem(child, path, section, rel, abs, cols, out);
+        walk_elem(child, path, section, identity, group_of, rel, abs, cols, out);
         path.pop();
     }
     // Mixed elements with stray direct Item children: descend into them too.
     for (idx, item) in items.iter().enumerate() {
         path.push(idx.to_string());
-        walk_item(item, path, section, rel, abs, cols, out);
+        walk_item(item, path, section, identity, group_of, rel, abs, cols, out);
         path.pop();
     }
 }
 
-/// Parse one carcols file → rows.
-fn parse_carcols(
+/// Generic list-file parser shared by carcols.meta + carvariations.meta: every
+/// `<Item>` that is a direct child of a pure-list element becomes a row. The
+/// `identity` container's members get their group label from `group_of`.
+pub(crate) fn collect_list_rows(
     roots: &[XmlNode],
     rel: &str,
     abs: &str,
     cols: &mut BTreeSet<String>,
+    identity: &str,
+    group_of: &dyn Fn(&XmlNode) -> String,
 ) -> Vec<VehicleRow> {
     let mut out = Vec::new();
-    // Only look inside the root element(s); a carcols doc usually has one root
-    // (CVehicleModelInfoVarGlobal). Its direct element children are "sections".
+    // A doc usually has one root; its direct element children are "sections"
+    // whose names prefix the entry paths (e.g. Kits, variationData).
     let mut roots_owned: Vec<&XmlNode> = roots.iter().collect();
-    // If the real root wraps children (rare), take its element children.
     if roots_owned.len() == 1 {
         let r = roots_owned[0];
         let kids = element_children_occ(r);
@@ -266,7 +294,17 @@ fn parse_carcols(
             let mut path = Vec::new();
             for (name, occ, child) in kids {
                 push_elem(&mut path, name, occ);
-                walk_elem(child, &mut path, name, rel, abs, cols, &mut out);
+                walk_elem(
+                    child,
+                    &mut path,
+                    name,
+                    identity,
+                    group_of,
+                    rel,
+                    abs,
+                    cols,
+                    &mut out,
+                );
                 path.pop();
             }
             return out;
@@ -274,7 +312,7 @@ fn parse_carcols(
     }
     for r in roots_owned.drain(..) {
         let mut path = Vec::new();
-        walk_elem(r, &mut path, "", rel, abs, cols, &mut out);
+        walk_elem(r, &mut path, "", identity, group_of, rel, abs, cols, &mut out);
     }
     out
 }
@@ -312,7 +350,7 @@ pub fn scan_carcols(folder_path: String) -> Result<ScanResult, String> {
             }
         };
         let abs = path.to_string_lossy().into_owned();
-        let rows = parse_carcols(&roots, &rel, &abs, &mut cols);
+        let rows = collect_list_rows(&roots, &rel, &abs, &mut cols, "Kits", &kit_label);
         if rows.is_empty() {
             skipped.push(format!("{rel}: no editable entries found"));
             continue;
@@ -333,7 +371,7 @@ pub fn scan_carcols(folder_path: String) -> Result<ScanResult, String> {
 
 /// Apply `params` to the entry identified by `path` inside `work` (in place).
 /// Returns (applied, unchanged, missing).
-fn patch_path(
+pub(crate) fn patch_path(
     work: &mut String,
     path: &[PathStep],
     params: &HashMap<String, String>,
@@ -347,6 +385,36 @@ fn patch_path(
             missing.push(format!("{name}: entry not found"));
             continue;
         };
+        // Leaf-item params patch the entry's own value attr / text, not a child.
+        if name == "Item.value" || name == "Item.text" {
+            let Some((os, oe)) = item_open_span(work, lo) else {
+                missing.push(format!("{name}: entry open tag not found"));
+                continue;
+            };
+            if name == "Item.value" {
+                match attr_value(&work[os..oe], "value") {
+                    Some(old) => {
+                        if old.trim() == new_val.trim() {
+                            unchanged += 1;
+                        } else {
+                            *work = replace_attr_value(work, os, oe, "value", new_val.trim());
+                            applied += 1;
+                        }
+                    }
+                    None => missing.push(format!("{name}: no value to edit")),
+                }
+            } else {
+                let old = work[lo..hi].split_whitespace().collect::<Vec<_>>().join(" ");
+                let new = new_val.trim();
+                if old == new {
+                    unchanged += 1;
+                } else {
+                    *work = replace_text(work, lo, hi, &escape_xml(new));
+                    applied += 1;
+                }
+            }
+            continue;
+        }
         let locs = elem_locs(work, lo, hi, name);
         let Some((os, oe, close)) = locs.first().cloned() else {
             missing.push(format!("{name} not found"));
@@ -389,18 +457,12 @@ fn patch_path(
     (applied, unchanged, missing)
 }
 
-/// Write edited carcols entries back. `changes[].folder_name` is the relative
-/// file path; `changes[].handling_name` is the entry path (`Kits/0/visibleMods/1`).
-#[tauri::command]
-pub fn update_carcols_files(
-    folder_path: String,
+/// Shared writer for list-style metas (carcols/carvariations/…): group edits by
+/// file, resolve each entry by its structural path and patch its scalar leaves.
+pub(crate) fn update_list_files_generic(
+    root: &Path,
     changes: Vec<VehicleChange>,
 ) -> Result<UpdateResult, String> {
-    let root = Path::new(&folder_path);
-    if !root.is_dir() {
-        return Err(format!("Folder not found: {folder_path}"));
-    }
-
     // Group: file -> path -> params.
     let mut by_file: HashMap<String, HashMap<String, HashMap<String, String>>> = HashMap::new();
     for ch in changes {
@@ -458,6 +520,18 @@ pub fn update_carcols_files(
     }
 
     Ok(result)
+}
+
+#[tauri::command]
+pub fn update_carcols_files(
+    folder_path: String,
+    changes: Vec<VehicleChange>,
+) -> Result<UpdateResult, String> {
+    let root = Path::new(&folder_path);
+    if !root.is_dir() {
+        return Err(format!("Folder not found: {folder_path}"));
+    }
+    update_list_files_generic(root, changes)
 }
 
 // ---------------------------------------------------------------------------
@@ -536,7 +610,7 @@ mod tests {
     fn scan_sample() -> (Vec<VehicleRow>, Vec<String>) {
         let roots = parse_xml(SAMPLE).unwrap();
         let mut cols = BTreeSet::new();
-        let rows = parse_carcols(&roots, "veh/t90m/carcols.meta", "abs", &mut cols);
+        let rows = collect_list_rows(&roots, "veh/t90m/carcols.meta", "abs", &mut cols, "Kits", &kit_label);
         (rows, cols.into_iter().collect())
     }
 

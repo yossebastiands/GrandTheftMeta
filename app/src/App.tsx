@@ -11,6 +11,7 @@ import SingleHandlingEditor from "./features/handling/SingleHandlingEditor";
 import VehicleTable from "./features/handling/VehicleTable";
 import {
   demoCarcols,
+  demoCarvariations,
   demoScan,
   demoVehicles,
   demoWeapons,
@@ -18,10 +19,12 @@ import {
 import { paramHintWeapon } from "./features/handling/weaponHints";
 import {
   scanCarcols,
+  scanCarvariations,
   scanFolder,
   scanVehicles,
   scanWeapons,
   updateCarcolsFiles,
+  updateCarvariationsFiles,
   updateFiles,
   updateVehicleFiles,
   updateWeaponFiles,
@@ -30,7 +33,7 @@ import { useMetaDomain, type Notify } from "./shared/useMetaDomain";
 import { version as APP_VERSION } from "../package.json";
 
 /** Which live meta panel the Home editors are showing. */
-type PanelId = "handling" | "vehicles" | "carcols" | "weapons";
+type PanelId = "handling" | "vehicles" | "carcols" | "carvariations" | "weapons";
 
 /** Weapon table labels (folder column shows the relative .meta file path). */
 const WEAPON_LABELS = {
@@ -103,6 +106,17 @@ const PANELS: Record<PanelId, DomainCfg> = {
     pickText:
       "Select a folder that contains your vehicle resources (carcols.meta / carcols*.meta, any layout).",
   },
+  carvariations: {
+    noun: "entries",
+    nounShort: "car-variation",
+    labels: CARCOLS_LABELS,
+    hintFor: noHint,
+    metaFile: "carvariations.meta",
+    coreLabel: "Entry",
+    note: "One variation entry (model, colour, kit, plate…) in one carvariations.meta — edits update only that entry.",
+    pickText:
+      "Select a folder that contains your vehicle resources (carvariations.meta / carvariations*.meta, any layout).",
+  },
   weapons: {
     noun: "weapons",
     nounShort: "weapon",
@@ -168,8 +182,20 @@ export default function App() {
     notify,
     onScanStart: resetFilters,
   });
+  const carv = useMetaDomain({
+    scan: scanCarvariations,
+    write: updateCarvariationsFiles,
+    notify,
+    onScanStart: resetFilters,
+  });
 
-  const domains = { handling: veh, weapons: wpn, vehicles: vmeta, carcols: car };
+  const domains = {
+    handling: veh,
+    weapons: wpn,
+    vehicles: vmeta,
+    carcols: car,
+    carvariations: carv,
+  };
   const d = domains[panel];
   const cfg = PANELS[panel];
 
@@ -224,6 +250,18 @@ export default function App() {
     setPanel("carcols");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCarcolsDemo]);
+
+  // ?cv — dev-only carvariations.meta demo.
+  const isCarvariationsDemo =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("cv");
+  useEffect(() => {
+    if (!isCarvariationsDemo) return;
+    carv.load(demoCarvariations(), "[demo-carvariations]");
+    setPanel("carvariations");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCarvariationsDemo]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
