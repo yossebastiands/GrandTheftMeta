@@ -1,7 +1,7 @@
 {
   "name": "grandtheftmeta",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "FiveM vehicle handling.meta bulk editor (Tauri v2 + React)",
   "scripts": {
     "dev": "vite",
