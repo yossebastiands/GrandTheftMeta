@@ -1,8 +1,9 @@
 // Performance Dashboard: visualises scanned handling.meta values as bars,
 // radar, rankings and histograms — turning raw numbers into a feel at a glance.
 import { useMemo, useState, type ReactNode } from "react";
-import { FolderOpen, Gauge, Radar as RadarIcon, Trophy, BarChart3, Search } from "lucide-react";
+import { FolderOpen, Gauge, Radar as RadarIcon, Trophy, BarChart3, Search, Sigma, TriangleAlert } from "lucide-react";
 import type { ScanResult } from "../../shared/models";
+import FormulaView from "./FormulaView";
 import {
   PERF_METRICS,
   computePerf,
@@ -106,6 +107,7 @@ export default function DashboardView({ result, folder, onPickFolder, onHome }: 
   const [histMetric, setHistMetric] = useState<MetricId>("topSpeed");
   const [fType, setFType] = useState("");
   const [fClass, setFClass] = useState("");
+  const [mode, setMode] = useState<"perf" | "formula">("perf");
 
   // Distinct type / class values with counts (filter dropdowns + type chips).
   const dims = useMemo(() => {
@@ -205,6 +207,12 @@ export default function DashboardView({ result, folder, onPickFolder, onHome }: 
         <div className="flex items-center gap-2">
           <Gauge className="h-5 w-5 text-accent" />
           <h1 className="text-sm font-semibold text-gray-100">Performance Dashboard</h1>
+          <span
+            title="EXPERIMENTAL — bugs are expected. The Formula tab documents the exact math this build currently uses."
+            className="flex items-center gap-1 rounded-full border border-amber-400/70 bg-amber-500/15 px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.35)] animate-pulse"
+          >
+            <TriangleAlert className="h-3 w-3" /> Experimental
+          </span>
         </div>
         <span className="max-w-md truncate text-2xs text-gray-500" title={folder ?? undefined}>
           {folder ?? "handling.meta data"}
@@ -217,6 +225,7 @@ export default function DashboardView({ result, folder, onPickFolder, onHome }: 
           {filtered.length}
           {filtered.length !== summary.entries.length ? ` / ${summary.entries.length}` : ""} vehicles
         </span>
+        {mode === "perf" && (
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
           {dims.types.map(([t, c]) => {
             const on = fType === t;
@@ -260,9 +269,39 @@ export default function DashboardView({ result, folder, onPickFolder, onHome }: 
             </button>
           )}
         </div>
+        )}
       </header>
 
-      {filtered.length === 0 ? (
+      {/* Dashboard sub-nav: charts vs formula */}
+      <div className="flex items-center gap-1 border-b border-gray-800 bg-gray-900/80 px-3 py-1">
+        <button
+          type="button"
+          onClick={() => setMode("perf")}
+          className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium ${
+            mode === "perf" ? "bg-accent/15 text-accent" : "text-gray-400 hover:text-gray-200"
+          }`}
+        >
+          <Gauge className="h-3.5 w-3.5" /> Performance
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("formula")}
+          className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium ${
+            mode === "formula" ? "bg-accent/15 text-accent" : "text-gray-400 hover:text-gray-200"
+          }`}
+        >
+          <Sigma className="h-3.5 w-3.5" /> Formula
+        </button>
+        <span className="ml-auto hidden text-2xs text-gray-600 md:inline">
+          {mode === "formula"
+            ? "The exact math this build currently uses — bugs expected."
+            : "Every bar, radar, ranking and histogram comes from the same folder data."}
+        </span>
+      </div>
+
+      {mode === "formula" ? (
+        <FormulaView summary={summary} folder={folder} />
+      ) : filtered.length === 0 ? (
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
           <Gauge className="h-10 w-10 text-gray-700" />
           <p className="max-w-sm text-sm leading-relaxed text-gray-400">
