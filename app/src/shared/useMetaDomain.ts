@@ -74,7 +74,12 @@ export function useMetaDomain({ scan, write, notify, onScanStart }: Options) {
   const chooseFolder = useCallback(async () => {
     try {
       const p = await pickFolder();
-      if (p) await runScan(p);
+      if (p) {
+        // Remember the chosen root so edits can be written back (canUpdate needs
+        // a real folder — the demo load() path sets this itself).
+        setFolder(p);
+        await runScan(p);
+      }
     } catch (e) {
       notify("error", "Could not open the folder picker", String(e));
     }
