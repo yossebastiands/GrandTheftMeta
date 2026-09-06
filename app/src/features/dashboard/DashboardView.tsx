@@ -155,6 +155,14 @@ export default function DashboardView({ result, folder, onPickFolder, onHome }: 
     );
   }, [filtered, q]);
 
+  // Position of the current selection within the (filtered) pick list.
+  const selIdx = selected ? pickList.findIndex((e) => e.key === selected.key) : -1;
+  const stepSel = (dir: number) => {
+    if (pickList.length === 0) return;
+    if (selIdx === -1) setSelKey(pickList[dir > 0 ? 0 : pickList.length - 1].key);
+    else setSelKey(pickList[(selIdx + dir + pickList.length) % pickList.length].key);
+  };
+
   const scoreMap = (list: PerfEntry[]) => {
     const m = new Map<string, (number | null)[]>();
     for (const e of list) {
@@ -277,68 +285,115 @@ export default function DashboardView({ result, folder, onPickFolder, onHome }: 
         {/* Vehicle performance: picker + bars */}
         <div className="flex min-w-0 flex-col gap-3 xl:col-span-2">
           {card("Vehicle performance", <Gauge className="h-3.5 w-3.5" />,
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto]">
-              <div className="min-w-0">
-                <label className="mb-1 flex items-center gap-2 text-2xs text-gray-500">
-                  <Search className="h-3 w-3" />
+            <>
+              {/* Compact vehicle selector: search + dropdown + prev/next */}
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <div className="relative min-w-40 flex-1">
+                  <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500" />
                   <input
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
-                    placeholder="Search name / folder / class…"
-                    className="w-full rounded-md border border-gray-700 bg-gray-950 px-2 py-1 text-xs text-gray-200 placeholder:text-gray-600 focus:border-accent focus:outline-none"
+                    placeholder="Filter vehicles by name / type / class…"
+                    className="w-full rounded-md border border-gray-700 bg-gray-950 py-1.5 pl-7 pr-2 text-xs text-gray-200 placeholder:text-gray-600 focus:border-accent focus:outline-none"
                   />
-                </label>
-                <ul className="max-h-64 min-w-0 overflow-auto rounded-md border border-gray-800">
+                </div>
+                <select
+                  value={selected?.key ?? ""}
+                  onChange={(e) => setSelKey(e.target.value)}
+                  title="Select vehicle"
+                  className="min-w-0 max-w-64 cursor-pointer appearance-none rounded-md border border-gray-700 bg-gray-950 px-2 py-1.5 text-xs text-gray-200 focus:border-accent focus:outline-none"
+                >
                   {pickList.map((e) => (
-                    <li key={e.key}>
-                      <button
-                        type="button"
-                        onClick={() => setSelKey(e.key)}
-                        className={`flex w-full items-center gap-2 px-2 py-1 text-left text-xs hover:bg-gray-800/70 ${
-                          selected?.key === e.key ? "bg-accent/15 text-accent" : "text-gray-300"
-                        }`}
-                      >
-                        <span className="truncate font-mono">{e.name}</span>
-                        <span className="ml-auto shrink-0 truncate text-2xs text-gray-500">
-                          {e.vehicleType || "—"}
-                          {e.vehicleClass && e.vehicleClass !== e.vehicleType ? ` · ${e.vehicleClass}` : ""}
-                        </span>
-                      </button>
-                    </li>
+                    <option key={e.key} value={e.key}>
+                      {e.name} · {e.vehicleType || "—"}
+                      {e.vehicleClass && e.vehicleClass !== e.vehicleType ? ` · ${e.vehicleClass}` : ""}
+                    </option>
                   ))}
-                </ul>
-                {selected && (
-                  <div className="mt-2 space-y-1.5">
-                    {PERF_METRICS.map((m) => {
-                      const v = selected.values[m.id];
-                      const s = scoreOf(summary, selected, m);
-                      return (
-                        <div key={m.id} title={m.blurb}>
-                          <div className="mb-0.5 flex items-baseline justify-between text-2xs">
-                            <span className="text-gray-300">{m.label}</span>
-                            <span className="font-mono text-gray-500">
-                              {v == null ? "n/a" : `${fmtNum(v)}${m.unit}`}
-                            </span>
+                </select>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => stepSel(-1)}
+                    disabled={pickList.length === 0}
+                    title="Previous vehicle"
+                    className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-700 text-sm leading-none text-gray-300 hover:border-gray-500 hover:text-white disabled:opacity-40"
+                  >
+                    ‹
+                  </button>
+                  <span className="w-10 shrink-0 text-center text-2xs tabular-nums text-gray-500">
+                    {selIdx >= 0 ? selIdx + 1 : 0}/{pickList.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => stepSel(1)}
+                    disabled={pickList.length === 0}
+                    title="Next vehicle"
+                    className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-700 text-sm leading-none text-gray-300 hover:border-gray-500 hover:text-white disabled:opacity-40"
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+              {pickList.length === 0 && q && (
+                <p className="mb-3 text-xs text-gray-600">No vehicles match “{q.trim()}”.</p>
+              )}
+
+              {/* Selected vehicle performance — comprehensive */}
+              {selected && (
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+                  <div className="min-w-0">
+                    <div className="mb-3 flex flex-wrap items-baseline gap-2">
+                      <h3 className="font-mono text-base font-semibold text-gray-100">
+                        {selected.name}
+                      </h3>
+                      <span className="rounded bg-gray-800 px-1.5 py-0.5 text-2xs text-gray-400">
+                        {selected.vehicleType || "—"}
+                        {selected.vehicleClass && selected.vehicleClass !== selected.vehicleType
+                          ? ` · ${selected.vehicleClass}`
+                          : ""}
+                      </span>
+                      <span className="min-w-0 truncate text-2xs text-gray-600" title={selected.folder}>
+                        {selected.folder}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
+                      {PERF_METRICS.map((m) => {
+                        const v = selected.values[m.id];
+                        const s = scoreOf(summary, selected, m);
+                        return (
+                          <div key={m.id} className="min-w-0">
+                            <div className="mb-1 flex items-baseline justify-between gap-2">
+                              <span className="flex items-center gap-1.5 text-xs font-medium text-gray-300">
+                                <span className="h-2 w-2 rounded-full" style={{ background: m.color }} />
+                                {m.label}
+                              </span>
+                              <span className="font-mono text-sm font-semibold text-gray-100">
+                                {v == null ? "n/a" : `${fmtNum(v)}${m.unit}`}
+                              </span>
+                            </div>
+                            <div className="h-3 overflow-hidden rounded-full bg-gray-800">
+                              {s != null && (
+                                <div
+                                  className="h-full rounded-full transition-all"
+                                  style={{ width: `${Math.round(s * 100)}%`, background: m.color }}
+                                />
+                              )}
+                            </div>
+                            <p className="mt-1 truncate text-2xs text-gray-600" title={m.blurb}>
+                              {m.blurb}
+                            </p>
                           </div>
-                          <div className="h-2 overflow-hidden rounded-full bg-gray-800">
-                            {s != null && (
-                              <div
-                                className="h-full rounded-full transition-all"
-                                style={{ width: `${Math.round(s * 100)}%`, background: m.color }}
-                              />
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                )}
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-2xs uppercase tracking-wider text-gray-600">Radar</span>
-                {selected ? <Radar entries={[selected]} scores={scoreMap([selected])} /> : null}
-              </div>
-            </div>
+                  <div className="flex flex-col items-center gap-1 self-start">
+                    <span className="text-2xs uppercase tracking-wider text-gray-600">Radar</span>
+                    <Radar entries={[selected]} scores={scoreMap([selected])} />
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Compare */}
