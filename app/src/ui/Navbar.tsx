@@ -1,4 +1,4 @@
-import { BookOpenText, Car, Home } from "lucide-react";
+import { BookOpenText, Home } from "lucide-react";
 
 export type AppView = "home" | "glossary";
 
@@ -16,9 +16,11 @@ const NAV = [
 export default function Navbar({ version, active, onNavigate }: NavbarProps) {
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-gray-800 bg-gray-900 px-3">
-      <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-white">
-        <Car className="h-4 w-4" />
-      </div>
+      <img
+        src="/gtm.png"
+        alt="GrandTheftMeta"
+        className="h-7 w-7 shrink-0 rounded-md object-contain"
+      />
       <div className="min-w-0 leading-tight">
         <div className="flex items-center gap-2">
           <span className="truncate text-sm font-semibold text-gray-100">GrandTheftMeta</span>
