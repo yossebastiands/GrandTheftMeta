@@ -42,14 +42,14 @@ const COLS = [
 ];
 
 const ROWS: Array<[string, string, string, string, Record<string, string>]> = [
-  ["Aircraft_F22A", "Plane", "Plane", "f22a", { fMass: "8000", fInitialDriveMaxFlatVel: "328.6", "CFlyingHandlingData.fThrust": "2.45", "CFlyingHandlingData.fYawMult": "-0.001", strHandlingFlags: "000100" }],
-  ["Aircraft_mir2k", "Plane", "Plane", "mir2k", { fMass: "7700", fInitialDriveMaxFlatVel: "315.0", "CFlyingHandlingData.fThrust": "2.6", strHandlingFlags: "C201001" }],
-  ["Aircraft_f16c", "Plane", "Plane", "f16c", { fMass: "7500", fInitialDriveMaxFlatVel: "320.0", "CFlyingHandlingData.fYawMult": "-0.002" }],
-  ["Helicopter_ah64e", "Helicopter", "Helicopter", "ah64e", { fMass: "5200", fInitialDriveForce: "0.35", "CFlyingHandlingData.fThrust": "2.2", strHandlingFlags: "000100" }],
-  ["Tank_abramsx", "Car", "Military", "abramsx", { fMass: "62000", fInitialDriveForce: "0.16", fBrakeForce: "1.0", strHandlingFlags: "C201001" }],
-  ["IFV_rosomak", "Amphibious", "Off-Road", "rosomak", { fMass: "11000", fInitialDriveForce: "0.12", "CBoatHandlingData.fRudderForce": "5.0" }],
-  ["Naval_usnavyfleet", "Boat", "Boat", "arleigh", { fMass: "40000", fPercentSubmerged: "290.0" }],
-  ["Car_m3g80", "Car", "Super", "m3g80", { fMass: "1650", fInitialDriveMaxFlatVel: "200.0", fBrakeForce: "0.9", strHandlingFlags: "0" }],
+  ["Aircraft_F22A", "Plane", "Plane", "f22a", { fMass: "8000", fInitialDriveForce: "0.24", fInitialDriveMaxFlatVel: "328.6", fBrakeForce: "0.6", fTractionCurveMax: "0.65", "CFlyingHandlingData.fThrust": "2.45", "CFlyingHandlingData.fYawMult": "-0.001", strHandlingFlags: "000100" }],
+  ["Aircraft_mir2k", "Plane", "Plane", "mir2k", { fMass: "7700", fInitialDriveForce: "0.26", fInitialDriveMaxFlatVel: "315.0", fBrakeForce: "0.62", fTractionCurveMax: "0.62", "CFlyingHandlingData.fThrust": "2.6", strHandlingFlags: "C201001" }],
+  ["Aircraft_f16c", "Plane", "Plane", "f16c", { fMass: "7500", fInitialDriveForce: "0.27", fInitialDriveMaxFlatVel: "320.0", fBrakeForce: "0.64", fTractionCurveMax: "0.6", "CFlyingHandlingData.fYawMult": "-0.002" }],
+  ["Helicopter_ah64e", "Helicopter", "Helicopter", "ah64e", { fMass: "5200", fInitialDriveForce: "0.18", fInitialDriveMaxFlatVel: "178.0", fBrakeForce: "0.5", fTractionCurveMax: "0.5", "CFlyingHandlingData.fThrust": "2.2", strHandlingFlags: "000100" }],
+  ["Tank_abramsx", "Car", "Military", "abramsx", { fMass: "62000", fInitialDriveForce: "0.16", fInitialDriveMaxFlatVel: "68.0", fBrakeForce: "0.9", fTractionCurveMax: "0.8", strHandlingFlags: "C201001" }],
+  ["IFV_rosomak", "Amphibious", "Off-Road", "rosomak", { fMass: "11000", fInitialDriveForce: "0.14", fInitialDriveMaxFlatVel: "100.0", fBrakeForce: "0.7", fTractionCurveMax: "0.75", "CBoatHandlingData.fRudderForce": "5.0" }],
+  ["Naval_usnavyfleet", "Boat", "Boat", "arleigh", { fMass: "40000", fInitialDriveForce: "0.05", fInitialDriveMaxFlatVel: "38.0", fBrakeForce: "0.1", fTractionCurveMax: "0.3", fPercentSubmerged: "290.0" }],
+  ["Car_m3g80", "Car", "Super", "m3g80", { fMass: "1650", fInitialDriveForce: "0.42", fInitialDriveMaxFlatVel: "200.0", fBrakeForce: "1.0", fTractionCurveMax: "1.1", strHandlingFlags: "0" }],
 ];
 
 export function demoScan(count = 8): ScanResult {

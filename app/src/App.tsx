@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Car, FolderOpen, Loader2 } from "lucide-react";
 import FilterBar from "./ui/FilterBar";
-import Navbar from "./ui/Navbar";
+import Navbar, { type AppView } from "./ui/Navbar";
 import Sidebar, { type EditorMode } from "./ui/Sidebar";
 import StatusBar from "./ui/StatusBar";
 import Toast, { type ToastData } from "./ui/Toast";
 import Toolbar from "./ui/Toolbar";
 import GlossaryView from "./features/handling/GlossaryView";
+import DashboardView from "./features/dashboard/DashboardView";
 import SingleHandlingEditor from "./features/handling/SingleHandlingEditor";
 import VehicleTable from "./features/handling/VehicleTable";
 import {
@@ -266,7 +267,7 @@ for (const id of Object.keys(PANELS)) {
 }
 
 export default function App() {
-  const [view, setView] = useState<"home" | "glossary">("home");
+  const [view, setView] = useState<AppView>("home");
   const [panel, setPanel] = useState<PanelId>("handling");
   const [editor, setEditor] = useState<EditorMode>("bulk");
   const [search, setSearch] = useState("");
@@ -605,7 +606,12 @@ export default function App() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gray-950 text-gray-200">
-      <Navbar version={APP_VERSION} active={view} onNavigate={setView} />
+      <Navbar
+        version={APP_VERSION}
+        active={view}
+        dashboardAvailable={veh.hasData}
+        onNavigate={setView}
+      />
 
       {/* Both panes stay mounted; the inactive one is only hidden via CSS, so
           switching between Home and Glossary is instant (the grid is never
@@ -665,6 +671,22 @@ export default function App() {
 
         <div className={view === "glossary" ? "absolute inset-0 flex flex-col" : "hidden"}>
           <GlossaryView />
+        </div>
+
+        <div className={view === "dashboard" ? "absolute inset-0 flex flex-col" : "hidden"}>
+          <DashboardView
+            result={veh.result}
+            folder={veh.folder}
+            onPickFolder={() => {
+              setView("home");
+              setPanel("handling");
+              void veh.chooseFolder();
+            }}
+            onHome={() => {
+              setView("home");
+              setPanel("handling");
+            }}
+          />
         </div>
       </div>
 

@@ -1,19 +1,22 @@
-import { BookOpenText, Home } from "lucide-react";
+import { BookOpenText, Gauge, Home } from "lucide-react";
 
-export type AppView = "home" | "glossary";
+export type AppView = "home" | "glossary" | "dashboard";
 
 interface NavbarProps {
   version?: string;
   active: AppView;
+  /** Dashboard is only meaningful after a handling.meta folder has been scanned. */
+  dashboardAvailable?: boolean;
   onNavigate: (view: AppView) => void;
 }
 
 const NAV = [
   { id: "home" as const, label: "Home", icon: <Home className="h-4 w-4" /> },
   { id: "glossary" as const, label: "Glossary", icon: <BookOpenText className="h-4 w-4" /> },
+  { id: "dashboard" as const, label: "Dashboard", icon: <Gauge className="h-4 w-4" /> },
 ];
 
-export default function Navbar({ version, active, onNavigate }: NavbarProps) {
+export default function Navbar({ version, active, dashboardAvailable, onNavigate }: NavbarProps) {
   return (
     <header className="flex h-12 shrink-0 items-center gap-3 border-b border-gray-800 bg-gray-900 px-3">
       <img
@@ -39,15 +42,24 @@ export default function Navbar({ version, active, onNavigate }: NavbarProps) {
       <nav className="ml-4 flex items-center gap-1">
         {NAV.map((item) => {
           const isActive = active === item.id;
+          const unavailable = item.id === "dashboard" && !dashboardAvailable;
           return (
             <button
               key={item.id}
               type="button"
+              disabled={unavailable}
+              title={
+                unavailable
+                  ? "Scan a vehicle folder in the Handling editor first"
+                  : item.label
+              }
               onClick={() => onNavigate(item.id)}
               className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition ${
                 isActive
                   ? "bg-accent/15 font-semibold text-accent ring-1 ring-inset ring-accent/40"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                  : unavailable
+                    ? "cursor-not-allowed text-gray-700"
+                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
               }`}
             >
               {item.icon}
