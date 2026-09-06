@@ -49,9 +49,17 @@ export function glossaryEntries(id: string): ReturnType<GlossarySource["entries"
   return GLOSSARIES[id]?.entries() ?? [];
 }
 
-/** Hint text for one column of one meta (undefined when not covered). */
+/** Hint text for one column of one meta, cached (undefined when not covered).
+ *  Hints are static per (id, column), but building them (plain summary + full
+ *  original HTML incl. flag tables) is expensive when re-done for every row /
+ *  every keystroke. Compute once, then look up. */
+const hintCache = new Map<string, string | undefined>();
 export function glossaryHint(id: string, col: string): string | undefined {
-  return GLOSSARIES[id]?.hint(col);
+  const key = `${id}\u0000${col}`;
+  if (hintCache.has(key)) return hintCache.get(key);
+  const h = GLOSSARIES[id]?.hint(col);
+  hintCache.set(key, h);
+  return h;
 }
 
 /** Number of glossary entries for a meta id. */

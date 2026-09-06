@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Car, FolderOpen, Loader2 } from "lucide-react";
 import FilterBar from "./ui/FilterBar";
 import Navbar, { type AppView } from "./ui/Navbar";
@@ -266,6 +266,13 @@ for (const id of Object.keys(PANELS)) {
   }
 }
 
+// Home keeps every pane mounted (CSS-hidden) so switching is instant, but that
+// means an App re-render (editing a cell, typing a filter…) would otherwise
+// re-render the hidden Glossary + Dashboard too. Memoizing them — with stable
+// props below — keeps the hidden views idle while you work in an editor.
+const GlossaryPane = memo(GlossaryView);
+const DashboardPane = memo(DashboardView);
+
 export default function App() {
   const [view, setView] = useState<AppView>("home");
   const [panel, setPanel] = useState<PanelId>("handling");
@@ -273,6 +280,9 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [classFilter, setClassFilter] = useState("ALL");
+  // Keep the search box instant-feeling; the expensive row filtering runs on a
+  // deferred copy so typing never blocks on huge row sets (e.g. 27k layouts).
+  const deferredSearch = useDeferredValue(search);
   const [toast, setToast] = useState<ToastData | null>(null);
   const toastTimer = useRef<number | null>(null);
 
@@ -502,7 +512,7 @@ export default function App() {
   }, [isPedpersonalityDemo]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = deferredSearch.trim().toLowerCase();
     return (d.result?.vehicles ?? []).filter((v) => {
       if (typeFilter !== "ALL" && v.vehicle_type !== typeFilter) return false;
       if (classFilter !== "ALL" && v.vehicle_class !== classFilter) return false;
@@ -511,13 +521,25 @@ export default function App() {
         .toLowerCase()
         .includes(q);
     });
-  }, [d.result, search, typeFilter, classFilter]);
+  }, [d.result, deferredSearch, typeFilter, classFilter]);
 
   const onSelect = useCallback((panelId: string, mode: EditorMode) => {
     if (Object.prototype.hasOwnProperty.call(PANELS, panelId)) {
       setPanel(panelId as PanelId);
       setEditor(mode);
     }
+  }, []);
+
+  // Stable callbacks so the memoized Dashboard never re-renders on App changes
+  // it doesn't care about (it only needs the scanned handling data + folder).
+  const onDashboardPickFolder = useCallback(() => {
+    setView("home");
+    setPanel("handling");
+    void veh.chooseFolder();
+  }, [veh.chooseFolder]);
+  const onDashboardHome = useCallback(() => {
+    setView("home");
+    setPanel("handling");
   }, []);
 
   let content: JSX.Element;
@@ -558,7 +580,7 @@ export default function App() {
     const noMatches =
       d.hasData &&
       editor === "bulk" &&
-      (search.trim() !== "" || typeFilter !== "ALL" || classFilter !== "ALL");
+      (deferredSearch.trim() !== "" || typeFilter !== "ALL" || classFilter !== "ALL");
     content = (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
         {noMatches ? (
@@ -670,22 +692,15 @@ export default function App() {
         </div>
 
         <div className={view === "glossary" ? "absolute inset-0 flex flex-col" : "hidden"}>
-          <GlossaryView />
+          <GlossaryPane />
         </div>
 
         <div className={view === "dashboard" ? "absolute inset-0 flex flex-col" : "hidden"}>
-          <DashboardView
+          <DashboardPane
             result={veh.result}
             folder={veh.folder}
-            onPickFolder={() => {
-              setView("home");
-              setPanel("handling");
-              void veh.chooseFolder();
-            }}
-            onHome={() => {
-              setView("home");
-              setPanel("handling");
-            }}
+            onPickFolder={onDashboardPickFolder}
+            onHome={onDashboardHome}
           />
         </div>
       </div>

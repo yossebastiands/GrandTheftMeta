@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown, HelpCircle, RotateCcw, Search, SquarePen } from "lucide-react";
 import { rowKey, type VehicleRow } from "../../shared/models";
 import ValueEditorDialog from "../../ui/ValueEditorDialog";
@@ -114,6 +114,177 @@ function ParamField({
 }
 
 // ---------------------------------------------------------------------------
+// The right-hand form for the selected entry. Memoized so typing in the vehicle
+// search (left) or re-rendering the parent never rebuilds the ~100 parameter
+// fields — it only re-renders when the selected entry / its edits / open groups
+// actually change.
+// ---------------------------------------------------------------------------
+
+interface EntryFormProps {
+  selected: VehicleRow;
+  columns: string[];
+  editsForRow?: Record<string, string>;
+  openGroups: Set<string>;
+  onToggleGroup: (id: string) => void;
+  onCommitEdit: (row: VehicleRow, col: string, value: string) => void;
+  hintFor?: (col: string) => string | undefined;
+  metaLabel?: string;
+  coreLabel?: string;
+  note?: string;
+}
+
+const EntryForm = memo(function EntryForm({
+  selected,
+  columns,
+  editsForRow,
+  openGroups,
+  onToggleGroup,
+  onCommitEdit,
+  hintFor,
+  metaLabel = "handling.meta",
+  coreLabel = "Vehicle",
+  note = "One handlingName in one handling.meta — edits update only this entry.",
+}: EntryFormProps) {
+  const [hintCol, setHintCol] = useState<string | null>(null);
+  const [editCol, setEditCol] = useState<string | null>(null);
+
+  // Switching to another entry closes any open hint / dialog.
+  useEffect(() => {
+    setHintCol(null);
+    setEditCol(null);
+  }, [selected]);
+
+  const groups = useMemo<ParamGroup[]>(() => {
+    const present = columns.filter((c) =>
+      Object.prototype.hasOwnProperty.call(selected.params, c)
+    );
+    const g = groupColumns(present);
+    return coreLabel === "Vehicle"
+      ? g
+      : g.map((x) => (x.id === "core" ? { ...x, label: coreLabel } : x));
+  }, [columns, selected, coreLabel]);
+
+  return (
+    <>
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="border-b border-gray-800 bg-gray-900/40 px-4 py-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h2 className="font-mono text-sm font-semibold text-accent">
+              {selected.handling_name}
+            </h2>
+            {selected.vehicle_type && (
+              <span className="rounded bg-gray-800 px-1.5 py-0.5 text-2xs text-gray-300">
+                {selected.vehicle_type}
+              </span>
+            )}
+            {selected.vehicle_class && (
+              <span className="rounded bg-gray-800 px-1.5 py-0.5 text-2xs text-gray-300">
+                {selected.vehicle_class}
+              </span>
+            )}
+            <span className="truncate text-2xs text-gray-500">
+              {selected.folder_name}
+              {metaLabel && !selected.folder_name.toLowerCase().endsWith(".meta")
+                ? ` · ${metaLabel}`
+                : ""}
+            </span>
+          </div>
+          <p className="mt-0.5 text-2xs text-gray-600">{note}</p>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-auto">
+          <div className="mx-auto min-w-[560px] max-w-4xl px-4 py-3">
+            {groups.length === 0 ? (
+              <p className="text-xs text-gray-600">No parameters in this entry.</p>
+            ) : (
+              groups.map((g) => {
+                const open = openGroups.has(g.id);
+                return (
+                  <section
+                    key={g.id}
+                    className="mb-3 overflow-hidden rounded-lg border border-gray-800"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => onToggleGroup(g.id)}
+                      className="flex w-full items-center gap-2 bg-gray-900/70 px-3 py-1.5 text-left transition-colors hover:bg-gray-800"
+                    >
+                      <ChevronDown
+                        className={`h-3.5 w-3.5 text-gray-500 transition-transform ${
+                          open ? "" : "-rotate-90"
+                        }`}
+                      />
+                      <span className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                        {g.label}
+                      </span>
+                      <span className="ml-auto text-2xs text-gray-600">
+                        {g.cols.length}
+                      </span>
+                    </button>
+                    {open && (
+                      <div className="bg-gray-950/40 px-3 py-2">
+                        {g.cols.map((col) => {
+                          const original = selected.params[col] ?? "";
+                          const edited =
+                            editsForRow?.[col] !== undefined &&
+                            editsForRow[col] !== original;
+                          const hint = hintFor
+                            ? hintFor(col)
+                            : paramHint(col, selected.vehicle_type);
+                          return (
+                            <ParamField
+                              key={col}
+                              label={elementName(col)}
+                              col={col}
+                              value={editsForRow?.[col] ?? original}
+                              edited={edited}
+                              hintHtml={hint}
+                              hintOpen={hintCol === col}
+                              onToggleHint={() =>
+                                setHintCol((prev) => (prev === col ? null : col))
+                              }
+                              onOpenEditor={() => setEditCol(col)}
+                              onRevert={() => onCommitEdit(selected, col, original)}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
+                  </section>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </main>
+
+      {editCol &&
+        (() => {
+          const col = editCol;
+          const original = selected.params[col] ?? "";
+          const current = editsForRow?.[col] ?? original;
+          const hint = hintFor
+            ? hintFor(col)
+            : paramHint(col, selected.vehicle_type);
+          return (
+            <ValueEditorDialog
+              title={elementName(col)}
+              value={current}
+              original={original}
+              hintHtml={hint}
+              onSave={(v) => {
+                setEditCol(null);
+                if (v !== current) onCommitEdit(selected, col, v);
+              }}
+              onCancel={() => setEditCol(null)}
+            />
+          );
+        })()}
+    </>
+  );
+});
+
+// ---------------------------------------------------------------------------
 // Single Handling Editor — pick ONE handlingName, edit as a module form
 // ---------------------------------------------------------------------------
 
@@ -133,8 +304,6 @@ export default function SingleHandlingEditor({
   const [openGroups, setOpenGroups] = useState<Set<string>>(
     () => new Set(["core", "flying", "boat", "vweapon", "wheel", "meta"])
   );
-  const [hintCol, setHintCol] = useState<string | null>(null);
-  const [editCol, setEditCol] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase();
@@ -157,27 +326,17 @@ export default function SingleHandlingEditor({
     return filtered.find((v) => rowKey(v) === selKey) ?? filtered[0] ?? null;
   }, [filtered, selKey]);
 
-  const groups = useMemo<ParamGroup[]>(() => {
-    if (!selected) return [];
-    const present = columns.filter((c) =>
-      Object.prototype.hasOwnProperty.call(selected.params, c)
-    );
-    const g = groupColumns(present);
-    return coreLabel === "Vehicle"
-      ? g
-      : g.map((x) => (x.id === "core" ? { ...x, label: coreLabel } : x));
-  }, [columns, selected, coreLabel]);
-
   const selRowKey = selected ? rowKey(selected) : null;
   const rowEdits = selRowKey ? edits[selRowKey] : undefined;
 
-  const toggleGroup = (id: string) =>
+  const toggleGroup = useCallback((id: string) => {
     setOpenGroups((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+  }, []);
 
   return (
     <>
@@ -189,11 +348,7 @@ export default function SingleHandlingEditor({
             <Search className="pointer-events-none absolute bottom-0 left-2 top-0 m-auto h-3.5 w-3.5 text-gray-500" />
             <input
               value={q}
-              onChange={(e) => {
-                setQ(e.target.value);
-                setHintCol(null);
-                setEditCol(null);
-              }}
+              onChange={(e) => setQ(e.target.value)}
               placeholder="Search handling name…"
               className="w-full rounded-md border border-gray-700 bg-gray-950 py-1 pl-7 pr-2 text-xs text-gray-200 placeholder:text-gray-500 focus:border-accent focus:outline-none"
             />
@@ -216,11 +371,7 @@ export default function SingleHandlingEditor({
                   <li key={key}>
                     <button
                       type="button"
-                      onClick={() => {
-                        setSelKey(key);
-                        setHintCol(null);
-                        setEditCol(null);
-                      }}
+                      onClick={() => setSelKey(key)}
                       className={`flex w-full flex-col gap-0.5 px-3 py-1.5 text-left transition-colors ${
                         isSel
                           ? "border-l-2 border-accent bg-accent/10"
@@ -254,127 +405,27 @@ export default function SingleHandlingEditor({
         </div>
       </aside>
 
-      {/* Right: module form for the selected entry */}
+      {/* Right: memoized module form for the selected entry — typing in the
+          vehicle search (left) never rebuilds the ~100 parameter fields. */}
       {selected ? (
-        <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <div className="border-b border-gray-800 bg-gray-900/40 px-4 py-2">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <h2 className="font-mono text-sm font-semibold text-accent">
-                {selected.handling_name}
-              </h2>
-              {selected.vehicle_type && (
-                <span className="rounded bg-gray-800 px-1.5 py-0.5 text-2xs text-gray-300">
-                  {selected.vehicle_type}
-                </span>
-              )}
-              {selected.vehicle_class && (
-                <span className="rounded bg-gray-800 px-1.5 py-0.5 text-2xs text-gray-300">
-                  {selected.vehicle_class}
-                </span>
-              )}
-              <span className="truncate text-2xs text-gray-500">
-                {selected.folder_name}
-                {metaLabel &&
-                !selected.folder_name.toLowerCase().endsWith(".meta")
-                  ? ` · ${metaLabel}`
-                  : ""}
-              </span>
-            </div>
-            <p className="mt-0.5 text-2xs text-gray-600">{note}</p>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-auto">
-            <div className="mx-auto min-w-[560px] max-w-4xl px-4 py-3">
-              {groups.length === 0 ? (
-                <p className="text-xs text-gray-600">No parameters in this entry.</p>
-              ) : (
-                groups.map((g) => {
-                  const open = openGroups.has(g.id);
-                  return (
-                    <section
-                      key={g.id}
-                      className="mb-3 overflow-hidden rounded-lg border border-gray-800"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => toggleGroup(g.id)}
-                        className="flex w-full items-center gap-2 bg-gray-900/70 px-3 py-1.5 text-left transition-colors hover:bg-gray-800"
-                      >
-                        <ChevronDown
-                          className={`h-3.5 w-3.5 text-gray-500 transition-transform ${
-                            open ? "" : "-rotate-90"
-                          }`}
-                        />
-                        <span className="text-xs font-semibold uppercase tracking-wider text-gray-300">
-                          {g.label}
-                        </span>
-                        <span className="ml-auto text-2xs text-gray-600">
-                          {g.cols.length}
-                        </span>
-                      </button>
-                      {open && (
-                        <div className="bg-gray-950/40 px-3 py-2">
-                          {g.cols.map((col) => {
-                            const value =
-                              rowEdits?.[col] ?? selected.params[col] ?? "";
-                            const original = selected.params[col] ?? "";
-                            const edited =
-                              rowEdits?.[col] !== undefined &&
-                              rowEdits[col] !== original;
-                            const hint = hintFor
-                              ? hintFor(col)
-                              : paramHint(col, selected.vehicle_type);
-                            return (
-                              <ParamField
-                                key={col}
-                                label={elementName(col)}
-                                col={col}
-                                value={value}
-                                edited={edited}
-                                hintHtml={hint}
-                                hintOpen={hintCol === col}
-                                onToggleHint={() =>
-                                  setHintCol((prev) => (prev === col ? null : col))
-                                }
-                                onOpenEditor={() => setEditCol(col)}
-                                onRevert={() => onCommitEdit(selected, col, original)}
-                              />
-                            );
-                          })}
-                        </div>
-                      )}
-                    </section>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </main>
+        <EntryForm
+          key={selRowKey}
+          selected={selected}
+          columns={columns}
+          editsForRow={rowEdits}
+          openGroups={openGroups}
+          onToggleGroup={toggleGroup}
+          onCommitEdit={onCommitEdit}
+          hintFor={hintFor}
+          metaLabel={metaLabel}
+          coreLabel={coreLabel}
+          note={note}
+        />
       ) : (
         <main className="flex flex-1 items-center justify-center text-sm text-gray-500">
           Select a handling entry from the list.
         </main>
       )}
-
-      {editCol && selected && (() => {
-        const col = editCol;
-        const original = selected.params[col] ?? "";
-        const current = (selRowKey ? edits[selRowKey]?.[col] : undefined) ?? original;
-        const hint = hintFor ? hintFor(col) : paramHint(col, selected.vehicle_type);
-        return (
-          <ValueEditorDialog
-            title={elementName(col)}
-            value={current}
-            original={original}
-            hintHtml={hint}
-            onSave={(v) => {
-              setEditCol(null);
-              if (v !== current) onCommitEdit(selected, col, v);
-            }}
-            onCancel={() => setEditCol(null)}
-          />
-        );
-      })()}
       </div>
     </>
   );
