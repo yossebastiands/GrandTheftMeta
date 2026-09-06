@@ -154,21 +154,6 @@ const CATEGORIES: Category[] = [
   },
 ];
 
-// Meta panels currently wired to live editors.
-const LIVE_PANELS: string[] = [
-  "handling",
-  "vehicles",
-  "carcols",
-  "carvariations",
-  "vehiclelayouts",
-  "vehicleweapons",
-  "veh_weaponarchetypes",
-  "weaponanimations",
-  "weaponarchetypes",
-  "pedpersonality",
-  "weapons",
-];
-
 interface SidebarProps {
   activePanel: string;
   activeMode: EditorMode;
@@ -176,8 +161,9 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activePanel, activeMode, onSelect }: SidebarProps) {
-  // Which panels are expanded (dropdowns). Live panels start open.
-  const [open, setOpen] = useState<Set<string>>(() => new Set(LIVE_PANELS));
+  // Which panels are expanded (dropdowns). Start fully collapsed so the editor
+  // list is compact on first open — click a panel header to reveal its modes.
+  const [open, setOpen] = useState<Set<string>>(() => new Set());
 
   const toggle = (id: string) =>
     setOpen((prev) => {

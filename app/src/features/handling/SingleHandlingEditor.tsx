@@ -129,9 +129,8 @@ export default function SingleHandlingEditor({
 }: Props) {
   const [q, setQ] = useState("");
   const [selKey, setSelKey] = useState<string | null>(null);
-  const [openGroups, setOpenGroups] = useState<Set<string>>(
-    () => new Set(["core", "flying", "boat", "vweapon", "wheel", "meta"])
-  );
+  // Param groups start collapsed — expand a group by clicking its header.
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
   const [hintCol, setHintCol] = useState<string | null>(null);
   const [editCol, setEditCol] = useState<string | null>(null);
 
