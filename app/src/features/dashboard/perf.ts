@@ -178,6 +178,14 @@ export function rankBy(summary: PerfSummary, metric: PerfMetric): RankRow[] {
   return ranked;
 }
 
+/** Rank a pre-filtered entry list best-first by raw value (rankings panel). */
+export function rankOf(entries: PerfEntry[], metric: PerfMetric): RankRow[] {
+  return entries
+    .filter((e) => e.values[metric.id] != null)
+    .map((e) => ({ entry: e, value: e.values[metric.id] as number, score: 0 }))
+    .sort((a, b) => b.value - a.value);
+}
+
 export interface HistBin {
   label: string;
   count: number;
@@ -185,9 +193,14 @@ export interface HistBin {
   to: number;
 }
 
-/** Equal-width histogram over a metric's present values. */
+/** Equal-width histogram over a metric's present values (whole summary). */
 export function histogram(summary: PerfSummary, metric: PerfMetric, bins = 12): HistBin[] {
-  const vals = summary.entries
+  return histogramEntries(summary.entries, metric, bins);
+}
+
+/** Equal-width histogram over a pre-filtered entry list. */
+export function histogramEntries(entries: PerfEntry[], metric: PerfMetric, bins = 12): HistBin[] {
+  const vals = entries
     .map((e) => e.values[metric.id])
     .filter((v): v is number => v != null);
   if (vals.length === 0) return [];

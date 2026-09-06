@@ -6,8 +6,8 @@ import type { ScanResult } from "../../shared/models";
 import {
   PERF_METRICS,
   computePerf,
-  rankBy,
-  histogram,
+  rankOf,
+  histogramEntries,
   fmtNum,
   type PerfEntry,
   type PerfSummary,
@@ -104,24 +104,56 @@ export default function DashboardView({ result, folder, onPickFolder, onHome }: 
   const [compare, setCompare] = useState<Set<string>>(new Set());
   const [q, setQ] = useState("");
   const [histMetric, setHistMetric] = useState<MetricId>("topSpeed");
+  const [fType, setFType] = useState("");
+  const [fClass, setFClass] = useState("");
+
+  // Distinct type / class values with counts (filter dropdowns + type chips).
+  const dims = useMemo(() => {
+    const ty = new Map<string, number>();
+    const cl = new Map<string, number>();
+    for (const e of summary.entries) {
+      const t = e.vehicleType || "—";
+      const c = e.vehicleClass || "—";
+      ty.set(t, (ty.get(t) ?? 0) + 1);
+      cl.set(c, (cl.get(c) ?? 0) + 1);
+    }
+    const byCount = (m: Map<string, number>) =>
+      [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    return { types: byCount(ty), classes: byCount(cl) };
+  }, [summary.entries]);
+
+  // Active type+class filter applied to EVERY panel below.
+  const filtered = useMemo(() => {
+    if (!fType && !fClass) return summary.entries;
+    return summary.entries.filter(
+      (e) =>
+        (!fType || e.vehicleType === fType || (!e.vehicleType && fType === "—")) &&
+        (!fClass || e.vehicleClass === fClass || (!e.vehicleClass && fClass === "—"))
+    );
+  }, [summary.entries, fType, fClass]);
+
+  const clearFilters = () => {
+    setFType("");
+    setFClass("");
+  };
 
   const selected: PerfEntry | undefined =
-    summary.entries.find((e) => e.key === selKey) ?? summary.entries[0];
+    filtered.find((e) => e.key === selKey) ?? filtered[0];
 
   const compareList = useMemo(() => {
-    const list = summary.entries.filter((e) => compare.has(e.key));
+    const list = filtered.filter((e) => compare.has(e.key));
     // Always include the main selected vehicle so compare is never empty.
     if (selected && !list.some((e) => e.key === selected.key)) list.unshift(selected);
     return list.slice(0, 5);
-  }, [compare, summary.entries, selected]);
+  }, [compare, filtered, selected]);
 
   const pickList = useMemo(() => {
     const t = q.trim().toLowerCase();
-    if (!t) return summary.entries;
-    return summary.entries.filter((e) =>
+    if (!t) return filtered;
+    return filtered.filter((e) =>
       `${e.name} ${e.folder} ${e.vehicleType} ${e.vehicleClass}`.toLowerCase().includes(t)
     );
-  }, [summary.entries, q]);
+  }, [filtered, q]);
 
   const scoreMap = (list: PerfEntry[]) => {
     const m = new Map<string, (number | null)[]>();
@@ -131,11 +163,6 @@ export default function DashboardView({ result, folder, onPickFolder, onHome }: 
     return m;
   };
   const radarScores = useMemo(() => scoreMap(compareList), [compareList, summary]);
-  const types = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const e of summary.entries) m.set(e.vehicleType || "—", (m.get(e.vehicleType || "—") ?? 0) + 1);
-    return [...m.entries()].sort((a, b) => b[1] - a[1]);
-  }, [summary.entries]);
 
   if (!result || summary.entries.length === 0) {
     return (
@@ -174,18 +201,78 @@ export default function DashboardView({ result, folder, onPickFolder, onHome }: 
         <span className="max-w-md truncate text-2xs text-gray-500" title={folder ?? undefined}>
           {folder ?? "handling.meta data"}
         </span>
-        <span className="rounded bg-gray-800 px-2 py-0.5 text-2xs text-gray-300">
-          {summary.entries.length} vehicles
+        <span
+          className={`rounded px-2 py-0.5 text-2xs ${
+            filtered.length !== summary.entries.length ? "bg-accent/15 text-accent" : "bg-gray-800 text-gray-300"
+          }`}
+        >
+          {filtered.length}
+          {filtered.length !== summary.entries.length ? ` / ${summary.entries.length}` : ""} vehicles
         </span>
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
-          {types.map(([t, c]) => (
-            <span key={t} className="rounded-full border border-gray-700 px-2 py-0.5 text-2xs text-gray-300">
-              {t} · {c}
-            </span>
-          ))}
+          {dims.types.map(([t, c]) => {
+            const on = fType === t;
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setFType(on ? "" : t)}
+                title={`Filter by type: ${t}`}
+                className={`rounded-full border px-2 py-0.5 text-2xs ${
+                  on
+                    ? "border-accent bg-accent/15 text-accent"
+                    : "border-gray-700 text-gray-300 hover:border-gray-500"
+                }`}
+              >
+                {t} · {c}
+              </button>
+            );
+          })}
+          <select
+            value={fClass}
+            onChange={(e) => setFClass(e.target.value)}
+            title="Filter by class"
+            className="max-w-44 cursor-pointer appearance-none rounded-full border border-gray-700 bg-gray-900 px-2 py-0.5 text-2xs text-gray-300 focus:border-accent focus:outline-none"
+          >
+            <option value="">All classes</option>
+            {dims.classes.map(([c, n]) => (
+              <option key={c} value={c}>
+                {c} · {n}
+              </option>
+            ))}
+          </select>
+          {(fType || fClass) && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              title="Clear type / class filter"
+              className="rounded-full border border-accent/60 px-2 py-0.5 text-2xs text-accent hover:bg-accent/10"
+            >
+              reset ✕
+            </button>
+          )}
         </div>
       </header>
 
+      {filtered.length === 0 ? (
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
+          <Gauge className="h-10 w-10 text-gray-700" />
+          <p className="max-w-sm text-sm leading-relaxed text-gray-400">
+            No vehicles match
+            {fType ? <> type <span className="text-accent">{fType}</span></> : null}
+            {fClass ? <> class <span className="text-accent">{fClass}</span></> : null} in this
+            folder.
+          </p>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="rounded-md border border-gray-700 px-3 py-1.5 text-xs text-gray-300 hover:border-gray-500 hover:text-white"
+          >
+            Clear type / class filter
+          </button>
+        </div>
+      ) : (
+        <>
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-auto p-3 xl:grid-cols-3">
         {/* Vehicle performance: picker + bars */}
         <div className="flex min-w-0 flex-col gap-3 xl:col-span-2">
@@ -212,8 +299,9 @@ export default function DashboardView({ result, folder, onPickFolder, onHome }: 
                         }`}
                       >
                         <span className="truncate font-mono">{e.name}</span>
-                        <span className="ml-auto shrink-0 text-2xs text-gray-500">
-                          {e.vehicleType || e.vehicleClass}
+                        <span className="ml-auto shrink-0 truncate text-2xs text-gray-500">
+                          {e.vehicleType || "—"}
+                          {e.vehicleClass && e.vehicleClass !== e.vehicleType ? ` · ${e.vehicleClass}` : ""}
                         </span>
                       </button>
                     </li>
@@ -260,7 +348,7 @@ export default function DashboardView({ result, folder, onPickFolder, onHome }: 
                 Click vehicles below to add them to the radar (up to 5, the selected one is always kept).
               </p>
               <div className="mb-3 flex flex-wrap gap-1.5">
-                {summary.entries.slice(0, 60).map((e) => {
+                {filtered.slice(0, 60).map((e) => {
                   const on = compareList.some((c) => c.key === e.key);
                   const idx = compareList.findIndex((c) => c.key === e.key);
                   return (
@@ -313,7 +401,7 @@ export default function DashboardView({ result, folder, onPickFolder, onHome }: 
           {card("Rankings", <Trophy className="h-3.5 w-3.5" />, (
             <div className="space-y-4">
               {PERF_METRICS.map((m) => {
-                const ranked = rankBy(summary, m).slice(0, 6);
+                const ranked = rankOf(filtered, m).slice(0, 6);
                 const best = ranked[0]?.value;
                 return (
                   <div key={m.id}>
@@ -363,10 +451,12 @@ export default function DashboardView({ result, folder, onPickFolder, onHome }: 
                 ))}
               </div>
             </div>
-            <Histogram summary={summary} metricId={histMetric} />
+            <Histogram entries={filtered} metricId={histMetric} />
           </>
         ))}
       </div>
+        </>
+      )}
     </div>
   );
 }
@@ -379,11 +469,11 @@ function scoreOf(summary: PerfSummary, entry: PerfEntry, metric: (typeof PERF_ME
   return metric.higherBetter ? raw : 1 - raw;
 }
 
-function Histogram({ summary, metricId }: { summary: PerfSummary; metricId: MetricId }) {
+function Histogram({ entries, metricId }: { entries: PerfEntry[]; metricId: MetricId }) {
   const metric = PERF_METRICS.find((m) => m.id === metricId)!;
-  const bins = histogram(summary, metric);
+  const bins = histogramEntries(entries, metric);
   const max = Math.max(1, ...bins.map((b) => b.count));
-  const vals = summary.entries
+  const vals = entries
     .map((e) => e.values[metricId])
     .filter((v): v is number => v != null);
   const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
