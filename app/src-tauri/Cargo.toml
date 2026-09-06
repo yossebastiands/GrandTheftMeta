@@ -1,6 +1,6 @@
 [package]
 name = "grandtheftmeta"
-version = "0.1.2"
+version = "0.1.3"
 description = "GTA V FiveM Advanced Meta Editor — .meta file studio"
 authors = ["Yos"]
 edition = "2021"

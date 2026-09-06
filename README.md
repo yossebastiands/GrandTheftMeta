@@ -19,7 +19,7 @@ Two ways to edit every meta kind: a **Bulk Editor** (one row per entry, all para
 virtualised grid) and a **Single Editor** (one entry at a time, grouped by module). A full
 **Glossary** view explains every parameter, and the same text powers per-cell "?" hints.
 
-## Editors (v0.1.2 — all live)
+## Editors (v0.1.3 — all live)
 
 | Category | Meta file | What one row is |
 | --- | --- | --- |
@@ -132,11 +132,11 @@ This repo is open source (GPL-3.0). Releases are published from `main`:
 
 ```bash
 git push origin main
-git tag v0.1.2 && git push origin v0.1.2
-gh release create v0.1.2 `
-  "app\src-tauri\target\release\bundle\nsis\GrandTheftMeta_0.1.2_x64-setup.exe" `
-  "app\src-tauri\target\release\bundle\msi\GrandTheftMeta_0.1.2_x64_en-US.msi" `
-  --repo yossebastiands/GrandTheftMeta --title "GrandTheftMeta v0.1.2" --notes "..."
+git tag v0.1.3 && git push origin v0.1.3
+gh release create v0.1.3 `
+  "app\src-tauri\target\release\bundle\nsis\GrandTheftMeta_0.1.3_x64-setup.exe" `
+  "app\src-tauri\target\release\bundle\msi\GrandTheftMeta_0.1.3_x64_en-US.msi" `
+  --repo yossebastiands/GrandTheftMeta --title "GrandTheftMeta v0.1.3" --notes "..."
 ```
 
 A committed `.github/workflows/release.yml` can build + attach installers on GitHub Actions
