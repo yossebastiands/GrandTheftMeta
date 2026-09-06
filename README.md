@@ -37,21 +37,21 @@ virtualised grid) and a **Single Editor** (one entry at a time, grouped by modul
 
 ## Features
 
-- 🔍 **Content-driven smart scanning** — file names aren't trusted; XML shape + content decides.
+- **Content-driven smart scanning** — file names aren't trusted; XML shape + content decides.
   Works with `handling_polmav.meta`, per-weapon `pedpersonality.meta` folders, merged files, etc.
-- ✏️ **Two editors per meta** — **Bulk** (all entries × all params in one grid) and **Single**
+- **Two editors per meta** — **Bulk** (all entries × all params in one grid) and **Single**
   (one entry at a time with grouped fields). Modified cells highlight yellow; edits are overlays
   until you click **Update Files**.
-- 🔤 **Always-text values** — flags/hashes/hex are never coerced to numbers, so `C201081` and
+- **Always-text values** — flags/hashes/hex are never coerced to numbers, so `C201081` and
   `0x00FFFFFF` are never corrupted. Empty edited cells are never written.
-- 💾 **Surgical comment-aware write-back** — edits resolve entries by structural path against the
+- **Surgical comment-aware write-back** — edits resolve entries by structural path against the
   raw text (commented-out blocks never shift item indexes) and patch only the changed values.
-- 🔎 **Filter / sort / search** on every editor (text + native Type/Class or Kind/Set dropdowns).
-- 📖 **Glossary view** — a parameter glossary for **every** meta (Vehicles + Weapons), registry-
+- **Filter / sort / search** on every editor (text + native Type/Class or Kind/Set dropdowns).
+- **Glossary view** — a parameter glossary for **every** meta (Vehicles + Weapons), registry-
   driven, searchable. Handling entries show the full original explanation (incl. flag tables) with
   a plain-language ↑/↓ summary on top.
-- ❓ **In-editor hints** — every cell's "?" popover shows the same plain-language guide.
-- 🎨 Dark dev-tool UI with an orange accent.
+- **In-editor hints** — every cell's "?" popover shows the same plain-language guide.
+- Dark dev-tool UI with an orange accent.
 
 ## Stack
 
