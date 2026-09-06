@@ -7,7 +7,8 @@
 > **Built by Apollo Flight Program — FiveM Asset Development Studio** ·
 > [Join the Discord](https://discord.gg/BrXbYWKvrM)
 
-A **FiveM `.meta` file studio** desktop app built with **Tauri v2 + React + Vite + TypeScript**.
+A **GTA V FiveM Advanced Meta Editor** — a desktop `.meta` file studio for GTA V / FiveM
+vehicle & weapon resources, built with **Tauri v2 + React + Vite + TypeScript**.
 
 Point it at any folder of vehicle/weapon resources (any layout). It auto-discovers the `.meta`
 files (file names vary wildly in the wild, so matching is **content-driven**), scans every

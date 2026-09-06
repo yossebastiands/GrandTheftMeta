@@ -31,7 +31,7 @@ export default function Navbar({ version, active, onNavigate }: NavbarProps) {
           )}
         </div>
         <div className="truncate text-2xs text-gray-500">
-          FiveM Vehicle Tools · by Apollo Flight Program
+          GTA V FiveM Advanced Meta Editor · by Apollo Flight Program
         </div>
       </div>
 

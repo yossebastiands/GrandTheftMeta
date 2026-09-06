@@ -2,7 +2,7 @@
   "name": "grandtheftmeta",
   "private": true,
   "version": "0.1.2",
-  "description": "FiveM vehicle handling.meta bulk editor (Tauri v2 + React)",
+  "description": "GTA V FiveM Advanced Meta Editor — .meta file studio (Tauri v2 + React)",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
