@@ -1,12 +1,16 @@
 import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Car, FolderOpen, Loader2 } from "lucide-react";
+import { AlertTriangle, BookOpenText, Car, FolderOpen, Gauge, Hammer, LayoutGrid, Loader2 } from "lucide-react";
 import FilterBar from "./ui/FilterBar";
-import Navbar, { type AppView } from "./ui/Navbar";
+import Navbar, { type AppSection } from "./ui/Navbar";
+import SubNavbar, { type SubNavItem } from "./ui/SubNavbar";
 import Sidebar, { type EditorMode } from "./ui/Sidebar";
 import StatusBar from "./ui/StatusBar";
 import Toast, { type ToastData } from "./ui/Toast";
 import Toolbar from "./ui/Toolbar";
 import GlossaryView from "./features/handling/GlossaryView";
+import CreatorToolsView from "./features/creator/CreatorToolsView";
+import AssetGlossaryView from "./features/creator/AssetGlossaryView";
+import HomeView from "./features/home/HomeView";
 import DashboardView from "./features/dashboard/DashboardView";
 import SingleHandlingEditor from "./features/handling/SingleHandlingEditor";
 import VehicleTable from "./features/handling/VehicleTable";
@@ -266,15 +270,32 @@ for (const id of Object.keys(PANELS)) {
   }
 }
 
+/** Views inside the Meta Workshop (and the Asset Workshop) secondary navbar. */
+export type MetaView = "workspace" | "glossary" | "dashboard";
+export type AssetView = "workspace" | "glossary";
+
 // Home keeps every pane mounted (CSS-hidden) so switching is instant, but that
 // means an App re-render (editing a cell, typing a filter…) would otherwise
 // re-render the hidden Glossary + Dashboard too. Memoizing them — with stable
 // props below — keeps the hidden views idle while you work in an editor.
 const GlossaryPane = memo(GlossaryView);
 const DashboardPane = memo(DashboardView);
+// Asset tools keep their own state (imported resource, viewport) — mounting them
+// permanently would hold a large parsed mesh in memory, so that pane is mounted
+// only while it is open (see the `section === "asset"` branch).
 
 export default function App() {
-  const [view, setView] = useState<AppView>("home");
+  // Dev deep links into an asset tool (`?uvfile=` / `?uvdemo` / `?wtdemo`) open the
+  // Asset Workshop instead of dropping the user on Home.
+  const [section, setSection] = useState<AppSection>(() => {
+    if (import.meta.env.DEV && typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      if (p.has("uvfile") || p.has("uvdemo") || p.has("wtdemo") || p.has("wggen")) return "asset";
+    }
+    return "home";
+  });
+  const [metaView, setMetaView] = useState<MetaView>("workspace");
+  const [assetView, setAssetView] = useState<AssetView>("workspace");
   const [panel, setPanel] = useState<PanelId>("handling");
   const [editor, setEditor] = useState<EditorMode>("bulk");
   const [search, setSearch] = useState("");
@@ -533,12 +554,14 @@ export default function App() {
   // Stable callbacks so the memoized Dashboard never re-renders on App changes
   // it doesn't care about (it only needs the scanned handling data + folder).
   const onDashboardPickFolder = useCallback(() => {
-    setView("home");
+    setSection("meta");
+    setMetaView("workspace");
     setPanel("handling");
     void veh.chooseFolder();
   }, [veh.chooseFolder]);
   const onDashboardHome = useCallback(() => {
-    setView("home");
+    setSection("meta");
+    setMetaView("workspace");
     setPanel("handling");
   }, []);
 
@@ -626,20 +649,84 @@ export default function App() {
     );
   }
 
+  const metaSub: SubNavItem[] = [
+    {
+      id: "workspace",
+      label: "Workspace",
+      icon: <LayoutGrid className="h-3.5 w-3.5" />,
+      title: "Import a pack folder and edit its meta files",
+    },
+    {
+      id: "glossary",
+      label: "Glossary",
+      icon: <BookOpenText className="h-3.5 w-3.5" />,
+      title: "Every meta parameter, explained",
+    },
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: <Gauge className="h-3.5 w-3.5" />,
+      disabled: !veh.hasData,
+      title: veh.hasData
+        ? "Performance dashboard for the scanned handling data"
+        : "Scan a vehicle folder in the Workspace first",
+    },
+  ];
+  const assetSub: SubNavItem[] = [
+    {
+      id: "workspace",
+      label: "Workspace",
+      icon: <Hammer className="h-3.5 w-3.5" />,
+      title: "Open an asset tool (UV Map Generator)",
+    },
+    {
+      id: "glossary",
+      label: "Glossary",
+      icon: <BookOpenText className="h-3.5 w-3.5" />,
+      title: "Shader / material reference — still empty",
+    },
+  ];
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gray-950 text-gray-200">
-      <Navbar
-        version={APP_VERSION}
-        active={view}
-        dashboardAvailable={veh.hasData}
-        onNavigate={setView}
-      />
+      <Navbar version={APP_VERSION} active={section} onNavigate={setSection} />
 
-      {/* Both panes stay mounted; the inactive one is only hidden via CSS, so
-          switching between Home and Glossary is instant (the grid is never
-          torn down and re-built). */}
+      {section !== "home" && (
+        <SubNavbar
+          section={section}
+          title={section === "meta" ? "Meta Workshop" : "Asset Workshop"}
+          items={section === "meta" ? metaSub : assetSub}
+          active={section === "meta" ? metaView : assetView}
+          onNavigate={(id) => {
+            if (section === "meta") setMetaView(id as MetaView);
+            else setAssetView(id as AssetView);
+          }}
+          right={
+            section === "meta" && d.folder ? (
+              <span className="max-w-[28rem] truncate" title={d.folder}>
+                {d.folder}
+              </span>
+            ) : null
+          }
+        />
+      )}
+
+      {/* Both workshops stay mounted once visited; the inactive panes are only
+          hidden via CSS, so switching is instant (no grid rebuild). */}
       <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
-        <div className={view === "home" ? "absolute inset-0 flex flex-col" : "hidden"}>
+        {section === "home" && (
+          <div className="absolute inset-0 flex flex-col">
+            <HomeView version={APP_VERSION} onOpen={setSection} />
+          </div>
+        )}
+
+        <div
+          className={
+            section === "meta" && metaView === "workspace"
+              ? "absolute inset-0 flex flex-col"
+              : "hidden"
+          }
+        >
           <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
             <Sidebar activePanel={panel} activeMode={editor} onSelect={onSelect} />
             <main className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -691,11 +778,23 @@ export default function App() {
           </div>
         </div>
 
-        <div className={view === "glossary" ? "absolute inset-0 flex flex-col" : "hidden"}>
+        <div
+          className={
+            section === "meta" && metaView === "glossary"
+              ? "absolute inset-0 flex flex-col"
+              : "hidden"
+          }
+        >
           <GlossaryPane />
         </div>
 
-        <div className={view === "dashboard" ? "absolute inset-0 flex flex-col" : "hidden"}>
+        <div
+          className={
+            section === "meta" && metaView === "dashboard"
+              ? "absolute inset-0 flex flex-col"
+              : "hidden"
+          }
+        >
           <DashboardPane
             result={veh.result}
             folder={veh.folder}
@@ -703,6 +802,18 @@ export default function App() {
             onHome={onDashboardHome}
           />
         </div>
+
+        {section === "asset" && assetView === "workspace" && (
+          <div className="absolute inset-0 flex flex-col">
+            <CreatorToolsView />
+          </div>
+        )}
+
+        {section === "asset" && assetView === "glossary" && (
+          <div className="absolute inset-0 flex flex-col">
+            <AssetGlossaryView />
+          </div>
+        )}
       </div>
 
       <Toast toast={toast} />

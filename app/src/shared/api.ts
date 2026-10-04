@@ -1,9 +1,19 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
+  ExportPlan,
+  PackPlan,
+  PackWriteReport,
+  PositionDocument,
   ScanResult,
   UpdateResult,
+  UvDocument,
   VehicleChange,
   VehicleRow,
+  WeaponAsset,
+  WeaponPackSpec,
+  WeaponPreset,
+  WeaponSpec,
+  WeaponTemplateCatalog,
 } from "./models";
 
 /** Open the native OS folder picker. Returns null when the user cancels. */
@@ -14,6 +24,52 @@ export function pickFolder(): Promise<string | null> {
 /** Scan a folder containing vehicle resources and return every handling entry. */
 export function scanFolder(folderPath: string): Promise<ScanResult> {
   return invoke<ScanResult>("scan_folder", { folderPath });
+}
+
+/**
+ * Derive the base-weapon catalogue (templates + components) from a folder of vanilla
+ * or pack metas. Read-only — the backend never writes.
+ */
+export function analyzeWeaponTemplates(folderPath: string): Promise<WeaponTemplateCatalog> {
+  return invoke<WeaponTemplateCatalog>("analyze_weapon_templates", { folderPath });
+}
+
+/** Classify the streamed files (`.ydr`/`.ytd`) of one weapon folder. Read-only. */
+export function scanWeaponAssets(folderPath: string): Promise<WeaponAsset[]> {
+  return invoke<WeaponAsset[]>("scan_weapon_assets", { folderPath });
+}
+
+/** Dry run for one weapon: the exact files/edits/conflicts a write would produce. */
+export function previewWeaponExport(spec: WeaponSpec, outFolder: string): Promise<ExportPlan> {
+  return invoke<ExportPlan>("preview_weapon_export", { spec, outFolder });
+}
+
+/** Dry run for a whole pack: one plan per weapon plus the shared resource files. */
+export function previewWeaponPack(pack: WeaponPackSpec, outFolder: string): Promise<PackPlan> {
+  return invoke<PackPlan>("preview_weapon_pack", { pack, outFolder });
+}
+
+/** Write every weapon of the pack into ONE resource (metas + manifest + lua + stream). */
+export function writeWeaponPack(
+  pack: WeaponPackSpec,
+  outFolder: string,
+  overwrite: boolean,
+): Promise<PackWriteReport> {
+  return invoke<PackWriteReport>("write_weapon_pack", { pack, outFolder, overwrite });
+}
+
+/** Save the queued weapons + output folder as a JSON preset (diffable, commit-able). */
+export function saveWeaponPreset(
+  weapons: WeaponSpec[],
+  outFolder: string | null,
+  path: string,
+): Promise<string> {
+  return invoke<string>("save_weapon_preset", { weapons, outFolder, path });
+}
+
+/** Load a preset written by `saveWeaponPreset`. Refuses foreign or newer files. */
+export function loadWeaponPreset(path: string): Promise<WeaponPreset> {
+  return invoke<WeaponPreset>("load_weapon_preset", { path });
 }
 
 /** Write edits surgically back into the handling.meta files. */
@@ -151,4 +207,30 @@ export function updatePedpersonalityFiles(
   changes: VehicleChange[]
 ): Promise<UpdateResult> {
   return invoke<UpdateResult>("update_pedpersonality_files", { folderPath, changes });
+}
+
+/* ---------------------------------------------------------------------------
+ * Creator Tools
+ * ------------------------------------------------------------------------ */
+
+/** Open the native picker filtered to RAGE drawable / fragment files. */
+export function pickResourceFile(): Promise<string | null> {
+  return invoke<string | null>("pick_resource_file");
+}
+
+/**
+ * Parse one `.ydr` / `.yft` / `.ydd` and return every geometry's UV set.
+ * Read-only — the resource file is never modified.
+ */
+export function loadUvDocument(path: string): Promise<UvDocument> {
+  return invoke<UvDocument>("load_uv_document", { path });
+}
+
+/**
+ * Re-parse one resource for vertex positions, used by the orthographic guide.
+ * A second pass on purpose: coordinates roughly double the payload of an import
+ * and the map generator never needs them.
+ */
+export function loadVertexPositions(path: string): Promise<PositionDocument> {
+  return invoke<PositionDocument>("load_vertex_positions", { path });
 }

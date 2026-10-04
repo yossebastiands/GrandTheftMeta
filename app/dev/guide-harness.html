@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Livery guide harness</title>
+    <style>
+      body { margin: 0; background: #0b1220; color: #cbd5e1; font: 13px system-ui, sans-serif; }
+      canvas { display: block; }
+      pre { padding: 8px 12px; white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <!--
+      Dev harness for the orthographic guide renderer.
+
+      The app only draws inside requestAnimationFrame, which browsers pause while
+      the tab is not visible — so this page renders the guide once, immediately,
+      and exposes the result as pixels + a PNG data URL for inspection.
+
+      usage: npm run dev, then open /dev/guide-harness.html?doc=/<uv>.json&pos=/<uv>.pos.json
+    -->
+    <div style="position: relative; width: 1200px">
+      <canvas id="view" width="1200" height="800" style="position: absolute; inset: 0"></canvas>
+      <canvas id="labels" width="1200" height="800" style="position: relative"></canvas>
+    </div>
+
+    <h1 style="font: 600 11px system-ui; padding: 8px 12px 0; color: #64748b">
+      LIVERY TEMPLATE (white islands + cage, one pixel block per texture tile)
+    </h1>
+    <canvas
+      id="template"
+      style="display: block; margin: 0 12px 12px; width: 420px; height: auto; background: #334155"
+    ></canvas>
+
+    <!--
+      Detached-canvas control: renders the guide into a canvas that is NOT in
+      the document, blits it onto a visible 2D canvas and reports the coverage.
+      Expect ~0% — `drawImage` (and `readPixels`) on a detached WebGL canvas can
+      come back blank, which is why the app keeps its GL canvas in the DOM.
+    -->
+    <h1 style="font: 600 11px system-ui; padding: 8px 12px 0; color: #64748b">
+      DETACHED-CANVAS CONTROL (expect ~0% painted)
+    </h1>
+    <div id="previewWrap" style="position: relative; width: 700px; height: 801px; margin: 0 12px 12px">
+      <canvas id="preview" style="position: absolute; inset: 0; width: 100%; height: 100%"></canvas>
+    </div>
+    <pre id="log">loading…</pre>
+    <script type="module" src="./guideHarness.ts"></script>
+  </body>
+</html>

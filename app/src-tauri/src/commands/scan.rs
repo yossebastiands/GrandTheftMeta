@@ -11,7 +11,7 @@
 //! - vector params split into `.x`/`.y`/`.z`, sub-handling params are prefixed by their
 //!   item type, and flag/hash params are always kept as text.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use quick_xml::Reader;
@@ -287,6 +287,34 @@ pub(crate) fn child_text(node: &XmlNode, name: &str) -> String {
         .find(|c| c.name == name)
         .map(|c| c.text.split_whitespace().collect::<Vec<_>>().join(" "))
         .unwrap_or_default()
+}
+
+/// Direct scalar leaves of `node` as a param map: `value=` attributes first, then
+/// short text leaves (whitespace collapsed). Containers (elements that have children)
+/// and every name in `skip` are ignored.
+///
+/// Single definition for "what counts as an editable scalar" — shared by the weapons
+/// scanner (identity `["Name","Slot","Group"]`) and the weapon template catalogue
+/// (which also skips the display columns). Keep the two callers in sync through this
+/// function rather than re-implementing the loop.
+pub(crate) fn scalar_leaves(node: &XmlNode, skip: &[&str]) -> BTreeMap<String, String> {
+    let mut params: BTreeMap<String, String> = BTreeMap::new();
+    for child in &node.children {
+        if !child.children.is_empty() || skip.contains(&child.name.as_str()) {
+            continue;
+        }
+        // Numeric / boolean scalar attribute.
+        if let Some(v) = child.attr("value") {
+            params.insert(child.name.clone(), v.trim().to_string());
+            continue;
+        }
+        // Short text leaf (flags, stat/hash names, …). Whitespace collapsed.
+        let text = child.text.split_whitespace().collect::<Vec<_>>().join(" ");
+        if !text.is_empty() {
+            params.insert(child.name.clone(), text);
+        }
+    }
+    params
 }
 
 /// Every `<Item>` node in the tree (vehicles.meta holds one per model).

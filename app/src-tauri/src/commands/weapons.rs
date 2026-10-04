@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use serde::Serialize;
 use walkdir::WalkDir;
 
-use super::scan::{child_text, collect_items, parse_xml, ScanResult, VehicleRow, XmlNode};
+use super::scan::{child_text, collect_items, parse_xml, scalar_leaves, ScanResult, VehicleRow, XmlNode};
 
 #[derive(Serialize, Debug)]
 pub struct WeaponScanResult {
@@ -55,26 +55,8 @@ fn parse_weapon(item: &XmlNode, file_rel: String, abs: String) -> VehicleRow {
     let slot = child_text(item, "Slot");
     let group = child_text(item, "Group");
 
-    let mut params: BTreeMap<String, String> = BTreeMap::new();
-    for child in &item.children {
-        // Skip container/structural blocks and the identity fields.
-        if !child.children.is_empty() {
-            continue;
-        }
-        if IDENTITY.contains(&child.name.as_str()) {
-            continue;
-        }
-        // Numeric / boolean scalar attribute.
-        if let Some(v) = child.attr("value") {
-            params.insert(child.name.clone(), v.trim().to_string());
-            continue;
-        }
-        // Short text leaf (flags, stat/hash names, …). Whitespace collapsed.
-        let text = child.text.split_whitespace().collect::<Vec<_>>().join(" ");
-        if !text.is_empty() {
-            params.insert(child.name.clone(), text);
-        }
-    }
+    // Same definition of "editable scalar" as the weapon template catalogue.
+    let params: BTreeMap<String, String> = scalar_leaves(item, IDENTITY);
 
     VehicleRow {
         // Relative file path (e.g. "metas/ak47/weapons.meta") — unique across any layout.

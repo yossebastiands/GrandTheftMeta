@@ -8,10 +8,16 @@ use commands::vehiclelayouts::{scan_vehiclelayouts, update_vehiclelayouts_files}
 use commands::vehicleweapons::{scan_vehicleweapons, update_vehicleweapons_files};
 use commands::scan::scan_folder;
 use commands::update::update_files;
+use commands::uvmap::{load_uv_document, load_vertex_positions, pick_resource_file};
 use commands::vehicles::{scan_vehicles, update_vehicle_files};
 use commands::weaponanimations::{scan_weaponanimations, update_weaponanimations_files};
 use commands::weaponarchetypes::{scan_weaponarchetypes, update_weaponarchetypes_files};
 use commands::weapons::{scan_weapons, update_weapon_files};
+use commands::weapontemplates::analyze_weapon_templates;
+use commands::weapongen::{
+    load_weapon_preset, preview_weapon_export, preview_weapon_pack, save_weapon_preset,
+    scan_weapon_assets, write_weapon_pack,
+};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -39,7 +45,17 @@ pub fn run() {
             scan_weaponarchetypes,
             update_weaponarchetypes_files,
             scan_weapons,
-            update_weapon_files
+            update_weapon_files,
+            analyze_weapon_templates,
+            scan_weapon_assets,
+            preview_weapon_export,
+            preview_weapon_pack,
+            write_weapon_pack,
+            save_weapon_preset,
+            load_weapon_preset,
+            pick_resource_file,
+            load_uv_document,
+            load_vertex_positions
         ])
         .run(tauri::generate_context!())
         .expect("error while running GrandTheftMeta");
